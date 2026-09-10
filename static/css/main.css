@@ -164,11 +164,7 @@ img {
 }
 
 
-.auth-btn-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
+
 
 .btn-login-nav {
     padding: 0.55rem 1.1rem;
