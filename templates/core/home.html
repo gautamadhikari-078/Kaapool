@@ -1,10 +1,439 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Kaapool - Home{% endblock title %}
+{% block title %}Kaapool - Travel Together. Spend A Lot Less.{% endblock title %}
 
 {% block content %}
-<section id="home-section">
-    <h1>Welcome to Kaapool</h1>
-    <p>Architecture Foundation Ready. Car-pooling and ride sharing platform backend.</p>
+<!-- 1. HERO SECTION -->
+<section class="hero-section">
+    <div class="hero-container">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                Travel together.<br>
+                <span class="highlight-text">Spend a lot less.</span>
+            </h1>
+            <p class="hero-subtitle">
+                Kaapool connects drivers with empty seats to passengers heading the same way. Save money, reduce road
+                traffic, and cut carbon emissions effortlessly.
+            </p>
+
+        </div>
+
+        <div class="hero-image-wrapper">
+            <div class="hero-image-card">
+                <img src="{% static 'images/hero_sunset.png' %}" alt="Kaapool Carpooling Sunset Trip" class="hero-img">
+            </div>
+        </div>
+    </div>
+
+    <!-- FLOATING SEARCH CARD -->
+    <div class="search-card-container">
+        <div class="search-card">
+            <div class="search-card-tabs">
+                <button class="search-tab active" data-type="find">
+                    <i class="fa-solid fa-magnifying-glass"></i> Find a ride
+                </button>
+                <button class="search-tab" data-type="offer">
+                    <i class="fa-solid fa-car"></i> Offer a ride
+                </button>
+            </div>
+
+            <form action="{% url 'rides:search' %}" method="get" class="search-form-grid">
+                <div class="search-field">
+                    <label><i class="fa-solid fa-location-dot"></i> From</label>
+                    <input type="text" name="origin" placeholder="Leaving from..." required>
+                </div>
+                <div class="search-divider"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+                <div class="search-field">
+                    <label><i class="fa-solid fa-location-crosshairs"></i> To</label>
+                    <input type="text" name="destination" placeholder="Going to..." required>
+                </div>
+                <div class="search-field">
+                    <label><i class="fa-regular fa-calendar-days"></i> Date</label>
+                    <input type="date" name="date" value="{% now 'Y-m-d' %}">
+                </div>
+                <div class="search-field">
+                    <label><i class="fa-solid fa-user-group"></i> Passengers</label>
+                    <select name="seats">
+                        <option value="1">1 Passenger</option>
+                        <option value="2">2 Passengers</option>
+                        <option value="3">3 Passengers</option>
+                        <option value="4">4+ Passengers</option>
+                    </select>
+                </div>
+                <div class="search-submit">
+                    <button type="submit" class="btn-search-submit">
+                        Search <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+            </form>
+            <div class="search-trust-note">
+                <i class="fa-solid fa-shield-halved"></i> Millions of rides shared securely with verified community
+                members
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 2. THREE VALUE PROPOSITION HIGHLIGHTS -->
+<section class="values-section">
+    <div class="section-container">
+        <div class="values-grid">
+            <div class="value-card">
+                <div class="value-icon"><i class="fa-solid fa-earth-americas"></i></div>
+                <h3>Go everywhere</h3>
+                <p>Thousands of daily routes connecting major metro cities, suburban towns, and university hubs.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon"><i class="fa-solid fa-wallet"></i></div>
+                <h3>Pay a lot less</h3>
+                <p>Share fuel and toll expenses and save up to 70% compared to private taxis or solo driving.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon"><i class="fa-solid fa-user-shield"></i></div>
+                <h3>Ride with confidence</h3>
+                <p>Government ID checks, driving license verification, and transparent community ratings.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3. TOP CARPOOL RIDES (DARK THEME CONTRAST SECTION) -->
+<section class="top-rides-section">
+    <div class="section-container">
+        <div class="section-header center">
+            <span class="sub-tag">POPULAR ROUTES</span>
+            <h2>Top carpool rides</h2>
+            <p>Find frequent, reliable rides on top intercity routes available every single day.</p>
+        </div>
+
+        <div class="top-rides-grid">
+            <a href="{% url 'rides:search' %}?origin=Delhi&destination=Jaipur" class="route-card">
+                <div class="route-info">
+                    <span class="route-cities">Delhi <i class="fa-solid fa-arrow-right"></i> Jaipur</span>
+                    <span class="route-freq">Daily 15+ rides</span>
+                </div>
+                <div class="route-price">
+                    <span class="price-tag">From ₹450</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </a>
+
+            <a href="{% url 'rides:search' %}?origin=Mumbai&destination=Pune" class="route-card">
+                <div class="route-info">
+                    <span class="route-cities">Mumbai <i class="fa-solid fa-arrow-right"></i> Pune</span>
+                    <span class="route-freq">Daily 30+ rides</span>
+                </div>
+                <div class="route-price">
+                    <span class="price-tag">From ₹350</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </a>
+
+            <a href="{% url 'rides:search' %}?origin=Bangalore&destination=Mysore" class="route-card">
+                <div class="route-info">
+                    <span class="route-cities">Bangalore <i class="fa-solid fa-arrow-right"></i> Mysore</span>
+                    <span class="route-freq">Daily 20+ rides</span>
+                </div>
+                <div class="route-price">
+                    <span class="price-tag">From ₹300</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </a>
+
+            <a href="{% url 'rides:search' %}?origin=Chennai&destination=Pondicherry" class="route-card">
+                <div class="route-info">
+                    <span class="route-cities">Chennai <i class="fa-solid fa-arrow-right"></i> Pondicherry</span>
+                    <span class="route-freq">Daily 12+ rides</span>
+                </div>
+                <div class="route-price">
+                    <span class="price-tag">From ₹280</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </a>
+
+            <a href="{% url 'rides:search' %}?origin=Hyderabad&destination=Vijayawada" class="route-card">
+                <div class="route-info">
+                    <span class="route-cities">Hyderabad <i class="fa-solid fa-arrow-right"></i> Vijayawada</span>
+                    <span class="route-freq">Daily 18+ rides</span>
+                </div>
+                <div class="route-price">
+                    <span class="price-tag">From ₹420</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </a>
+
+            <a href="{% url 'rides:search' %}?origin=Kolkata&destination=Durgapur" class="route-card">
+                <div class="route-info">
+                    <span class="route-cities">Kolkata <i class="fa-solid fa-arrow-right"></i> Durgapur</span>
+                    <span class="route-freq">Daily 10+ rides</span>
+                </div>
+                <div class="route-price">
+                    <span class="price-tag">From ₹320</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </a>
+        </div>
+
+        <div class="routes-action">
+            <a href="{% url 'rides:search' %}" class="btn-routes-more">
+                View all available routes <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 4. THREE STOPS HOW IT WORKS -->
+<section class="how-it-works-section">
+    <div class="section-container">
+        <div class="section-header">
+            <span class="sub-tag">HOW IT WORKS</span>
+            <h2>Three stops between you and a shared ride</h2>
+        </div>
+
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-badge">1</div>
+                <h3>Find or search a trip</h3>
+                <p>Enter your departure city and destination. Browse verified drivers traveling along your exact route.
+                </p>
+            </div>
+            <div class="step-card">
+                <div class="step-badge amber">2</div>
+                <h3>Book your seat</h3>
+                <p>Choose your driver, check vehicle specifications, reserve your seats, and receive instant
+                    confirmation.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-badge green">3</div>
+                <h3>Travel and save</h3>
+                <p>Meet your driver at the agreed pickup point, share the road trip cost, and enjoy a comfortable ride.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 5. EVERY SEAT GUARANTEES GRID -->
+<section class="guarantees-section">
+    <div class="section-container">
+        <div class="section-header">
+            <span class="sub-tag">SAFETY & COMFORT</span>
+            <h2>Every seat comes with a few guarantees</h2>
+            <p>Peace of mind designed into every single trip you take with Kaapool.</p>
+        </div>
+
+        <div class="guarantees-grid">
+            <div class="guarantee-card">
+                <div class="g-icon"><i class="fa-solid fa-location-dot"></i></div>
+                <h4>Exact Pickups & Drops</h4>
+                <p>Pick convenient locations along the driver's route without unnecessary detour hassles.</p>
+            </div>
+            <div class="guarantee-card">
+                <div class="g-icon"><i class="fa-solid fa-id-card"></i></div>
+                <h4>Verified Drivers</h4>
+                <p>Every driver passes mandatory government photo ID and driving license validation.</p>
+            </div>
+            <div class="guarantee-card">
+                <div class="g-icon"><i class="fa-solid fa-bolt"></i></div>
+                <h4>Instant Confirmation</h4>
+                <p>No waiting around. Book your seat immediately with automated booking confirmation.</p>
+            </div>
+            <div class="guarantee-card">
+                <div class="g-icon"><i class="fa-solid fa-person-dress"></i></div>
+                <h4>Women-Only Rides</h4>
+                <p>Filter options allow women members to ride exclusively with female drivers and passengers.</p>
+            </div>
+            <div class="guarantee-card">
+                <div class="g-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
+                <h4>Flexible Cancellation</h4>
+                <p>Change of plans? Cancel your booking easily with clear refund policies.</p>
+            </div>
+            <div class="guarantee-card">
+                <div class="g-icon"><i class="fa-solid fa-headset"></i></div>
+                <h4>24/7 Support Team</h4>
+                <p>Our dedicated customer support is available round-the-clock to assist your journey.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 6. PLATFORM STATISTICS BAR -->
+<section class="stats-banner-section">
+    <div class="section-container">
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-number">21L+</span>
+                <span class="stat-label">Happy Commuters</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">180+</span>
+                <span class="stat-label">Cities Connected</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">9,400 t</span>
+                <span class="stat-label">CO₂ Emissions Saved</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">₹41 Cr+</span>
+                <span class="stat-label">Member Cost Saved</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 7. TESTIMONIALS REVIEWS -->
+<section class="testimonials-section">
+    <div class="section-container">
+        <div class="section-header">
+            <span class="sub-tag">MEMBER REVIEWS</span>
+            <h2>What people say after the drive</h2>
+        </div>
+
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="stars">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                        class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                </div>
+                <p class="review-text">
+                    "I travel from Delhi to Jaipur twice a month. Carpooling on Kaapool cut my travel budget by half!
+                    Met great co-passengers and smooth comfortable ride."
+                </p>
+                <div class="reviewer-info">
+                    <div class="reviewer-avatar">AS</div>
+                    <div>
+                        <span class="reviewer-name">Ananya Sharma</span>
+                        <span class="reviewer-role">Verified Passenger</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="stars">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                        class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                </div>
+                <p class="review-text">
+                    "As a regular driver between Mumbai and Pune, Kaapool lets me cover my fuel cost completely while
+                    helping fellow commuters. Super clean app!"
+                </p>
+                <div class="reviewer-info">
+                    <div class="reviewer-avatar amber">RK</div>
+                    <div>
+                        <span class="reviewer-name">Rahul Kulkarni</span>
+                        <span class="reviewer-role">Verified Driver</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="stars">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                        class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                </div>
+                <p class="review-text">
+                    "The Women-Only ride option gives me complete peace of mind when traveling late evening between
+                    Bangalore and Mysore. Highly recommended!"
+                </p>
+                <div class="reviewer-info">
+                    <div class="reviewer-avatar dark">PN</div>
+                    <div>
+                        <span class="reviewer-name">Pooja Nair</span>
+                        <span class="reviewer-role">Verified Passenger</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 8. FREQUENTLY ASKED QUESTIONS (FAQ) -->
+<section class="faq-section">
+    <div class="section-container">
+        <div class="section-header">
+            <span class="sub-tag">FAQ</span>
+            <h2>Before you book your first seat</h2>
+        </div>
+
+        <div class="faq-accordion">
+            <div class="faq-item active">
+                <button class="faq-question">
+                    <span>How do I book a carpool ride on Kaapool?</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Simply enter your departure city, destination, and travel date in the search bar above. Browse
+                        available drivers, select your preferred time and seats, and click "Book Seat" for instant
+                        reservation.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>What happens if my travel plans change and I need to cancel?</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>You can cancel your booking directly from your "My Bookings" dashboard. Cancellations made 24
+                        hours prior to departure receive a 100% full refund.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>How are drivers and passengers verified on the platform?</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>All members undergo mandatory mobile number verification and government-issued photo ID checks
+                        (Aadhaar/Driver's License). Drivers must also submit valid vehicle registration and insurance.
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Can I offer a ride if I drive every day for my work commute?</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Yes! Offering your daily commute on Kaapool is a great way to split fuel costs. Click "Offer a
+                        Ride", set your schedule, available seats, and price per seat.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Is there an option for women-only rides?</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Yes, female drivers can choose to offer "Women-Only" rides, and female passengers can filter
+                        search results to book exclusively with female members.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 9. CTA BANNER -->
+<section class="cta-banner-section">
+    <div class="section-container">
+        <div class="cta-banner">
+            <div class="cta-content">
+                <h2>Your next trip has empty seats somewhere. Go find them.</h2>
+                <p>Join over 2 Million commuters sharing rides, saving money, and protecting the environment.</p>
+            </div>
+            <div class="cta-buttons">
+                <a href="{% url 'rides:search' %}" class="btn-cta-dark">
+                    <i class="fa-solid fa-magnifying-glass"></i> Find a Ride
+                </a>
+                <a href="{% url 'rides:create' %}" class="btn-cta-light">
+                    <i class="fa-solid fa-car"></i> Offer a Ride
+                </a>
+            </div>
+        </div>
+    </div>
 </section>
 {% endblock content %}

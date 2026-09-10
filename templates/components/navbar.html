@@ -1,19 +1,31 @@
+{% load static %}
 <header id="site-header">
-    <nav id="main-nav">
-        <a href="{% url 'core:home' %}" id="brand-logo">KAAPOOL</a>
-        <ul class="nav-links">
-            <li><a href="{% url 'rides:search' %}">Find a Ride</a></li>
-            <li><a href="{% url 'rides:create' %}">Offer a Ride</a></li>
-            <li><a href="{% url 'core:how_it_works' %}">How It Works</a></li>
-            <li><a href="{% url 'core:safety' %}">Safety</a></li>
-        </ul>
-        <div class="user-auth-section">
+    <div class="header-container">
+        <a href="{% url 'core:home' %}" id="brand-logo">
+            <img src="{% static 'images/kaapool_logo.png' %}" alt="Kaapool Logo" class="brand-logo-img">
+        </a>
+        
+        <nav id="main-nav">
+            <ul class="nav-links">
+                <li><a href="{% url 'rides:search' %}" class="nav-link">Find a ride</a></li>
+                <li><a href="{% url 'rides:create' %}" class="nav-link">Offer a ride</a></li>
+                <li><a href="{% url 'core:safety' %}" class="nav-link">Safety</a></li>
+                <li><a href="{% url 'core:how_it_works' %}" class="nav-link">How it works</a></li>
+            </ul>
+        </nav>
+
+        <div class="header-actions">
+            <a href="{% url 'rides:create' %}" class="btn-offer-nav">
+                <i class="fa-solid fa-circle-plus"></i> Offer a ride
+            </a>
             {% if user.is_authenticated %}
                 {% include 'components/user_menu.html' %}
             {% else %}
-                <a href="{% url 'accounts:login' %}" class="btn-login">Login</a>
-                <a href="{% url 'accounts:signup' %}" class="btn-signup">Sign Up</a>
+                <div class="auth-btn-group">
+                    <a href="{% url 'accounts:login' %}" class="btn-login-nav">Login</a>
+                    <a href="{% url 'accounts:signup' %}" class="btn-signup-nav">Sign up</a>
+                </div>
             {% endif %}
         </div>
-    </nav>
+    </div>
 </header>

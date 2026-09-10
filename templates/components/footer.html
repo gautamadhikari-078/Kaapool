@@ -1,11 +1,59 @@
+{% load static %}
 <footer id="site-footer">
-    <div class="footer-container">
-        <p>&copy; 2026 Kaapool. Car-pooling and Ride-Sharing Platform.</p>
-        <ul class="footer-links">
-            <li><a href="{% url 'core:about' %}">About</a></li>
-            <li><a href="{% url 'core:how_it_works' %}">How It Works</a></li>
-            <li><a href="{% url 'core:safety' %}">Safety</a></li>
-            <li><a href="{% url 'core:contact' %}">Contact</a></li>
-        </ul>
+    <div class="footer-top-container">
+        <div class="footer-brand-col">
+            <a href="{% url 'core:home' %}" class="footer-logo">
+                <img src="{% static 'images/kaapool_logo.png' %}" alt="Kaapool Logo" class="footer-logo-img">
+            </a>
+            <p class="footer-description">
+                Connecting drivers with empty seats with passengers heading the same way. Save money, travel safely, and reduce your environmental footprint.
+            </p>
+            <div class="social-links">
+                <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+                <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+            </div>
+        </div>
+
+        <div class="footer-links-col">
+            <h4>Popular Routes</h4>
+            <ul>
+                <li><a href="{% url 'rides:search' %}?origin=Delhi&destination=Jaipur">Delhi &rarr; Jaipur</a></li>
+                <li><a href="{% url 'rides:search' %}?origin=Mumbai&destination=Pune">Mumbai &rarr; Pune</a></li>
+                <li><a href="{% url 'rides:search' %}?origin=Bangalore&destination=Mysore">Bangalore &rarr; Mysore</a></li>
+                <li><a href="{% url 'rides:search' %}?origin=Chennai&destination=Pondicherry">Chennai &rarr; Pondicherry</a></li>
+                <li><a href="{% url 'rides:search' %}">All Intercity Routes</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-links-col">
+            <h4>Company</h4>
+            <ul>
+                <li><a href="{% url 'core:about' %}">About Kaapool</a></li>
+                <li><a href="{% url 'core:how_it_works' %}">How It Works</a></li>
+                <li><a href="{% url 'core:safety' %}">Safety & Verification</a></li>
+                <li><a href="{% url 'core:contact' %}">Contact & Support</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-links-col">
+            <h4>Carpoolers</h4>
+            <ul>
+                <li><a href="{% url 'rides:search' %}">Find a Ride</a></li>
+                <li><a href="{% url 'rides:create' %}">Offer a Ride</a></li>
+                <li><a href="{% url 'accounts:signup' %}">Register Account</a></li>
+                <li><a href="{% url 'accounts:login' %}">Member Login</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="footer-bottom-container">
+        <p>&copy; 2026 Kaapool Inc. All rights reserved. Built for safe & sustainable travel.</p>
+        <div class="legal-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Cookie Settings</a>
+        </div>
     </div>
 </footer>
