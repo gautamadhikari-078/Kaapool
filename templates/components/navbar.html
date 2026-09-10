@@ -1,0 +1,19 @@
+<header id="site-header">
+    <nav id="main-nav">
+        <a href="{% url 'core:home' %}" id="brand-logo">KAAPOOL</a>
+        <ul class="nav-links">
+            <li><a href="{% url 'rides:search' %}">Find a Ride</a></li>
+            <li><a href="{% url 'rides:create' %}">Offer a Ride</a></li>
+            <li><a href="{% url 'core:how_it_works' %}">How It Works</a></li>
+            <li><a href="{% url 'core:safety' %}">Safety</a></li>
+        </ul>
+        <div class="user-auth-section">
+            {% if user.is_authenticated %}
+                {% include 'components/user_menu.html' %}
+            {% else %}
+                <a href="{% url 'accounts:login' %}" class="btn-login">Login</a>
+                <a href="{% url 'accounts:signup' %}" class="btn-signup">Sign Up</a>
+            {% endif %}
+        </div>
+    </nav>
+</header>

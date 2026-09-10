@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bookings - Kaapool{% endblock title %}
+
+{% block content %}
+<section id="my-bookings-section">
+    <h1>My Ride Bookings</h1>
+    
+    <div class="bookings-list">
+        {% for booking in bookings %}
+            <div class="booking-card">
+                <h3>Booking #{{ booking.id }} - {{ booking.ride.origin }} to {{ booking.ride.destination }}</h3>
+                <p>Seats: {{ booking.seats_booked }} | Status: {{ booking.status }} | Total: ${{ booking.total_price }}</p>
+                <a href="{% url 'bookings:detail' booking.pk %}">View Booking Details</a>
+            </div>
+        {% empty %}
+            <p>You have no ride bookings yet.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock content %}

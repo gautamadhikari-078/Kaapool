@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Ride Details - Kaapool{% endblock title %}
+
+{% block content %}
+<section id="ride-detail-section">
+    <h1>Ride Details</h1>
+    <h2>{{ ride.origin }} &rarr; {{ ride.destination }}</h2>
+    <p><strong>Driver:</strong> {{ ride.driver.username }}</p>
+    <p><strong>Departure Time:</strong> {{ ride.departure_time }}</p>
+    <p><strong>Pickup Point:</strong> {{ ride.pickup_point|default:"As arranged with driver" }}</p>
+    <p><strong>Available Seats:</strong> {{ ride.available_seats }}</p>
+    <p><strong>Price per Seat:</strong> ${{ ride.price_per_seat }}</p>
+    <p><strong>Vehicle Info:</strong> {{ ride.vehicle_info|default:"Standard" }}</p>
+
+    {% if user.is_authenticated and user != ride.driver %}
+        <form method="post" action="{% url 'bookings:list' %}">
+            {% csrf_token %}
+            <input type="hidden" name="ride" value="{{ ride.id }}">
+            <button type="submit">Book Seats</button>
+        </form>
+    {% endif %}
+</section>
+{% endblock content %}

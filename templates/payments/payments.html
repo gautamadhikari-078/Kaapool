@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Payments & Refunds - Kaapool{% endblock title %}
+
+{% block content %}
+<section id="payments-history-section">
+    <h1>Payments & Transaction History</h1>
+    
+    <div class="payments-list">
+        {% for payment in payments %}
+            <div class="payment-item">
+                <p>Transaction ID: {{ payment.transaction_id|default:"N/A" }}</p>
+                <p>Amount: ${{ payment.amount }} | Status: {{ payment.status }} | Date: {{ payment.created_at }}</p>
+            </div>
+        {% empty %}
+            <p>No payment records found.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock content %}

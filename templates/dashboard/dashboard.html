@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Kaapool{% endblock title %}
+
+{% block content %}
+<section id="dashboard-section">
+    <h1>User Dashboard</h1>
+    <p>Welcome back, {{ user.username }}!</p>
+    
+    <div class="dashboard-nav-grid">
+        <a href="{% url 'rides:my_rides' %}">My Offered Rides</a>
+        <a href="{% url 'bookings:my_bookings' %}">My Bookings</a>
+        <a href="{% url 'messaging:inbox' %}">Inbox / Messages</a>
+        <a href="{% url 'payments:history' %}">Payments & Refunds</a>
+        <a href="{% url 'notifications:list' %}">Notifications</a>
+        <a href="{% url 'accounts:profile' %}">Account Profile</a>
+    </div>
+</section>
+{% endblock content %}

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Offer a Ride - Kaapool{% endblock title %}
+
+{% block content %}
+<section id="ride-create-section">
+    <h1>Offer a Ride</h1>
+    <form method="post" id="offer-ride-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Publish Ride</button>
+    </form>
+</section>
+{% endblock content %}

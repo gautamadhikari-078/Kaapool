@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Rides - Kaapool{% endblock title %}
+
+{% block content %}
+<section id="ride-search-section">
+    <h1>Search Available Rides</h1>
+    <form method="get" action="" id="search-form">
+        <input type="text" name="origin" placeholder="Leaving from...">
+        <input type="text" name="destination" placeholder="Going to...">
+        <button type="submit">Search</button>
+    </form>
+
+    <div class="rides-list">
+        {% for ride in rides %}
+            <div class="ride-card">
+                <h3>{{ ride.origin }} &rarr; {{ ride.destination }}</h3>
+                <p>Departure: {{ ride.departure_time }}</p>
+                <p>Available Seats: {{ ride.available_seats }}</p>
+                <p>Price: ${{ ride.price_per_seat }}</p>
+                <a href="{% url 'rides:detail' ride.pk %}">View Details</a>
+            </div>
+        {% empty %}
+            <p>No rides available matching your criteria.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock content %}

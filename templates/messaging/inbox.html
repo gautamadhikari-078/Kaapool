@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Inbox - Kaapool{% endblock title %}
+
+{% block content %}
+<section id="inbox-section">
+    <h1>Messages & Inbox</h1>
+    
+    <div class="inbox-messages-list">
+        {% for message in messages %}
+            <div class="message-card">
+                <p><strong>From:</strong> {{ message.sender.username }} | <strong>To:</strong> {{ message.recipient.username }}</p>
+                <p>{{ message.content }}</p>
+                <small>{{ message.timestamp }}</small>
+            </div>
+        {% empty %}
+            <p>Your inbox is empty.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock content %}

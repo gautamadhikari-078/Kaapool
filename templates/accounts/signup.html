@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign Up - Kaapool{% endblock title %}
+
+{% block content %}
+<section id="signup-section">
+    <h1>Create Your Kaapool Account</h1>
+    <form method="post" id="signup-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Sign Up</button>
+    </form>
+</section>
+{% endblock content %}

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Kaapool{% endblock title %}
+
+{% block content %}
+<section id="login-section">
+    <h1>Account Login</h1>
+    <form method="post" id="login-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Login</button>
+    </form>
+</section>
+{% endblock content %}

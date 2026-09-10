@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Details - Kaapool{% endblock title %}
+
+{% block content %}
+<section id="booking-detail-section">
+    <h1>Booking Details #{{ booking.id }}</h1>
+    <p><strong>Route:</strong> {{ booking.ride.origin }} to {{ booking.ride.destination }}</p>
+    <p><strong>Departure:</strong> {{ booking.ride.departure_time }}</p>
+    <p><strong>Driver:</strong> {{ booking.ride.driver.username }}</p>
+    <p><strong>Seats Booked:</strong> {{ booking.seats_booked }}</p>
+    <p><strong>Total Price:</strong> ${{ booking.total_price }}</p>
+    <p><strong>Status:</strong> {{ booking.status }}</p>
+</section>
+{% endblock content %}

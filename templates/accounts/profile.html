@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile - Kaapool{% endblock title %}
+
+{% block content %}
+<section id="profile-section">
+    <h1>User Profile</h1>
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Phone:</strong> {{ user.phone_number|default:"Not specified" }}</p>
+    <p><strong>Driver Verification Status:</strong> {% if user.is_verified_driver %}Verified Driver{% else %}Not Verified{% endif %}</p>
+</section>
+{% endblock content %}
