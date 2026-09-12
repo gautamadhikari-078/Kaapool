@@ -1,14 +1,265 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Offer a Ride - Kaapool{% endblock title %}
 
+{% block extra_css %}
+<style>
+/* ==========================================================
+   OFFER A RIDE PAGE STYLING
+   ========================================================== */
+.create-page-wrapper {
+    background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+}
+
+.create-card-container {
+    background: #ffffff;
+    width: 100%;
+    max-width: 650px;
+    border-radius: 24px;
+    border: 2px solid #e2e8f0;
+    padding: 2.5rem 2.25rem;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+}
+
+.create-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.create-logo-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: #eff6ff;
+    color: #3b82f6;
+    border-radius: 50%;
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    border: 2px solid #bfdbfe;
+}
+
+.create-header h1 {
+    font-family: var(--font-heading);
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 0.5rem 0;
+}
+
+.create-header p {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* FORM FIELDS */
+.create-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1.25rem;
+}
+
+@media (max-width: 640px) {
+    .form-row {
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+}
+
+.form-row .form-field-group {
+    flex: 1;
+}
+
+.form-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-field-group label {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.form-field-group input, .form-field-group textarea {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    border: 2px solid #cbd5e1;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.form-field-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-field-group input:focus, .form-field-group textarea:focus {
+    border-color: #0073e6;
+    box-shadow: 0 0 0 4px rgba(0, 115, 230, 0.1);
+}
+
+.btn-create-submit {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #0073e6 0%, #005bb5 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 14px;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 1.05rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 8px 20px rgba(0, 115, 230, 0.3);
+    transition: all 0.2s ease;
+    margin-top: 1rem;
+}
+
+.btn-create-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 25px rgba(0, 115, 230, 0.4);
+}
+
+/* ERROR MESSAGES */
+.form-error {
+    color: #991b1b;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+.auth-error-box {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+</style>
+{% endblock extra_css %}
+
 {% block content %}
-<section id="ride-create-section">
-    <h1>Offer a Ride</h1>
-    <form method="post" id="offer-ride-form">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Publish Ride</button>
-    </form>
-</section>
+<div class="create-page-wrapper">
+    <div class="create-card-container">
+        <!-- LOGO BADGE & HEADER -->
+        <div class="create-header">
+            <div class="create-logo-badge">
+                <i class="fa-solid fa-car"></i>
+            </div>
+            <h1>Offer a Ride</h1>
+            <p>Share your journey and save money on travel costs.</p>
+        </div>
+
+        <!-- ERROR MESSAGES -->
+        {% if form.errors %}
+            <div class="auth-error-box">
+                <i class="fa-solid fa-triangle-exclamation"></i> Please correct the errors below.
+            </div>
+        {% endif %}
+
+        <!-- FORM -->
+        <form method="post" class="create-form">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <div class="form-field-group">
+                    <label for="id_origin"><i class="fa-solid fa-location-dot"></i> Origin</label>
+                    <input type="text" name="origin" id="id_origin" placeholder="Where from? (e.g., Delhi)" required value="{{ form.origin.value|default_if_none:'' }}">
+                    {% if form.origin.errors %}
+                        <div class="form-error">{{ form.origin.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field-group">
+                    <label for="id_destination"><i class="fa-solid fa-flag-checkered"></i> Destination</label>
+                    <input type="text" name="destination" id="id_destination" placeholder="Where to? (e.g., Jaipur)" required value="{{ form.destination.value|default_if_none:'' }}">
+                    {% if form.destination.errors %}
+                        <div class="form-error">{{ form.destination.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-field-group">
+                <label for="id_pickup_point"><i class="fa-solid fa-map-pin"></i> Pickup Point</label>
+                <input type="text" name="pickup_point" id="id_pickup_point" placeholder="Specific meeting spot" required value="{{ form.pickup_point.value|default_if_none:'' }}">
+                {% if form.pickup_point.errors %}
+                    <div class="form-error">{{ form.pickup_point.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-field-group">
+                    <label for="id_departure_time"><i class="fa-solid fa-calendar-days"></i> Departure Time</label>
+                    <input type="datetime-local" name="departure_time" id="id_departure_time" required value="{{ form.departure_time.value|date:'Y-m-d\TH:i' }}">
+                    {% if form.departure_time.errors %}
+                        <div class="form-error">{{ form.departure_time.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field-group">
+                    <label for="id_available_seats"><i class="fa-solid fa-users"></i> Available Seats</label>
+                    <input type="number" name="available_seats" id="id_available_seats" min="1" max="8" required value="{{ form.available_seats.value|default_if_none:'1' }}">
+                    {% if form.available_seats.errors %}
+                        <div class="form-error">{{ form.available_seats.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-field-group">
+                    <label for="id_price_per_seat"><i class="fa-solid fa-indian-rupee-sign"></i> Price per Seat (₹)</label>
+                    <input type="number" step="0.01" name="price_per_seat" id="id_price_per_seat" placeholder="e.g., 500" required value="{{ form.price_per_seat.value|default_if_none:'' }}">
+                    {% if form.price_per_seat.errors %}
+                        <div class="form-error">{{ form.price_per_seat.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-field-group">
+                    <label for="id_vehicle_info"><i class="fa-solid fa-car-side"></i> Vehicle Info</label>
+                    <input type="text" name="vehicle_info" id="id_vehicle_info" placeholder="Car make, model, color" required value="{{ form.vehicle_info.value|default_if_none:'' }}">
+                    {% if form.vehicle_info.errors %}
+                        <div class="form-error">{{ form.vehicle_info.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-field-group">
+                <label for="id_notes"><i class="fa-solid fa-message"></i> Notes (Optional)</label>
+                <textarea name="notes" id="id_notes" placeholder="Any specific rules or details (e.g., No smoking, flexible on time)">{{ form.notes.value|default_if_none:'' }}</textarea>
+                {% if form.notes.errors %}
+                    <div class="form-error">{{ form.notes.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn-create-submit">
+                Publish Ride <i class="fa-solid fa-check"></i>
+            </button>
+        </form>
+    </div>
+</div>
 {% endblock content %}
