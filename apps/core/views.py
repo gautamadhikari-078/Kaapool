@@ -10,16 +10,37 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
-        # Fetch active route groups dynamically from database
-        routes_qs = (
-            Ride.objects.filter(status='active')
-            .values('origin', 'destination')
-            .annotate(ride_count=Count('id'), min_price=Min('price_per_seat'))
-            .order_by('-ride_count')[:6]
-        )
-        
-        # Predefined default routes if database is fresh
+
+        dynamic_routes = []
+
+        try:
+            routes_qs = (
+                Ride.objects.filter(status='active')
+                .values('origin', 'destination')
+                .annotate(
+                    ride_count=Count('id'),
+                    min_price=Min('price_per_seat')
+                )
+                .order_by('-ride_count')[:6]
+            )
+
+            for r in routes_qs:
+                dynamic_routes.append({
+                    'origin': r['origin'],
+                    'destination': r['destination'],
+                    'min_price': r['min_price'],
+                    'freq_text': f"{r['ride_count']} active ride(s)"
+                })
+
+            context['recent_rides'] = (
+                Ride.objects
+                .filter(status='active')
+                .order_by('-created_at')[:4]
+            )
+
+        except Exception:
+            context['recent_rides'] = []
+
         default_routes = [
             {'origin': 'Delhi', 'destination': 'Jaipur', 'default_price': 450, 'default_freq': 'Daily 15+ rides'},
             {'origin': 'Gurgaon', 'destination': 'Rohtak', 'default_price': 150, 'default_freq': 'Daily 25+ rides'},
@@ -28,37 +49,33 @@ class HomeView(TemplateView):
             {'origin': 'Chennai', 'destination': 'Pondicherry', 'default_price': 280, 'default_freq': 'Daily 12+ rides'},
             {'origin': 'Hyderabad', 'destination': 'Vijayawada', 'default_price': 420, 'default_freq': 'Daily 18+ rides'},
         ]
-        
-        dynamic_routes = []
-        seen_pairs = set()
 
-        for r in routes_qs:
-            pair = (r['origin'].strip().lower(), r['destination'].strip().lower())
-            seen_pairs.add(pair)
-            dynamic_routes.append({
-                'origin': r['origin'],
-                'destination': r['destination'],
-                'min_price': r['min_price'],
-                'freq_text': f"{r['ride_count']} active ride(s)"
-            })
+        seen_pairs = {
+            (r['origin'].lower(), r['destination'].lower())
+            for r in dynamic_routes
+        }
 
-        for d in default_routes:
+        for route in default_routes:
             if len(dynamic_routes) >= 6:
                 break
-            pair = (d['origin'].lower(), d['destination'].lower())
+
+            pair = (
+                route['origin'].lower(),
+                route['destination'].lower()
+            )
+
             if pair not in seen_pairs:
-                seen_pairs.add(pair)
                 dynamic_routes.append({
-                    'origin': d['origin'],
-                    'destination': d['destination'],
-                    'min_price': d['default_price'],
-                    'freq_text': d['default_freq']
+                    'origin': route['origin'],
+                    'destination': route['destination'],
+                    'min_price': route['default_price'],
+                    'freq_text': route['default_freq']
                 })
+                seen_pairs.add(pair)
 
         context['popular_routes'] = dynamic_routes
-        context['recent_rides'] = Ride.objects.filter(status='active').order_by('-created_at')[:4]
-        return context
 
+        return context
 
 class AboutView(TemplateView):
     """About Kaapool page view."""
