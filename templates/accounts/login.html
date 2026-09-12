@@ -1,14 +1,231 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Login - Kaapool{% endblock title %}
+{% block title %}Log In - Kaapool Carpooling{% endblock title %}
+
+{% block extra_css %}
+<style>
+/* ==========================================================
+   KAAPOOL BRANDED LOGIN PAGE STYLING
+   ========================================================== */
+.auth-page-wrapper {
+    background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+}
+
+.auth-card-container {
+    background: #ffffff;
+    width: 100%;
+    max-width: 460px;
+    border-radius: 24px;
+    border: 2px solid #e2e8f0;
+    padding: 2.5rem 2.25rem;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-logo-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: #fffbeb;
+    color: #f59e0b;
+    border-radius: 50%;
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    border: 2px solid #fde68a;
+}
+
+.auth-header h1 {
+    font-family: var(--font-heading);
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 0.5rem 0;
+}
+
+.auth-header p {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* BOOKING INTENT NOTICE BANNER */
+.booking-redirect-notice {
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    color: #1e40af;
+    padding: 0.9rem 1.1rem;
+    border-radius: 14px;
+    margin-bottom: 1.75rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    line-height: 1.4;
+}
+
+.booking-redirect-notice i {
+    font-size: 1.1rem;
+    color: #3b82f6;
+    flex-shrink: 0;
+}
+
+/* FORM FIELDS */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.form-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-field-group label {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.form-field-group input {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    border: 2px solid #cbd5e1;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.form-field-group input:focus {
+    border-color: #0073e6;
+    box-shadow: 0 0 0 4px rgba(0, 115, 230, 0.1);
+}
+
+.auth-error-box {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.btn-auth-submit {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 14px;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 1.05rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+}
+
+.btn-auth-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 25px rgba(245, 158, 11, 0.4);
+}
+
+.auth-footer-prompt {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #f1f5f9;
+    font-size: 0.92rem;
+    color: #64748b;
+}
+
+.auth-footer-prompt a {
+    color: #0073e6;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.auth-footer-prompt a:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock extra_css %}
 
 {% block content %}
-<section id="login-section">
-    <h1>Account Login</h1>
-    <form method="post" id="login-form">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Login</button>
-    </form>
-</section>
+<div class="auth-page-wrapper">
+    <div class="auth-card-container">
+        <!-- LOGO BADGE & HEADER -->
+        <div class="auth-header">
+            <div class="auth-logo-badge">
+                <i class="fa-solid fa-car-side"></i>
+            </div>
+            <h1>Log In to Kaapool</h1>
+            <p>Welcome back! Sign in to manage or book your carpool rides.</p>
+        </div>
+
+        <!-- IF REDIRECTED FROM BOOKING -->
+        {% if request.GET.next %}
+            <div class="booking-redirect-notice">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Please log in to your Kaapool account first to complete your ride booking.</span>
+            </div>
+        {% endif %}
+
+        <!-- ERROR MESSAGES -->
+        {% if form.errors %}
+            <div class="auth-error-box">
+                <i class="fa-solid fa-triangle-exclamation"></i> Please enter a correct username and password. Note that both fields may be case-sensitive.
+            </div>
+        {% endif %}
+
+        <!-- FORM -->
+        <form method="post" action="{% url 'accounts:login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" class="auth-form">
+            {% csrf_token %}
+
+            <div class="form-field-group">
+                <label for="id_username"><i class="fa-solid fa-user"></i> Username</label>
+                <input type="text" name="username" id="id_username" placeholder="Enter your username" required autofocus>
+            </div>
+
+            <div class="form-field-group">
+                <label for="id_password"><i class="fa-solid fa-lock"></i> Password</label>
+                <input type="password" name="password" id="id_password" placeholder="Enter your password" required>
+            </div>
+
+            <button type="submit" class="btn-auth-submit">
+                Log In & Continue <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="auth-footer-prompt">
+            Don't have a Kaapool account? <a href="{% url 'accounts:signup' %}">Create Account</a>
+        </div>
+    </div>
+</div>
 {% endblock content %}

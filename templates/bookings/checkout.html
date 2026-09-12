@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book online and secure your seat - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+/* ==========================================================
+   KAAPOOL BOOKING CHECKOUT SCREEN STYLING (BLABLACAR STYLE)
+   ========================================================== */
+.checkout-page-wrapper {
+    background-color: #f8fafc;
+    min-height: 85vh;
+    padding: 3.5rem 1.5rem 5rem 1.5rem;
+    font-family: var(--font-body);
+}
+
+.checkout-container {
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+.checkout-title-heading {
+    font-family: var(--font-heading);
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    text-align: center;
+    margin-bottom: 2.5rem;
+    letter-spacing: -0.5px;
+}
+
+.checkout-card {
+    background: #ffffff;
+    border-radius: 24px;
+    border: 1px solid #e2e8f0;
+    padding: 2.5rem 2.25rem;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+}
+
+/* SECTION 1: ROUTE & TIMELINE */
+.checkout-date-header {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 1.25rem;
+}
+
+.checkout-timeline-block {
+    display: flex;
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+}
+
+.checkout-track-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.25rem 0;
+}
+
+.checkout-node {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2.5px solid #0073e6;
+    background: #ffffff;
+}
+
+.checkout-line {
+    width: 2px;
+    flex: 1;
+    background: #cbd5e1;
+    margin: 0.2rem 0;
+    min-height: 35px;
+}
+
+.checkout-info-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.25rem;
+}
+
+.checkout-city-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.checkout-city-row .time {
+    font-family: var(--font-heading);
+    min-width: 50px;
+}
+
+.checkout-divider {
+    height: 1px;
+    background-color: #f1f5f9;
+    margin: 1.75rem 0;
+}
+
+/* SECTION 2: PRICE SUMMARY */
+.section-subheading {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 1rem;
+}
+
+.price-summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.price-summary-left {
+    display: flex;
+    flex-direction: column;
+}
+
+.price-summary-left .seat-price-val {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.price-summary-left .pay-note {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 0.2rem;
+    font-weight: 600;
+}
+
+.cash-badge-pill {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+/* SECTION 3: DRIVER MESSAGE INTRO */
+.driver-message-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.driver-intro-textarea {
+    width: 100%;
+    min-height: 110px;
+    padding: 1rem 1.25rem;
+    border-radius: 16px;
+    border: 1.5px solid #cbd5e1;
+    background: #f8fafc;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: #334155;
+    outline: none;
+    resize: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.driver-intro-textarea:focus {
+    border-color: #0073e6;
+    background: #ffffff;
+}
+
+/* SUBMIT BUTTON */
+.checkout-action-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 2.25rem;
+}
+
+.btn-confirm-checkout {
+    padding: 1.1rem 3.5rem;
+    background: #0073e6;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 1.15rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    box-shadow: 0 8px 25px rgba(0, 115, 230, 0.35);
+    transition: all 0.2s ease;
+}
+
+.btn-confirm-checkout:hover {
+    background: #0059b3;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(0, 115, 230, 0.45);
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="checkout-page-wrapper">
+    <div class="checkout-container">
+        <!-- TITLE -->
+        <h1 class="checkout-title-heading">Book online and secure your seat</h1>
+
+        <!-- CHECKOUT CARD -->
+        <div class="checkout-card">
+            <form action="{% url 'bookings:create' %}" method="post" id="checkout-form">
+                {% csrf_token %}
+                <input type="hidden" name="ride_id" value="{{ ride.id }}">
+                <input type="hidden" name="seats_booked" value="{{ seats_booked }}">
+
+                <!-- SECTION 1: ROUTE & TIMELINE -->
+                <div class="checkout-date-header">
+                    {{ ride.departure_time|date:"D, j F" }}
+                </div>
+
+                <div class="checkout-timeline-block">
+                    <div class="checkout-track-col">
+                        <span class="checkout-node"></span>
+                        <span class="checkout-line"></span>
+                        <span class="checkout-node"></span>
+                    </div>
+
+                    <div class="checkout-info-col">
+                        <div class="checkout-city-row">
+                            <span class="time">{{ ride.departure_time|date:"H:i" }}</span>
+                            <span>{{ ride.origin }}</span>
+                        </div>
+
+                        <div class="checkout-city-row">
+                            <span class="time">{{ ride.departure_time|date:"H:i" }}</span>
+                            <span>{{ ride.destination }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="checkout-divider"></div>
+
+                <!-- SECTION 2: PRICE SUMMARY -->
+                <div class="section-subheading">Price summary</div>
+                <div class="price-summary-row">
+                    <div class="price-summary-left">
+                        <span class="seat-price-val">{{ seats_booked }} seat{% if seats_booked > 1 %}s{% endif %}: ₹{{ total_price }}</span>
+                        <span class="pay-note">Pay in the car</span>
+                    </div>
+                    <div class="cash-badge-pill">Cash</div>
+                </div>
+
+                <div class="checkout-divider"></div>
+
+                <!-- SECTION 3: DRIVER INTRO MESSAGE -->
+                <div class="driver-message-box">
+                    <div class="section-subheading">
+                        Send a message to {{ ride.driver.get_full_name|default:ride.driver.username }} to introduce yourself
+                    </div>
+                    <textarea name="driver_message" class="driver-intro-textarea">{{ default_message }}</textarea>
+                </div>
+
+                <!-- ACTION BUTTON -->
+                <div class="checkout-action-wrap">
+                    <button type="submit" class="btn-confirm-checkout">
+                        <i class="fa-solid fa-bolt"></i> Book
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}

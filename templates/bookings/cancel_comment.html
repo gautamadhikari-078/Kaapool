@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Could you tell us a bit more? - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+/* ==========================================================
+   KAAPOOL CANCELLATION COMMENT SCREEN (BLABLACAR STYLE)
+   ========================================================== */
+.cancel-comment-page-wrapper {
+    background-color: #ffffff;
+    min-height: 85vh;
+    padding: 2.5rem 1.5rem 5rem 1.5rem;
+    font-family: var(--font-body);
+}
+
+.cancel-comment-container {
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+.back-arrow-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #0073e6;
+    font-size: 1.4rem;
+    text-decoration: none;
+    margin-bottom: 2rem;
+    transition: transform 0.2s;
+}
+
+.back-arrow-link:hover {
+    transform: translateX(-3px);
+}
+
+.cancel-comment-heading {
+    font-family: var(--font-heading);
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    text-align: center;
+    margin-bottom: 2rem;
+    letter-spacing: -0.5px;
+}
+
+.selected-reason-tag {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    padding: 0.6rem 1.25rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0 auto 2rem auto;
+    display: table;
+}
+
+.cancel-comment-textarea {
+    width: 100%;
+    min-height: 140px;
+    padding: 1.25rem;
+    border-radius: 20px;
+    border: 2.5px solid #0073e6;
+    background: #f8fafc;
+    font-family: inherit;
+    font-size: 1.05rem;
+    color: #0f172a;
+    outline: none;
+    resize: none;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.cancel-comment-textarea:focus {
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(0, 115, 230, 0.12);
+}
+
+.cancel-action-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 2.5rem;
+}
+
+.btn-submit-cancellation {
+    padding: 0.85rem 3rem;
+    background: #0073e6;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 6px 20px rgba(0, 115, 230, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-submit-cancellation:hover {
+    background: #0059b3;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 115, 230, 0.4);
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="cancel-comment-page-wrapper">
+    <div class="cancel-comment-container">
+        <!-- BACK LINK -->
+        <a href="{% url 'bookings:cancel_reason' booking.id %}" class="back-arrow-link">
+            <i class="fa-solid fa-arrow-left"></i>
+        </a>
+
+        <!-- HEADING -->
+        <h1 class="cancel-comment-heading">Could you tell us a bit more?</h1>
+
+        {% if selected_reason %}
+            <div class="selected-reason-tag">
+                Reason: {{ selected_reason }}
+            </div>
+        {% endif %}
+
+        <form action="{% url 'bookings:cancel_confirm' booking.id %}" method="post" id="cancel-comment-form">
+            {% csrf_token %}
+            <input type="hidden" name="reason" value="{{ selected_reason }}">
+
+            <textarea name="comment" class="cancel-comment-textarea" placeholder="I cancelled because..."></textarea>
+
+            <div class="cancel-action-wrap">
+                <button type="submit" class="btn-submit-cancellation">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}

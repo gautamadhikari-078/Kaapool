@@ -2,10 +2,11 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView as DjangoLoginView, LogoutView as DjangoLogoutView
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
 from django.views.generic import TemplateView, CreateView, UpdateView
 from django.urls import reverse_lazy
 
+from .forms import CustomUserCreationForm
 from rest_framework import generics, permissions
 from .serializers import UserSerializer, RegisterSerializer
 
@@ -25,8 +26,19 @@ class CustomLogoutView(DjangoLogoutView):
 
 class SignUpView(CreateView):
     template_name = 'accounts/signup.html'
-    form_class = UserCreationForm
-    success_url = reverse_lazy('accounts:login')
+    form_class = CustomUserCreationForm
+    success_url = reverse_lazy('core:home')
+
+    def form_valid(self, form):
+        user = form.save()
+        login(self.request, user)
+        messages.success(self.request, f"🎉 Welcome to Kaapool, {user.username}! Your account has been created successfully.")
+        
+        next_url = self.request.GET.get('next') or self.request.POST.get('next')
+        if next_url:
+            return redirect(next_url)
+        return redirect(self.success_url)
+
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):

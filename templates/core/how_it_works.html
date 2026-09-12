@@ -1,10 +1,479 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}How It Works - Kaapool{% endblock title %}
+{% block title %}How Kaapool Works - Smart, Safe & Affordable Carpooling{% endblock title %}
+
+{% block meta_description %}Learn how Kaapool connects verified drivers and passengers. Discover our smart route matching algorithm, transparent fare calculation, ID verification, and step-by-step ride booking process.{% endblock meta_description %}
 
 {% block content %}
-<section id="how-it-works-section">
-    <h1>How Kaapool Works</h1>
-    <p>Search for a ride or offer empty seats in your vehicle.</p>
+<!-- 1. HERO HEADER SECTION -->
+<section class="hiw-hero-section">
+    <div class="hiw-hero-container">
+        <span class="hiw-badge"><i class="fa-solid fa-sparkles"></i> Simple, Transparent & Secure</span>
+        <h1 class="hiw-hero-title">How <span class="highlight-text">Kaapool</span> Works</h1>
+        <p class="hiw-hero-subtitle">
+            Kaapool connects verified drivers with empty seats to passengers traveling the same route. Save up to 70% on travel costs with automated route matching and transparent price calculation.
+        </p>
+
+        <div class="hiw-hero-actions">
+            <a href="{% url 'rides:search' %}" class="btn-hiw-primary">
+                <i class="fa-solid fa-magnifying-glass"></i> Find a Ride
+            </a>
+            <a href="{% url 'rides:create' %}" class="btn-hiw-secondary">
+                <i class="fa-solid fa-plus-circle"></i> Offer Empty Seats
+            </a>
+        </div>
+    </div>
 </section>
+
+<!-- 2. STEP-BY-STEP PROCESS SECTION -->
+<section class="hiw-process-section">
+    <div class="section-container">
+        <div class="section-header center">
+            <span class="sub-title">STEP-BY-STEP WORKFLOW</span>
+            <h2>How Carpooling Works on Kaapool</h2>
+            <p>Select your role below to explore the simple step-by-step process.</p>
+        </div>
+
+        <!-- Role Selector Tabs -->
+        <div class="role-tab-container">
+            <button class="role-tab active" data-tab="passenger">
+                <i class="fa-solid fa-user"></i> For Passengers
+            </button>
+            <button class="role-tab" data-tab="driver">
+                <i class="fa-solid fa-car-side"></i> For Drivers
+            </button>
+        </div>
+
+        <!-- PASSENGER STEPS CONTENT -->
+        <div class="tab-content active" id="tab-passenger">
+            <div class="steps-grid-flow">
+                <!-- Step 1 -->
+                <div class="flow-card">
+                    <div class="flow-number">01</div>
+                    <div class="flow-icon"><i class="fa-solid fa-id-card"></i></div>
+                    <span class="flow-tag">Instant Verification</span>
+                    <h3>Register & Verify Profile</h3>
+                    <p>Create your account via mobile OTP. Upload Govt ID (Aadhaar/Voter ID) to earn your Verified Badge and unlock instant booking trust.</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="flow-card">
+                    <div class="flow-number">02</div>
+                    <div class="flow-icon"><i class="fa-solid fa-route"></i></div>
+                    <span class="flow-tag">Smart Route Engine</span>
+                    <h3>Search & Match Best Route</h3>
+                    <p>Enter origin, destination, and date. Our route engine scans schedules, matching direct highway routes and intermediate pickup points.</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="flow-card">
+                    <div class="flow-number">03</div>
+                    <div class="flow-icon"><i class="fa-solid fa-calculator"></i></div>
+                    <span class="flow-tag">Cheaper Price Suitability</span>
+                    <h3>Transparent Cost Sharing</h3>
+                    <p>Fares are calculated based on actual fuel and toll costs divided among seats. Zero surge pricing—saving you up to 70% vs taxis.</p>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="flow-card">
+                    <div class="flow-number">04</div>
+                    <div class="flow-icon"><i class="fa-solid fa-circle-check"></i></div>
+                    <span class="flow-tag">Safe Journey</span>
+                    <h3>Book & Travel Together</h3>
+                    <p>Book instantly, chat with your verified driver via in-app messaging, coordinate pickup, and enjoy a comfortable, eco-friendly trip.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DRIVER STEPS CONTENT -->
+        <div class="tab-content" id="tab-driver">
+            <div class="steps-grid-flow">
+                <!-- Step 1 -->
+                <div class="flow-card">
+                    <div class="flow-number">01</div>
+                    <div class="flow-icon"><i class="fa-solid fa-address-card"></i></div>
+                    <span class="flow-tag">Driver Verification</span>
+                    <h3>Register & Add Vehicle</h3>
+                    <p>Sign up, upload Driving License and Vehicle RC. Get your Verified Driver badge to build instant credibility in the community.</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="flow-card">
+                    <div class="flow-number">02</div>
+                    <div class="flow-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+                    <span class="flow-tag">Schedule Trip</span>
+                    <h3>Publish Route & Seats</h3>
+                    <p>Specify departure city, destination, travel time, and available empty seats in your vehicle for co-passengers.</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="flow-card">
+                    <div class="flow-number">03</div>
+                    <div class="flow-icon"><i class="fa-solid fa-sliders"></i></div>
+                    <span class="flow-tag">Auto Pricing & Detours</span>
+                    <h3>Smart Pricing Suggestion</h3>
+                    <p>System recommends fair seat pricing based on mileage and fuel costs, plus convenient highway pickup spots without major detours.</p>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="flow-card">
+                    <div class="flow-number">04</div>
+                    <div class="flow-icon"><i class="fa-solid fa-wallet"></i></div>
+                    <span class="flow-tag">Cost Recovery</span>
+                    <h3>Accept Passengers & Save</h3>
+                    <p>Review passenger profiles and community ratings. Accept bookings, share the ride, and receive automatic payouts directly to your account.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- 3. SMART ALGORITHM & TECH ENGINE SHOWCASE -->
+<section class="hiw-tech-section">
+    <div class="section-container">
+        <div class="section-header center light-text">
+            <span class="sub-title amber">UNDER THE HOOD</span>
+            <h2 class="text-white">How Kaapool Finds the Best Route & Cheaper Prices</h2>
+            <p class="text-slate-300">Engineered with smart spatial matching and transparent cost-sharing algorithms.</p>
+        </div>
+
+        <div class="tech-grid">
+            <div class="tech-card">
+                <div class="tech-icon"><i class="fa-solid fa-network-wired"></i></div>
+                <h3>Corridor Route Matching</h3>
+                <p>Matches passengers along highway corridors. For example, a driver traveling Delhi ➔ Jaipur seamlessly matches passengers going Gurgaon ➔ Neemrana.</p>
+                <ul class="tech-list">
+                    <li><i class="fa-solid fa-check"></i> En-route pickup & drop-off matching</li>
+                    <li><i class="fa-solid fa-check"></i> Minimal detour time (< 10 mins)</li>
+                    <li><i class="fa-solid fa-check"></i> Real-time route optimization</li>
+                </ul>
+            </div>
+
+            <div class="tech-card featured">
+                <div class="tech-badge"><i class="fa-solid fa-bolt"></i> Best Value Guarantee</div>
+                <div class="tech-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+                <h3>Fair Price Suitability Engine</h3>
+                <p>Capped per-seat pricing calculated using vehicle fuel efficiency and toll expenses. Keeps rides up to 70% cheaper than taxis while drivers offset trip costs.</p>
+                <ul class="tech-list">
+                    <li><i class="fa-solid fa-check"></i> Strict fuel & toll expense-sharing cap</li>
+                    <li><i class="fa-solid fa-check"></i> Up to 70% cheaper than private cabs</li>
+                    <li><i class="fa-solid fa-check"></i> Zero surge pricing during peak hours</li>
+                </ul>
+            </div>
+
+            <div class="tech-card">
+                <div class="tech-icon"><i class="fa-solid fa-user-shield"></i></div>
+                <h3>360° Trust & Security Matrix</h3>
+                <p>Combines mandatory Govt ID checks, driving license validation, mutual ratings, and live tracking to ensure complete peace of mind.</p>
+                <ul class="tech-list">
+                    <li><i class="fa-solid fa-check"></i> Govt ID & Driving License validation</li>
+                    <li><i class="fa-solid fa-check"></i> Verified passenger & driver badges</li>
+                    <li><i class="fa-solid fa-check"></i> Optional female-only ride filter</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 4. HELP CENTER & FREQUENTLY ASKED QUESTIONS -->
+<section class="hiw-faq-section">
+    <div class="section-container">
+        <div class="section-header center">
+            <span class="sub-title">HELP CENTER & FAQ</span>
+            <h2>Frequently Asked Questions</h2>
+            <p>Click any question below to open or close its answer.</p>
+        </div>
+
+        <div class="faq-layout">
+            <!-- Sidebar Navigation Categories -->
+            <div class="faq-sidebar">
+                <button class="faq-cat-btn active" data-cat="all">
+                    <i class="fa-solid fa-layer-group"></i> All Topics
+                </button>
+                <button class="faq-cat-btn" data-cat="registration">
+                    <i class="fa-solid fa-user-check"></i> Registration & Verification
+                </button>
+                <button class="faq-cat-btn" data-cat="booking">
+                    <i class="fa-solid fa-ticket-simple"></i> Booking & Payments
+                </button>
+                <button class="faq-cat-btn" data-cat="pricing">
+                    <i class="fa-solid fa-sliders"></i> Pricing & Route Matching
+                </button>
+                <button class="faq-cat-btn" data-cat="safety">
+                    <i class="fa-solid fa-shield-halved"></i> Safety & Guidelines
+                </button>
+            </div>
+
+            <!-- Accordion Content -->
+            <div class="faq-accordion-container">
+                
+                <!-- CATEGORY 1: REGISTRATION & VERIFICATION -->
+                <div class="faq-item active" data-category="registration">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">1.</span> How do I create a Kaapool account and verify my profile?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <p>Sign up in under 2 minutes with mobile OTP, add a profile photo, and upload a Govt ID (Aadhaar/Voter ID). Once verified, you get a green <strong>Verified Badge</strong> for 3x higher booking trust.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-category="registration">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">2.</span> Why is identity & document verification mandatory?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <p>Verification guarantees real identities, validates driver licenses & vehicle RC, and enforces 100% safety and accountability across our co-traveling community.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-category="registration">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">3.</span> What documents are required for driver registration?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <p>Drivers must submit a valid <strong>Driving License</strong>, <strong>Vehicle RC (Registration Certificate)</strong>, and a Govt ID. Verification takes under 10 minutes.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-category="registration">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">4.</span> How long does profile verification take?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <p>Our automated document verification system processes most profiles in <strong>5 to 15 minutes</strong>. You will receive an instant SMS notification when approved.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CATEGORY 2: BOOKING & PAYMENTS -->
+                <div class="faq-item" data-category="booking">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">5.</span> How do I search, request, and book a ride as a passenger?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <p>Enter your origin, destination & date. Select a verified driver, click <strong>Book Seat</strong>, and pay securely via UPI or Card for instant booking confirmation and driver contact details.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-category="booking">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">6.</span> How do drivers receive payouts for completed rides?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <p>Payments are held safely in escrow during the ride and automatically deposited into the driver's bank account or UPI within 24 hours of trip completion with 0% commission fee.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-category="booking">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">7.</span> What is the cancellation and refund policy?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <ul class="faq-check-list">
+                                <li><i class="fa-solid fa-check"></i> <strong>Driver Cancels:</strong> 100% instant full refund to passenger.</li>
+                                <li><i class="fa-solid fa-check"></i> <strong>Passenger Cancels (>24h):</strong> 100% full refund.</li>
+                                <li><i class="fa-solid fa-check"></i> <strong>Passenger Cancels (<24h):</strong> 50% refund to compensate reserved driver seat.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-category="booking">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">8.</span> Are there any hidden fees or extra booking charges?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <p>No hidden charges! What you see on the seat fare is the exact total price. Payment gateway processing is included upfront.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CATEGORY 3: PRICING & ROUTE MATCHING -->
+                <div class="faq-item" data-category="pricing">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">9.</span> How does the algorithm calculate cheap & fair prices for passengers?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <div class="formula-card">
+                                <code>Seat Fare = (Trip Distance × Fuel Rate + Tolls) ÷ Total Seats Offered</code>
+                            </div>
+                            <p>Fares are capped to strictly share actual travel expenses—zero surge pricing, making rides up to <strong>70% cheaper than taxis</strong>.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-category="pricing">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">10.</span> How does smart corridor matching work for intermediate stops?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <p>If a driver travels <strong>Delhi ➔ Jaipur</strong>, our spatial engine automatically matches passengers traveling intermediate segments like <em>Gurgaon ➔ Neemrana</em> along the highway without requiring out-of-way detours.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-category="pricing">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">11.</span> Can a driver change seat prices after publishing a ride?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <p>Seat prices cannot be changed for already booked seats to protect passenger trust. Drivers can adjust seat rates for remaining empty seats prior to booking.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-category="pricing">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">12.</span> How does cost sharing benefit both drivers and passengers?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <p>Drivers recover up to 90% of their fuel & toll expenses on trips they were already taking, while passengers travel comfortably for a fraction of private taxi rates.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CATEGORY 4: SAFETY & GUIDELINES -->
+                <div class="faq-item" data-category="safety">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">13.</span> What safety features are available during the trip?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <ul class="faq-check-list">
+                                <li><i class="fa-solid fa-shield-heart"></i> <strong>Live GPS Tracking:</strong> Share live trip tracking with family & friends.</li>
+                                <li><i class="fa-solid fa-shield-heart"></i> <strong>Masked Chat:</strong> In-app messaging without exposing personal phone numbers.</li>
+                                <li><i class="fa-solid fa-shield-heart"></i> <strong>24/7 SOS Button:</strong> One-tap emergency alert to safety team & authorities.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-category="safety">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">14.</span> Can female travelers choose women-only carpools?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <p>Yes! Select the <strong>Women Only</strong> filter during search to view and join rides offered exclusively by verified female drivers for female co-passengers.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-category="safety">
+                    <button type="button" class="faq-question">
+                        <span class="faq-q-text"><span class="faq-number">15.</span> How does the rating and review system work?</span>
+                        <i class="fa-solid fa-chevron-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <p>After trip completion, both driver and passenger submit mutual star ratings & reviews. This ensures high behavioral standards and transparency across our community.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 5. CALL TO ACTION BANNER -->
+<section class="cta-banner-section">
+    <div class="section-container">
+        <div class="cta-banner">
+            <div class="cta-content">
+                <h2>Ready to Travel Together & Spend a Lot Less?</h2>
+                <p>Join thousands of verified drivers and passengers saving money every day on Kaapool.</p>
+            </div>
+            <div class="cta-buttons">
+                <a href="{% url 'rides:search' %}" class="btn-cta-dark">
+                    <i class="fa-solid fa-magnifying-glass"></i> Find a Ride
+                </a>
+                <a href="{% url 'rides:create' %}" class="btn-cta-light">
+                    <i class="fa-solid fa-car"></i> Offer a Ride
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Role Switcher Tabs (For Passengers vs For Drivers)
+    const roleTabs = document.querySelectorAll('.role-tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    roleTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetId = 'tab-' + tab.getAttribute('data-tab');
+
+            roleTabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            tab.classList.add('active');
+            const targetEl = document.getElementById(targetId);
+            if (targetEl) {
+                targetEl.classList.add('active');
+            }
+        });
+    });
+
+    // 2. Category Filter Sidebar
+    const catBtns = document.querySelectorAll('.faq-cat-btn');
+    const faqItems = document.querySelectorAll('.faq-item');
+
+    catBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const category = btn.getAttribute('data-cat');
+
+            catBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            faqItems.forEach(item => {
+                const itemCat = item.getAttribute('data-category');
+                if (category === 'all' || itemCat === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock extra_js %}

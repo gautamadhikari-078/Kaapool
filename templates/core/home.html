@@ -20,9 +20,7 @@
         </div>
 
         <div class="hero-image-wrapper">
-            <div class="hero-image-card">
-                <img src="{% static 'images/hero_sunset.png' %}" alt="Kaapool Carpooling Sunset Trip" class="hero-img">
-            </div>
+            <img src="{% static 'images/new1.png' %}" alt="Kaapool Carpooling" class="hero-img">
         </div>
     </div>
 
@@ -108,71 +106,20 @@
         </div>
 
         <div class="top-rides-grid">
-            <a href="{% url 'rides:search' %}?origin=Delhi&destination=Jaipur" class="route-card">
+            {% for route in popular_routes %}
+            <a href="{% url 'rides:search' %}?origin={{ route.origin }}&destination={{ route.destination }}"
+                class="route-card">
                 <div class="route-info">
-                    <span class="route-cities">Delhi <i class="fa-solid fa-arrow-right"></i> Jaipur</span>
-                    <span class="route-freq">Daily 15+ rides</span>
+                    <span class="route-cities">{{ route.origin }} <i class="fa-solid fa-arrow-right"></i> {{
+                        route.destination }}</span>
+                    <span class="route-freq">{{ route.freq_text }}</span>
                 </div>
                 <div class="route-price">
-                    <span class="price-tag">From ₹450</span>
+                    <span class="price-tag">From ₹{{ route.min_price }}</span>
                     <i class="fa-solid fa-chevron-right"></i>
                 </div>
             </a>
-
-            <a href="{% url 'rides:search' %}?origin=Mumbai&destination=Pune" class="route-card">
-                <div class="route-info">
-                    <span class="route-cities">Mumbai <i class="fa-solid fa-arrow-right"></i> Pune</span>
-                    <span class="route-freq">Daily 30+ rides</span>
-                </div>
-                <div class="route-price">
-                    <span class="price-tag">From ₹350</span>
-                    <i class="fa-solid fa-chevron-right"></i>
-                </div>
-            </a>
-
-            <a href="{% url 'rides:search' %}?origin=Bangalore&destination=Mysore" class="route-card">
-                <div class="route-info">
-                    <span class="route-cities">Bangalore <i class="fa-solid fa-arrow-right"></i> Mysore</span>
-                    <span class="route-freq">Daily 20+ rides</span>
-                </div>
-                <div class="route-price">
-                    <span class="price-tag">From ₹300</span>
-                    <i class="fa-solid fa-chevron-right"></i>
-                </div>
-            </a>
-
-            <a href="{% url 'rides:search' %}?origin=Chennai&destination=Pondicherry" class="route-card">
-                <div class="route-info">
-                    <span class="route-cities">Chennai <i class="fa-solid fa-arrow-right"></i> Pondicherry</span>
-                    <span class="route-freq">Daily 12+ rides</span>
-                </div>
-                <div class="route-price">
-                    <span class="price-tag">From ₹280</span>
-                    <i class="fa-solid fa-chevron-right"></i>
-                </div>
-            </a>
-
-            <a href="{% url 'rides:search' %}?origin=Hyderabad&destination=Vijayawada" class="route-card">
-                <div class="route-info">
-                    <span class="route-cities">Hyderabad <i class="fa-solid fa-arrow-right"></i> Vijayawada</span>
-                    <span class="route-freq">Daily 18+ rides</span>
-                </div>
-                <div class="route-price">
-                    <span class="price-tag">From ₹420</span>
-                    <i class="fa-solid fa-chevron-right"></i>
-                </div>
-            </a>
-
-            <a href="{% url 'rides:search' %}?origin=Kolkata&destination=Durgapur" class="route-card">
-                <div class="route-info">
-                    <span class="route-cities">Kolkata <i class="fa-solid fa-arrow-right"></i> Durgapur</span>
-                    <span class="route-freq">Daily 10+ rides</span>
-                </div>
-                <div class="route-price">
-                    <span class="price-tag">From ₹320</span>
-                    <i class="fa-solid fa-chevron-right"></i>
-                </div>
-            </a>
+            {% endfor %}
         </div>
 
         <div class="routes-action">

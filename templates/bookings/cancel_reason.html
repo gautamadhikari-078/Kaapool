@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}What's the reason? - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+/* ==========================================================
+   KAAPOOL CANCELLATION REASON SELECTION PAGE (BLABLACAR STYLE)
+   ========================================================== */
+.cancel-reason-page-wrapper {
+    background-color: #ffffff;
+    min-height: 85vh;
+    padding: 2.5rem 1.5rem 5rem 1.5rem;
+    font-family: var(--font-body);
+}
+
+.cancel-reason-container {
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+.back-arrow-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #0073e6;
+    font-size: 1.4rem;
+    text-decoration: none;
+    margin-bottom: 2rem;
+    transition: transform 0.2s;
+}
+
+.back-arrow-link:hover {
+    transform: translateX(-3px);
+}
+
+.cancel-reason-heading {
+    font-family: var(--font-heading);
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    text-align: center;
+    margin-bottom: 2.5rem;
+    letter-spacing: -0.5px;
+}
+
+.reasons-list-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.reason-option-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    text-decoration: none;
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 1.02rem;
+    transition: background-color 0.2s, color 0.2s;
+    border-radius: 12px;
+}
+
+.reason-option-item:hover {
+    background-color: #f8fafc;
+    color: #0073e6;
+}
+
+.reason-option-item i {
+    color: #94a3b8;
+    font-size: 1.1rem;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="cancel-reason-page-wrapper">
+    <div class="cancel-reason-container">
+        <!-- BACK LINK -->
+        <a href="{% url 'bookings:detail' booking.id %}" class="back-arrow-link">
+            <i class="fa-solid fa-arrow-left"></i>
+        </a>
+
+        <!-- HEADING -->
+        <h1 class="cancel-reason-heading">What's the reason?</h1>
+
+        <!-- REASONS LIST -->
+        <div class="reasons-list-group">
+            {% for reason in reasons %}
+                <a href="{% url 'bookings:cancel_comment' booking.id %}?reason={{ reason|urlencode }}" class="reason-option-item">
+                    <span>{{ reason }}</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

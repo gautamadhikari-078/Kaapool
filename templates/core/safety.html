@@ -1,10 +1,263 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Safety - Kaapool{% endblock title %}
+{% block title %}Safety Guidelines - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+/* ==========================================================
+   KAAPOOL SAFETY GUIDELINES (PARAGRAPH & BULLET STRUCTURE)
+   ========================================================== */
+.safety-article-wrapper {
+    background-color: #ffffff;
+    min-height: 80vh;
+    padding: 4rem 1.5rem 6rem 1.5rem;
+}
+
+.safety-article-container {
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+.article-header {
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 2rem;
+    margin-bottom: 3rem;
+}
+
+.article-header h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #0f172a;
+    margin-bottom: 1rem;
+}
+
+.article-header p.lead {
+    font-size: 1.25rem;
+    color: #475569;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.safety-section-block {
+    margin-bottom: 3.5rem;
+}
+
+.safety-section-block h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.safety-section-block h2 i {
+    color: #0073e6;
+}
+
+.safety-section-block p {
+    font-size: 1.05rem;
+    color: #334155;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+}
+
+/* HIGHLIGHTED BULLET LIST STYLING */
+.safety-bullet-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.safety-bullet-item {
+    position: relative;
+    padding-left: 2.25rem;
+    font-size: 1.05rem;
+    color: #334155;
+    line-height: 1.6;
+}
+
+.safety-bullet-item::before {
+    content: "•";
+    position: absolute;
+    left: 0.5rem;
+    top: -0.1rem;
+    font-size: 1.8rem;
+    color: #0073e6;
+    line-height: 1;
+}
+
+.safety-bullet-item strong {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.safety-bullet-item .icon-prefix {
+    color: #0073e6;
+    margin-right: 0.4rem;
+}
+
+/* HIGHLIGHT CALLOUT BOX */
+.safety-callout {
+    background: #f8fafc;
+    border-left: 4px solid #0073e6;
+    padding: 1.5rem 1.75rem;
+    border-radius: 0 12px 12px 0;
+    margin-top: 1.75rem;
+}
+
+.safety-callout p {
+    font-size: 1rem;
+    color: #1e293b;
+    margin: 0;
+}
+
+.safety-callout.warning {
+    background: #fef2f2;
+    border-left-color: #ef4444;
+}
+
+.safety-callout.warning p {
+    color: #991b1b;
+}
+
+.btn-contact-safety {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #0f172a;
+    color: #ffffff;
+    padding: 0.85rem 1.75rem;
+    border-radius: 999px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-contact-safety:hover {
+    background: #0073e6;
+    color: #ffffff;
+}
+</style>
+{% endblock extra_css %}
 
 {% block content %}
-<section id="safety-section">
-    <h1>Safety Guidelines</h1>
-    <p>Learn about our trust and safety architecture.</p>
-</section>
+<div class="safety-article-wrapper">
+    <article class="safety-article-container">
+        <!-- HEADER -->
+        <header class="article-header">
+            <h1>Kaapool Safety Guidelines</h1>
+            <p class="lead">
+                Safety and trust are the foundation of Kaapool. We connect members traveling along the same routes to share costs, reduce emissions, and build a dependable carpooling community. Please review our safety guidelines and standards below.
+            </p>
+        </header>
+
+        <!-- SECTION 1: CORE SAFETY FOUNDATION -->
+        <section class="safety-section-block">
+            <h2><i class="fa-solid fa-shield-halved"></i> 1. Platform Trust & Member Verification</h2>
+            <p>
+                Every trip on Kaapool is supported by robust verification systems and community accountability. We require all members to verify their identities before joining or reserving rides.
+            </p>
+
+            <ul class="safety-bullet-list">
+                <li class="safety-bullet-item">
+                    <strong>Mandatory Government ID Verification:</strong> Every member must verify their mobile phone number via OTP and submit a government-issued photo ID (Aadhaar, Driving License, or Passport) prior to offering or booking rides.
+                </li>
+                <li class="safety-bullet-item">
+                    <strong>Women-Only Carpool Options:</strong> Female drivers can publish rides exclusively for women, and female passengers can filter search results to book female-only trips.
+                </li>
+                <li class="safety-bullet-item">
+                    <strong>Transparent 2-Way Rating System:</strong> Passengers and drivers rate and review each other after every completed ride to maintain high standards of courtesy, punctuality, and respect.
+                </li>
+                <li class="safety-bullet-item">
+                    <strong>Data Privacy & Contact Masking:</strong> Personal phone numbers and email addresses remain protected. All pre-trip coordination and messaging take place securely within the Kaapool application.
+                </li>
+            </ul>
+        </section>
+
+        <!-- SECTION 2: PASSENGER SAFETY TIPS -->
+        <section class="safety-section-block">
+            <h2><i class="fa-solid fa-user-check"></i> 2. Essential Safety Tips for Passengers</h2>
+            <p>
+                As a passenger, following these simple guidelines ensures a smooth, comfortable, and secure journey from pickup to arrival.
+            </p>
+
+            <ul class="safety-bullet-list">
+                <li class="safety-bullet-item">
+                    <strong>Review Driver Profiles Prior to Booking:</strong> Check the driver’s overall star rating, member reviews, total completed rides, and vehicle specifications before confirming your seat.
+                </li>
+                <li class="safety-bullet-item">
+                    <strong>Verify Car & Driver Details at Pickup:</strong> Always confirm that the driver’s name, car model, color, and license plate number match the booking details displayed on your screen before entering the vehicle.
+                </li>
+                <li class="safety-bullet-item">
+                    <strong>Share Your Trip Status:</strong> Send your booking summary and live trip updates to trusted family members or friends prior to departure.
+                </li>
+                <li class="safety-bullet-item">
+                    <strong>Keep Bookings & Payments Official:</strong> Complete all seat reservations and transactions inside the Kaapool platform to ensure clear receipts, cancellation coverage, and trip tracking.
+                </li>
+            </ul>
+
+            <div class="safety-callout">
+                <p><strong>Passenger Tip:</strong> Arrive at your agreed pickup location 5 minutes early and communicate any unexpected delays through Kaapool in-app messaging.</p>
+            </div>
+        </section>
+
+        <!-- SECTION 3: DRIVER SAFETY TIPS -->
+        <section class="safety-section-block">
+            <h2><i class="fa-solid fa-car-side"></i> 3. Essential Safety Tips for Drivers</h2>
+            <p>
+                Offering empty seats in your car comes with the responsibility of ensuring a safe, clean, and reliable driving experience for your co-passengers.
+            </p>
+
+            <ul class="safety-bullet-list">
+                <li class="safety-bullet-item">
+                    <strong>Maintain Valid Vehicle & Driving Documents:</strong> Keep your driving license, vehicle registration (RC), pollution certificate (PUC), and insurance policies fully active and up to date.
+                </li>
+                <li class="safety-bullet-item">
+                    <strong>Confirm Passenger Identities at Pickup:</strong> Greet your passengers at the designated pickup point and verify their names against your active passenger manifest.
+                </li>
+                <li class="safety-bullet-item">
+                    <strong>Adhere to Safe Driving Standards:</strong> Always follow traffic regulations, observe speed limits, avoid mobile phone distractions while driving, and refrain from driving when tired or fatigued.
+                </li>
+                <li class="safety-bullet-item">
+                    <strong>Provide a Clean & Comfortable Environment:</strong> Maintain a clean, well-serviced, non-smoking vehicle cabin to ensure pleasant travel for everyone on board.
+                </li>
+            </ul>
+        </section>
+
+        <!-- SECTION 4: REPORTING & ZERO TOLERANCE -->
+        <section class="safety-section-block">
+            <h2><i class="fa-solid fa-triangle-exclamation"></i> 4. Reporting Issues & Zero Tolerance Policy</h2>
+            <p>
+                Kaapool enforces a strict zero-tolerance policy against harassment, dangerous driving, discrimination, or fraudulent activity. Any member found violating our community standards faces immediate, permanent account suspension.
+            </p>
+
+            <ul class="safety-bullet-list">
+                <li class="safety-bullet-item">
+                    <strong>Instant In-App Reporting:</strong> Report any unprofessional behavior, no-shows, or safety concerns directly through your dashboard or booking details.
+                </li>
+                <li class="safety-bullet-item">
+                    <strong>24/7 Safety Support Team:</strong> Our dedicated safety team investigates all reports promptly to take appropriate action.
+                </li>
+            </ul>
+
+            <div class="safety-callout warning">
+                <p><strong>Emergency Situations:</strong> In case of an immediate emergency or safety threat on the road, contact local police emergency services (112 / 100) immediately.</p>
+            </div>
+
+            <a href="{% url 'core:contact' %}" class="btn-contact-safety">
+                Contact Safety Team <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </section>
+    </article>
+</div>
 {% endblock content %}

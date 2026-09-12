@@ -3,22 +3,24 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. FAQ Accordion Handler
-    const faqItems = document.querySelectorAll('.faq-item');
-    faqItems.forEach(item => {
-        const questionBtn = item.querySelector('.faq-question');
-        if (questionBtn) {
-            questionBtn.addEventListener('click', () => {
-                const isActive = item.classList.contains('active');
-                
-                // Close all other items
-                faqItems.forEach(otherItem => otherItem.classList.remove('active'));
-                
-                // Toggle clicked item
-                if (!isActive) {
-                    item.classList.add('active');
-                }
-            });
+    // 1. FAQ Accordion Handler (Delegated to support all dynamic FAQ items cleanly)
+    document.addEventListener('click', (e) => {
+        const questionBtn = e.target.closest('.faq-question');
+        if (!questionBtn) return;
+
+        const item = questionBtn.closest('.faq-item');
+        if (!item) return;
+
+        const isActive = item.classList.contains('active');
+
+        // Close all open FAQ items
+        document.querySelectorAll('.faq-item').forEach(otherItem => {
+            otherItem.classList.remove('active');
+        });
+
+        // If the clicked FAQ item was not open, open it
+        if (!isActive) {
+            item.classList.add('active');
         }
     });
 
