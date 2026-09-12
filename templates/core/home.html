@@ -110,8 +110,7 @@
             <a href="{% url 'rides:search' %}?origin={{ route.origin }}&destination={{ route.destination }}"
                 class="route-card">
                 <div class="route-info">
-                    <span class="route-cities">{{ route.origin }} <i class="fa-solid fa-arrow-right"></i> {{
-                        route.destination }}</span>
+                    <span class="route-cities">{{ route.origin }} <i class="fa-solid fa-arrow-right"></i> {{ route.destination }}</span>
                     <span class="route-freq">{{ route.freq_text }}</span>
                 </div>
                 <div class="route-price">
