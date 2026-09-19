@@ -33,7 +33,12 @@
     </main>
 
     <!-- Footer -->
-    {% include 'components/footer.html' %}
+    {% block footer %}
+        {% if request.resolver_match.view_name in 'core:home,rides:search,rides:list,core:safety,core:how_it_works,core:about,core:contact' %}
+            {% include 'components/footer.html' %}
+        {% endif %}
+    {% endblock footer %}
+
 
     <!-- Custom JavaScript -->
     <script src="{% static 'js/main.js' %}"></script>

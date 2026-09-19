@@ -1,0 +1,559 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Document - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+.doc-upload-wrapper {
+    background: #ffffff;
+    min-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+    position: relative;
+    text-align: center;
+}
+
+.doc-upload-card {
+    max-width: 640px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.doc-upload-heading {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.25;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.5px;
+}
+
+.doc-upload-sub {
+    font-size: 1.05rem;
+    color: #475569;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+}
+
+/* PROGRESS STEPPER (Uploading -> Checking -> Verifying -> Result) */
+.progress-stepper-box {
+    width: 100%;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.25rem 1rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.step-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.step-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 18px;
+    right: -50%;
+    width: 100%;
+    height: 3px;
+    background: #e2e8f0;
+    z-index: 1;
+}
+
+.step-item.active:not(:last-child)::after {
+    background: #f89516;
+}
+
+.step-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 800;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.step-item.active .step-circle {
+    background: #f89516;
+    color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(248, 149, 22, 0.2);
+}
+
+.step-item.completed .step-circle {
+    background: #10b981;
+    color: #ffffff;
+}
+
+.step-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-top: 0.5rem;
+}
+
+.step-item.active .step-title {
+    color: #0f172a;
+}
+
+/* BANNERS */
+.error-alert-banner {
+    background: #fef2f2;
+    border: 1.5px solid #fca5a5;
+    color: #991b1b;
+    padding: 1.1rem 1.5rem;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    width: 100%;
+    margin-bottom: 2rem;
+    text-align: left;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.review-alert-banner {
+    background: #fffbeb;
+    border: 1.5px solid #fde68a;
+    color: #92400e;
+    padding: 1.1rem 1.5rem;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    width: 100%;
+    margin-bottom: 2rem;
+    text-align: left;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.verified-card-box {
+    background: #f0fdf4;
+    border: 2px solid #bbf7d0;
+    border-radius: 20px;
+    padding: 2.5rem;
+    width: 100%;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.verified-icon-graphic {
+    width: 80px;
+    height: 80px;
+    background: #10b981;
+    border-radius: 50%;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+}
+
+/* VISUAL COMPARISON HINTS */
+.doc-comparison-grid {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+.comparison-item-card {
+    flex: 1;
+    border-radius: 16px;
+    padding: 0.85rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+}
+
+.comparison-item-card.bad { border: 2px solid #ef4444; }
+.comparison-item-card.good { border: 2px solid #10b981; }
+
+.comparison-img-placeholder {
+    width: 100%;
+    height: 110px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+
+.badge-icon-status {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 800;
+    margin-top: -16px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    z-index: 5;
+}
+.badge-icon-status.bad { background: #ef4444; }
+.badge-icon-status.good { background: #10b981; }
+
+/* UPLOAD DROPZONE CONTAINER */
+.dropzones-grid {
+    display: grid;
+    grid-template-columns: {% if requires_back %}1fr 1fr{% else %}1fr{% endif %};
+    gap: 1.25rem;
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 640px) {
+    .dropzones-grid { grid-template-columns: 1fr; }
+}
+
+.upload-dropzone-card {
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 20px;
+    padding: 1.75rem 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    min-height: 220px;
+    justify-content: center;
+}
+
+.upload-dropzone-card:hover {
+    border-color: #f89516;
+    background: #fff8ed;
+    transform: translateY(-2px);
+}
+
+.upload-dropzone-card.selected {
+    border-color: #10b981;
+    background: #ffffff;
+}
+
+.dropzone-label-badge {
+    position: absolute;
+    top: -12px;
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dropzone-icon {
+    font-size: 2.25rem;
+    color: #f89516;
+    margin-top: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.img-preview-box {
+    width: 100%;
+    max-height: 140px;
+    border-radius: 12px;
+    object-fit: cover;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: none;
+}
+
+.btn-replace-img {
+    font-size: 0.8rem;
+    color: #ef4444;
+    font-weight: 700;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.btn-replace-img:hover {
+    text-decoration: underline;
+}
+
+.btn-upload-submit {
+    width: 100%;
+    padding: 1rem;
+    background: #f89516;
+    color: #ffffff;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.15rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(248, 149, 22, 0.35);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-upload-submit:hover:not(:disabled) {
+    background: #d97d0d;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(248, 149, 22, 0.45);
+}
+
+.btn-upload-submit:disabled {
+    background: #cbd5e1;
+    color: #64748b;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="doc-upload-wrapper">
+    <a href="{% url 'accounts:document_select' %}" class="btn-page-back" title="Go back">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
+    <div class="doc-upload-card">
+
+        <!-- PROGRESS STEPPER TRACKER -->
+        <div class="progress-stepper-box">
+            <div class="step-item completed" id="step1">
+                <div class="step-circle"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                <span class="step-title">1. Uploading</span>
+            </div>
+            <div class="step-item {% if is_error or is_verified or is_review %}completed{% else %}active{% endif %}" id="step2">
+                <div class="step-circle"><i class="fa-solid fa-magnifying-glass"></i></div>
+                <span class="step-title">2. Checking</span>
+            </div>
+            <div class="step-item {% if is_verified or is_review %}completed{% elif is_error %}active{% endif %}" id="step3">
+                <div class="step-circle"><i class="fa-solid fa-shield-halved"></i></div>
+                <span class="step-title">3. Verifying</span>
+            </div>
+            <div class="step-item {% if is_verified or is_review or is_error %}active completed{% endif %}" id="step4">
+                <div class="step-circle"><i class="fa-solid fa-flag-checkered"></i></div>
+                <span class="step-title">4. Result</span>
+            </div>
+        </div>
+
+        {% if is_verified %}
+            <!-- STATE: VERIFIED -->
+            <div class="verified-card-box">
+                <div class="verified-icon-graphic">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h1 class="doc-upload-heading" style="margin-bottom: 0.5rem;">Identity Verified Successfully</h1>
+                <p style="font-size: 1rem; color: #475569; margin-bottom: 1.5rem; max-width: 460px;">
+                    Your <strong>{% if doc_type == 'passport' %}Passport{% elif doc_type == 'driver_license' %}Driver's License{% else %}Aadhaar Card{% endif %}</strong> has been authenticated via Sumsub Identity Verification Service.
+                </p>
+                <a href="{% url 'accounts:profile' %}" class="btn-upload-submit" style="text-decoration: none; max-width: 320px;">
+                    Continue to Profile
+                </a>
+            </div>
+
+        {% elif is_review %}
+            <!-- STATE: REVIEW -->
+            <h1 class="doc-upload-heading">Verification in Progress</h1>
+            <div class="review-alert-banner">
+                <i class="fa-solid fa-clock" style="font-size: 1.5rem;"></i>
+                <div>
+                    {{ review_message|default:"Your document is currently under review by our verification team. We will update your profile status shortly." }}
+                </div>
+            </div>
+            <a href="{% url 'accounts:profile' %}" class="btn-upload-submit" style="text-decoration: none; max-width: 320px;">
+                Return to Profile
+            </a>
+
+        {% elif is_error %}
+            <!-- STATE: FAILED -->
+            <h1 class="doc-upload-heading">We couldn't verify this document</h1>
+
+            <div class="error-alert-banner">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <div>
+                    {{ error_message|default:"No valid ID document detected. Please make sure your document is clear, valid, and fully in frame." }}
+                </div>
+            </div>
+
+            <div class="doc-comparison-grid">
+                <!-- BAD EXAMPLE -->
+                <div class="comparison-item-card bad">
+                    <div class="comparison-img-placeholder" style="background: #fecdd3; color: #991b1b;">
+                        <i class="fa-solid fa-hand"></i>
+                    </div>
+                    <div class="badge-icon-status bad">
+                        <i class="fa-solid fa-xmark"></i>
+                    </div>
+                </div>
+
+                <!-- GOOD EXAMPLE -->
+                <div class="comparison-item-card good">
+                    <div class="comparison-img-placeholder" style="background: #dcfce7; color: #166534;">
+                        <i class="fa-solid fa-id-card"></i>
+                    </div>
+                    <div class="badge-icon-status good">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                </div>
+            </div>
+
+            <a href="{% url 'accounts:document_upload' %}?type={{ doc_type }}" class="btn-upload-submit" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
+                <i class="fa-solid fa-rotate-right"></i> Try Again
+            </a>
+
+        {% else %}
+            <!-- STATE: NORMAL UPLOAD FORM -->
+            <h1 class="doc-upload-heading">
+                Upload your {% if doc_type == 'passport' %}Passport{% elif doc_type == 'driver_license' %}Driver's License{% else %}Aadhaar Card{% endif %}
+            </h1>
+
+            <p class="doc-upload-sub">
+                {% if requires_back %}
+                    Please upload clear, un-cropped photos of both the <strong>Front Side</strong> and <strong>Back Side</strong> of your document.
+                {% else %}
+                    Please upload a clear, un-cropped photo of the <strong>Front Main Page</strong> of your Passport.
+                {% endif %}
+            </p>
+
+            <form id="docUploadForm" method="post" action="{% url 'accounts:document_upload' %}" enctype="multipart/form-data" style="width: 100%;" onsubmit="handleFormSubmission(event)">
+                {% csrf_token %}
+                <input type="hidden" name="doc_type" value="{{ doc_type }}">
+
+                <div class="dropzones-grid">
+                    <!-- FRONT SIDE DROPZONE -->
+                    <div class="upload-dropzone-card" id="frontDropzone" onclick="triggerFileInput('frontFileInput')">
+                        <span class="dropzone-label-badge">
+                            {% if requires_back %}1. Front Side{% else %}Main Data Page{% endif %}
+                        </span>
+                        <i class="fa-solid fa-cloud-arrow-up dropzone-icon" id="frontIcon"></i>
+                        <img id="frontPreview" class="img-preview-box" alt="Front Preview">
+                        <span class="dropzone-text" id="frontFileName">Click to browse or drop Front photo</span>
+                        <span class="dropzone-sub" id="frontSubText">JPG, PNG (Max 10MB)</span>
+                        <button type="button" class="btn-replace-img" id="frontRemoveBtn" onclick="removeSelectedFile(event, 'frontFileInput', 'frontFileName', 'frontDropzone', 'frontIcon', 'frontPreview', 'frontRemoveBtn', 'frontSubText')">
+                            <i class="fa-solid fa-trash"></i> Remove / Replace
+                        </button>
+                    </div>
+                    <input type="file" id="frontFileInput" name="id_document_front" accept="image/*" style="display: none;" onchange="handleFilePreview(this, 'frontFileName', 'frontDropzone', 'frontIcon', 'frontPreview', 'frontRemoveBtn', 'frontSubText')">
+
+                    {% if requires_back %}
+                    <!-- BACK SIDE DROPZONE -->
+                    <div class="upload-dropzone-card" id="backDropzone" onclick="triggerFileInput('backFileInput')">
+                        <span class="dropzone-label-badge">2. Back Side</span>
+                        <i class="fa-solid fa-cloud-arrow-up dropzone-icon" id="backIcon"></i>
+                        <img id="backPreview" class="img-preview-box" alt="Back Preview">
+                        <span class="dropzone-text" id="backFileName">Click to browse or drop Back photo</span>
+                        <span class="dropzone-sub" id="backSubText">JPG, PNG (Max 10MB)</span>
+                        <button type="button" class="btn-replace-img" id="backRemoveBtn" onclick="removeSelectedFile(event, 'backFileInput', 'backFileName', 'backDropzone', 'backIcon', 'backPreview', 'backRemoveBtn', 'backSubText')">
+                            <i class="fa-solid fa-trash"></i> Remove / Replace
+                        </button>
+                    </div>
+                    <input type="file" id="backFileInput" name="id_document_back" accept="image/*" style="display: none;" onchange="handleFilePreview(this, 'backFileName', 'backDropzone', 'backIcon', 'backPreview', 'backRemoveBtn', 'backSubText')">
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn-upload-submit" id="btnSubmit">
+                    <span id="btnText">Verify &amp; Continue</span>
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function triggerFileInput(fileInputId) {
+    document.getElementById(fileInputId).click();
+}
+
+function handleFilePreview(input, textId, cardId, iconId, previewId, removeBtnId, subTextId) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const preview = document.getElementById(previewId);
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+
+            document.getElementById(iconId).style.display = 'none';
+            document.getElementById(textId).textContent = file.name;
+            document.getElementById(subTextId).style.display = 'none';
+            document.getElementById(removeBtnId).style.display = 'inline-flex';
+            document.getElementById(cardId).classList.add('selected');
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeSelectedFile(event, inputId, textId, cardId, iconId, previewId, removeBtnId, subTextId) {
+    event.stopPropagation();
+    document.getElementById(inputId).value = '';
+    document.getElementById(previewId).style.display = 'none';
+    document.getElementById(previewId).src = '';
+    document.getElementById(iconId).style.display = 'block';
+    document.getElementById(iconId).className = 'fa-solid fa-cloud-arrow-up dropzone-icon';
+    document.getElementById(textId).textContent = 'Click to browse or drop photo';
+    document.getElementById(subTextId).style.display = 'block';
+    document.getElementById(removeBtnId).style.display = 'none';
+    document.getElementById(cardId).classList.remove('selected');
+}
+
+function handleFormSubmission(event) {
+    const btn = document.getElementById('btnSubmit');
+    const text = document.getElementById('btnText');
+    
+    // Disable submit button and prevent duplicate submission
+    btn.disabled = true;
+    text.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Verification...';
+
+    // Animate Stepper UI
+    document.getElementById('step2').classList.add('active');
+    setTimeout(() => {
+        if (document.getElementById('step3')) document.getElementById('step3').classList.add('active');
+    }, 1200);
+}
+</script>
+{% endblock content %}
+
+{% block footer %}{% endblock footer %}
+
+

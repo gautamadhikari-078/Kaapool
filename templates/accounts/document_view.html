@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Identity Document Details - Kaapool{% endblock %}
+
+{% block extra_css %}
+<style>
+.doc-view-wrapper {
+    background-color: #f8fafc;
+    min-height: 90vh;
+    padding: 3rem 1.5rem 5rem 1.5rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+}
+
+.doc-view-container {
+    max-width: 680px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.doc-view-header {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.btn-back-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.btn-back-circle:hover {
+    background: #f89516;
+    color: #ffffff;
+    border-color: #f89516;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(248, 149, 22, 0.3);
+}
+
+.doc-view-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 2rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+}
+
+.doc-main-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+}
+
+.doc-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1.5px solid #f1f5f9;
+}
+
+.doc-type-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.2rem;
+}
+
+.doc-sub-text {
+    font-size: 0.88rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.status-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 1.1rem;
+    border-radius: 999px;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 0.88rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge-pill.verified {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+.status-badge-pill.pending {
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fef3c7;
+}
+
+.status-badge-pill.uploaded {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.doc-meta-block {
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.75rem;
+    border: 1px solid #f1f5f9;
+}
+
+.meta-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.2rem;
+}
+
+.meta-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.images-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 600px) {
+    .images-preview-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.image-preview-card {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.image-preview-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 0.75rem;
+    width: 100%;
+    text-align: left;
+}
+
+.image-frame {
+    width: 100%;
+    height: 180px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.image-frame img:hover {
+    transform: scale(1.04);
+}
+
+.info-notice-box {
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    color: #1e40af;
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+}
+
+.info-notice-box i {
+    font-size: 1.3rem;
+    color: #3b82f6;
+}
+
+.doc-actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1.25rem;
+    border-top: 1.5px solid #f1f5f9;
+    gap: 1rem;
+}
+
+.btn-doc-back {
+    padding: 0.8rem 1.75rem;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #334155;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 0.95rem;
+    font-weight: 700;
+    border: 1.5px solid #cbd5e1;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-doc-back:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #94a3b8;
+}
+
+.btn-doc-update {
+    padding: 0.8rem 2rem;
+    border-radius: 999px;
+    background: #f89516;
+    color: #ffffff;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 0.95rem;
+    font-weight: 800;
+    border: none;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(248, 149, 22, 0.3);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-doc-update:hover {
+    background: #d97d0d;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(248, 149, 22, 0.4);
+    color: #ffffff;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="doc-view-wrapper">
+    <div class="doc-view-container">
+        <!-- HEADER -->
+        <div class="doc-view-header">
+            <a href="{% url 'accounts:personal_details' %}" class="btn-back-circle" title="Go back to Profile">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
+            <h1 class="doc-view-title">Identity Document</h1>
+        </div>
+
+        <!-- MAIN CARD -->
+        <div class="doc-main-card">
+            <div class="doc-header-row">
+                <div>
+                    <div class="doc-type-title">
+                        {% if user.govt_id_type %}
+                            {{ user.govt_id_type|title }}
+                        {% else %}
+                            Government Issued Identity Document
+                        {% endif %}
+                    </div>
+                    <div class="doc-sub-text">Uploaded document & authentication status</div>
+                </div>
+                <div>
+                    {% if user.is_verified_driver or user.document_status == 'VERIFIED' %}
+                        <span class="status-badge-pill verified">
+                            <i class="fa-solid fa-circle-check"></i> Verified
+                        </span>
+                    {% elif user.document_status == 'PENDING' %}
+                        <span class="status-badge-pill pending">
+                            <i class="fa-solid fa-hourglass-half"></i> Pending
+                        </span>
+                    {% else %}
+                        <span class="status-badge-pill uploaded">
+                            <i class="fa-solid fa-file-check"></i> Uploaded
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if user.govt_id_number %}
+            <div class="doc-meta-block">
+                <div class="meta-label">Document ID Number</div>
+                <div class="meta-value">{{ user.govt_id_number }}</div>
+            </div>
+            {% endif %}
+
+            {% if user.govt_id_front or user.govt_id_back %}
+            <div class="images-preview-grid">
+                {% if user.govt_id_front %}
+                <div class="image-preview-card">
+                    <div class="image-preview-title">Front Side</div>
+                    <div class="image-frame">
+                        <img src="{{ user.govt_id_front.url }}" alt="Document Front Side">
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if user.govt_id_back %}
+                <div class="image-preview-card">
+                    <div class="image-preview-title">Back Side</div>
+                    <div class="image-frame">
+                        <img src="{{ user.govt_id_back.url }}" alt="Document Back Side">
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="info-notice-box">
+                <i class="fa-solid fa-shield-halved"></i>
+                <div>Your identity document has been verified in our secure authentication system.</div>
+            </div>
+            {% endif %}
+
+            <!-- ACTIONS -->
+            <div class="doc-actions-row">
+                <a href="{% url 'accounts:personal_details' %}" class="btn-doc-back">
+                    Back to Profile
+                </a>
+                <a href="{% url 'accounts:verify_id' %}" class="btn-doc-update">
+                    <i class="fa-solid fa-pen-to-square"></i> Update Document
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block footer %}{% endblock footer %}

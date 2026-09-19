@@ -27,7 +27,7 @@
 }
 
 .top-support-bar a {
-    color: #0073e6;
+    color: #f89516;
     font-weight: 700;
     font-size: 0.9rem;
     text-decoration: none;
@@ -95,7 +95,7 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    border: 2.5px solid #0073e6;
+    border: 2.5px solid #f89516;
     background: #ffffff;
 }
 
@@ -184,20 +184,20 @@
 
 .warning-cash-notice i {
     font-size: 1rem;
-    color: #d97706;
+    color: #e07f07;
     margin-top: 0.1rem;
 }
 
 .warning-cash-notice a {
-    color: #0073e6;
+    color: #f89516;
     text-decoration: underline;
     font-weight: 600;
 }
 
 /* SECTION: ACCOMMODATION WIDGET */
 .promo-accommodation-card {
-    background: #f8fafc;
-    border: 1.5px solid #e2e8f0;
+    background: #fff7ed;
+    border: 1.5px solid #ffedd5;
     border-radius: 16px;
     padding: 1.25rem 1.5rem;
     display: flex;
@@ -209,7 +209,7 @@
 .promo-brand-name {
     font-size: 0.85rem;
     font-weight: 800;
-    color: #0073e6;
+    color: #f89516;
     margin-bottom: 0.2rem;
 }
 
@@ -228,7 +228,7 @@
 }
 
 .promo-link-action {
-    color: #0073e6;
+    color: #f89516;
     font-weight: 800;
     font-size: 0.9rem;
     text-decoration: none;
@@ -328,7 +328,7 @@
     font-family: var(--font-heading);
     font-size: 1rem;
     font-weight: 800;
-    color: #0073e6;
+    color: #f89516;
     text-decoration: none;
     transition: opacity 0.2s;
 }
@@ -338,7 +338,7 @@
 }
 
 .action-link-item.cancel-link {
-    color: #0073e6;
+    color: #ef4444;
 }
 </style>
 {% endblock extra_css %}
@@ -380,7 +380,7 @@
                     <div class="plan-city-block">
                         <div class="time-city-row">
                             <span class="time-val">{{ booking.ride.departure_time|date:"H:i" }}</span>
-                            <span>{{ booking.ride.origin }} <i class="fa-regular fa-map" style="font-size:0.85rem; color:#0073e6;"></i></span>
+                            <span>{{ booking.ride.origin }} <i class="fa-regular fa-map" style="font-size:0.85rem; color:#f89516;"></i></span>
                         </div>
                         <div class="addr-sub">
                             {{ booking.ride.pickup_point|default:"Main Bus Station / Express Highway Exit" }}
@@ -390,7 +390,7 @@
                     <div class="plan-city-block">
                         <div class="time-city-row">
                             <span class="time-val">{{ booking.ride.departure_time|date:"H:i" }}</span>
-                            <span>{{ booking.ride.destination }} <i class="fa-regular fa-map" style="font-size:0.85rem; color:#0073e6;"></i></span>
+                            <span>{{ booking.ride.destination }} <i class="fa-regular fa-map" style="font-size:0.85rem; color:#f89516;"></i></span>
                         </div>
                         <div class="addr-sub">
                             Central Junction, {{ booking.ride.destination }}
@@ -444,7 +444,7 @@
                     </div>
                     <div class="driver-plan-name">
                         {{ booking.ride.driver.get_full_name|default:booking.ride.driver.username }}
-                        <i class="fa-solid fa-circle-check" style="color:#0073e6; font-size:0.9rem;"></i>
+                        <i class="fa-solid fa-circle-check" style="color:#10b981; font-size:0.9rem;"></i>
                     </div>
                 </div>
                 <i class="fa-solid fa-chevron-right chevron-icon"></i>

@@ -1,167 +1,261 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Ride details: {{ ride.origin }} to {{ ride.destination }} - Kaapool{% endblock title %}
+{% block title %}Ride plan - {{ ride.origin }} to {{ ride.destination }} - Kaapool{% endblock title %}
 
 {% block extra_css %}
+<!-- Leaflet Map CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
 <style>
 /* ==========================================================
-   BLABLACAR STYLE KAAPOOL RIDE DETAILS PAGE DESIGN
+   BLABLACAR STYLE RIDE PLAN DESIGN (IMAGE 2 REPLICA)
    ========================================================== */
-:root {
-    --detail-bg: #f4f6f8;
-    --card-bg: #ffffff;
-    --card-border: #e2e8f0;
-    --text-primary: #0f172a;
-    --text-secondary: #64748b;
-    --brand-blue: #0073e6;
-    --brand-amber: #f59e0b;
-    --brand-amber-hover: #d97706;
-}
-
-.ride-detail-page {
-    background-color: var(--detail-bg);
+.ride-plan-page-wrapper {
+    background-color: #f8fafc;
     min-height: 90vh;
-    padding: 2.5rem 1rem 5rem 1rem;
+    padding: 2rem 1rem 6rem 1rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+    position: relative;
 }
 
-.detail-main-container {
-    max-width: 1120px;
+
+.ride-plan-main-container {
+    max-width: 680px;
     margin: 0 auto;
 }
 
-.page-title-heading {
-    font-family: var(--font-heading);
+/* TOP GET SUPPORT LINK & TITLE */
+.ride-plan-top-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.5rem;
+}
+
+.get-support-link {
+    color: #f89516;
+    font-weight: 700;
+    font-size: 0.925rem;
+    text-decoration: none !important;
+}
+
+.get-support-link:hover {
+    text-decoration: underline !important;
+}
+
+.ride-plan-title {
+    text-align: center;
     font-size: 2.25rem;
     font-weight: 800;
-    color: var(--text-primary);
-    margin-bottom: 2rem;
+    color: #051528;
+    margin: 0 0 2rem 0;
     letter-spacing: -0.5px;
 }
 
-/* 2-COLUMN LAYOUT */
-.details-layout-grid {
-    display: grid;
-    grid-template-columns: 1fr 370px;
-    gap: 2.25rem;
-    align-items: start;
-}
-
-/* LEFT COLUMN STACK */
-.left-details-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.blabla-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
+/* MAIN WHITE CARD CONTAINER */
+.ride-plan-card {
+    background: #ffffff;
     border-radius: 20px;
-    padding: 2rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-}
-
-/* 1. TIMELINE CARD */
-.timeline-card-wrapper {
-    display: flex;
-    gap: 1.5rem;
-}
-
-.timeline-time-col {
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+    padding: 2.25rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    min-width: 55px;
-    text-align: right;
+    gap: 2rem;
 }
 
-.timeline-time-col .time-val {
-    font-family: var(--font-heading);
-    font-size: 1.15rem;
+/* DATE HEADER */
+.plan-date-header {
+    font-size: 1.2rem;
     font-weight: 800;
-    color: var(--text-primary);
-    line-height: 1.2;
+    color: #051528;
 }
 
-.timeline-time-col .duration-val {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    font-weight: 600;
-    margin-top: 0.15rem;
+/* 1. TIMELINE & STOPS BLOCK */
+.plan-timeline-block {
+    display: flex;
+    gap: 1.5rem;
+    align-items: stretch;
+    position: relative;
 }
 
-.timeline-track-col {
+.plan-dots-column {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0.3rem 0;
+    padding-top: 0.4rem;
 }
 
-.timeline-node {
+.plan-dot-circle {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    border: 3px solid var(--brand-blue);
+    border: 3px solid #f89516;
     background: #ffffff;
+    flex-shrink: 0;
 }
 
-.timeline-line {
-    width: 3px;
-    flex: 1;
+.plan-line-connect {
+    width: 2px;
+    height: 48px;
     background: #cbd5e1;
-    margin: 0.3rem 0;
-    min-height: 45px;
+    margin: 3px 0;
 }
 
-.timeline-info-col {
+.plan-stops-column {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 1.75rem;
+    gap: 1.5rem;
     flex: 1;
 }
 
-.location-info-block .city-title {
-    font-family: var(--font-heading);
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: var(--text-primary);
+.plan-stop-row {
+    display: flex;
+    flex-direction: column;
+}
+
+.stop-time-city {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.6rem;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #051528;
 }
 
-.location-info-block .city-title i {
+.stop-time-city i {
+    color: #f89516;
     font-size: 0.95rem;
-    color: var(--brand-blue);
 }
 
-.location-info-block .address-detail {
-    font-size: 0.88rem;
-    color: var(--text-secondary);
-    margin-top: 0.25rem;
+.stop-address-subtext {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #94a3b8;
+    margin-top: 0.15rem;
+}
+
+/* PRICE & SEATS STRIP */
+.plan-price-seats-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 0;
+    border-top: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.plan-seats-info {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #051528;
+}
+
+.plan-price-tag {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #051528;
+}
+
+/* SAFETY WARNING ALERT BOX */
+.plan-safety-alert {
+    background: #fffbeb;
+    border: 1px solid #fef3c7;
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: #92400e;
     line-height: 1.45;
 }
 
-/* 2. DRIVER & PREFERENCES CARD */
-.driver-profile-row {
+.plan-safety-alert i {
+    font-size: 1.1rem;
+    color: #e07f07;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.plan-safety-alert a {
+    color: #f89516;
+    text-decoration: underline !important;
+    font-weight: 700;
+}
+
+/* BOOKING.COM ACCOMMODATION PROMO */
+.plan-hotel-promo {
+    background: #fff7ed;
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    text-decoration: none;
-    color: inherit;
-    padding-bottom: 1.25rem;
-    margin-bottom: 1.25rem;
-    border-bottom: 1px solid #f1f5f9;
-    transition: opacity 0.2s ease;
+    gap: 1.25rem;
+    border: 1px solid #ffedd5;
 }
 
-.driver-profile-row:hover {
-    opacity: 0.85;
+.promo-text-side {
+    display: flex;
+    flex-direction: column;
 }
 
-.driver-profile-left {
+.promo-brand-name {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #f89516;
+    margin-bottom: 0.2rem;
+}
+
+.promo-main-heading {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #051528;
+    margin-bottom: 0.15rem;
+}
+
+.promo-subtext {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 0.65rem;
+}
+
+.promo-cta-link {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #f89516;
+    text-decoration: none !important;
+}
+
+.promo-cta-link:hover {
+    text-decoration: underline !important;
+}
+
+.promo-img-thumb {
+    width: 100px;
+    height: 70px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+/* DRIVER PROFILE BLOCK */
+.plan-driver-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-top: 0.5rem;
+}
+
+.plan-user-profile-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none !important;
+}
+
+.plan-user-left {
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -171,13 +265,13 @@
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: #0f172a;
+    background: #051528;
     color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
-    font-size: 1.2rem;
     overflow: hidden;
 }
 
@@ -188,643 +282,357 @@
 }
 
 .driver-name-title {
-    font-family: var(--font-heading);
     font-size: 1.15rem;
     font-weight: 800;
-    color: var(--text-primary);
-}
-
-.chevron-icon {
-    color: #94a3b8;
-    font-size: 1.1rem;
-}
-
-.trip-preferences-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1.1rem;
-}
-
-.pref-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    font-size: 0.92rem;
-    color: #334155;
-    font-weight: 600;
-}
-
-.pref-item i {
-    width: 24px;
-    text-align: center;
-    font-size: 1.15rem;
-    color: var(--text-secondary);
-}
-
-/* 3. PASSENGERS CARD */
-.card-section-heading {
-    font-family: var(--font-heading);
-    font-size: 1.3rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    margin-bottom: 1.25rem;
-}
-
-.passengers-list {
-    display: flex;
-    flex-direction: column;
-}
-
-.passenger-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.85rem 0;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.passenger-row:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.passenger-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.passenger-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: #e2e8f0;
-    color: #0f172a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1rem;
-    overflow: hidden;
-}
-
-.passenger-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.passenger-name {
-    font-weight: 700;
-    font-size: 1rem;
-    color: var(--text-primary);
-}
-
-.passenger-route-sub {
-    font-size: 0.82rem;
-    color: var(--text-secondary);
-    margin-top: 0.15rem;
-}
-
-.no-passengers-text {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    margin: 0;
-}
-
-/* 4. ECO IMPACT CARD */
-.eco-impact-card {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    background: #ffffff;
-    border: 1px solid var(--card-border);
-    border-radius: 20px;
-    padding: 1.5rem 1.75rem;
-}
-
-.eco-leaf-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #ecfdf5;
-    color: #10b981;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    flex-shrink: 0;
-}
-
-.eco-text {
-    font-size: 0.88rem;
-    color: #475569;
-    line-height: 1.5;
-}
-
-.eco-text a {
-    color: var(--brand-blue);
-    text-decoration: underline;
-    font-weight: 600;
-}
-
-/* RIGHT COLUMN (STICKY SIDEBAR) */
-.right-sidebar-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    position: sticky;
-    top: 90px;
-}
-
-.departed-alert-box {
-    background: #ffffff;
-    border: 1px solid var(--card-border);
-    border-radius: 16px;
-    padding: 1.1rem 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    color: var(--text-secondary);
-    font-size: 0.88rem;
-    font-weight: 600;
-}
-
-.departed-alert-box i {
-    font-size: 1.1rem;
-    color: var(--text-secondary);
-}
-
-.summary-sidebar-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 20px;
-    padding: 1.75rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-}
-
-.sidebar-date-heading {
-    font-family: var(--font-heading);
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    margin-bottom: 1.25rem;
-}
-
-.sidebar-mini-timeline {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.mini-time-col {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    text-align: right;
-    font-size: 0.9rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    min-width: 45px;
-}
-
-.mini-time-col .mini-duration {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    font-weight: 600;
-}
-
-.mini-track-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.mini-node {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    border: 2px solid var(--brand-blue);
-    background: #ffffff;
-}
-
-.mini-line {
-    width: 2px;
-    flex: 1;
-    background: #cbd5e1;
-    margin: 0.2rem 0;
-    min-height: 35px;
-}
-
-.mini-info-col {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 1.25rem;
-}
-
-.mini-city-row {
-    font-size: 0.95rem;
-    font-weight: 800;
-    color: var(--text-primary);
+    color: #051528;
     display: flex;
     align-items: center;
     gap: 0.4rem;
 }
 
-.mini-city-row .mini-addr {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    font-weight: 500;
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 170px;
+.verified-icon {
+    color: #10b981;
+    font-size: 0.95rem;
 }
 
-.sidebar-driver-row {
+.plan-user-profile-row i.chevron-right {
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+/* VEHICLE DETAILS */
+.plan-vehicle-section {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.vehicle-model-name {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #051528;
+}
+
+.vehicle-type-sub {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.passengers-status-text {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin-top: 0.4rem;
+}
+
+/* ACTION LINKS AT BOTTOM */
+.plan-actions-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
     padding-top: 1.25rem;
     border-top: 1px solid #f1f5f9;
-    font-size: 0.9rem;
+}
+
+.plan-action-link {
+    font-size: 1rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #f89516;
+    text-decoration: none !important;
+    display: inline-block;
 }
 
-.sidebar-driver-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #0f172a;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
-    font-weight: 800;
-    overflow: hidden;
+.plan-action-link:hover {
+    text-decoration: underline !important;
+    color: #e07f07;
 }
 
-.sidebar-driver-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.plan-action-link.danger-link {
+    color: #ef4444;
 }
 
-/* 5. BOOKING ACTION CARD */
-.booking-action-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 20px;
-    padding: 1.5rem 1.75rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-}
-
-.booking-header-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.25rem;
-}
-
-.passenger-select-box {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 700;
-    font-size: 0.95rem;
-    color: var(--text-primary);
-}
-
-.passenger-select-box select {
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 0.4rem 0.6rem;
-    font-weight: 700;
-    font-size: 0.95rem;
-    outline: none;
-    cursor: pointer;
-    background: #ffffff;
-    color: var(--text-primary);
-}
-
-.sidebar-price-tag {
-    font-family: var(--font-heading);
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: var(--text-primary);
-}
-
-.btn-book-action {
-    width: 100%;
-    padding: 1rem 1.5rem;
-    background: var(--brand-amber);
-    color: #ffffff;
+.plan-action-btn-clean {
+    background: none;
     border: none;
-    border-radius: 999px;
-    font-family: var(--font-heading);
-    font-weight: 800;
-    font-size: 1.1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
-    transition: all 0.2s ease;
-    text-decoration: none;
-}
-
-.btn-book-action:hover {
-    background: var(--brand-amber-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
-    color: #ffffff;
-}
-
-.notice-info-banner {
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    color: #1e40af;
-    padding: 0.85rem 1rem;
-    border-radius: 12px;
-    text-align: center;
+    padding: 0.5rem 0;
+    font-family: inherit;
+    font-size: 1rem;
     font-weight: 700;
-    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: left;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: opacity 0.15s ease;
+}
+.plan-action-btn-clean:hover {
+    opacity: 0.85;
+}
+.plan-action-btn-clean.danger-link {
+    color: #ef4444;
+}
+.plan-action-btn-clean.success-link {
+    color: #10b981;
+}
+.plan-action-btn-clean.primary-link {
+    color: #0284c7;
 }
 
-/* RESPONSIVE */
-@media (max-width: 900px) {
-    .details-layout-grid {
-        grid-template-columns: 1fr;
-    }
-    .right-sidebar-stack {
-        position: static;
-    }
+/* STATUS BADGE */
+.badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: capitalize;
+}
+.badge-status.badge-scheduled,
+.badge-status.badge-active {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+.badge-status.badge-in_progress {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+.badge-status.badge-completed {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+}
+.badge-status.badge-cancelled {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+.badge-status.badge-expired {
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+.badge-status.badge-overdue {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fde68a;
+}
+
+/* MAP SECTION FOR LIVE DRIVER ROUTE */
+.plan-map-container {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    height: 320px;
+    width: 100%;
 }
 </style>
 {% endblock extra_css %}
 
 {% block content %}
-<div class="ride-detail-page">
-    <div class="detail-main-container">
-        <!-- PAGE TITLE -->
-        <h1 class="page-title-heading">Ride details</h1>
+<div class="ride-plan-page-wrapper">
+    <a href="javascript:history.back()" class="btn-page-back" title="Go back">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
 
-        <!-- 2-COLUMN GRID -->
-        <div class="details-layout-grid">
-            <!-- LEFT COLUMN STACK -->
-            <div class="left-details-stack">
-                
-                <!-- 1. TIMELINE CARD -->
-                <div class="blabla-card">
-                    <div class="timeline-card-wrapper">
-                        <!-- TIME COLUMN -->
-                        <div class="timeline-time-col">
-                            <div>
-                                <span class="time-val">{{ ride.departure_time|date:"H:i" }}</span>
-                                <div class="duration-val">3h40</div>
-                            </div>
-                            <div>
-                                <span class="time-val">{{ ride.departure_time|date:"H:i" }}</span>
-                            </div>
-                        </div>
+    <div class="ride-plan-main-container">
 
-                        <!-- TRACK TRACKER -->
-                        <div class="timeline-track-col">
-                            <span class="timeline-node"></span>
-                            <span class="timeline-line"></span>
-                            <span class="timeline-node"></span>
-                        </div>
 
-                        <!-- LOCATION DETAILS -->
-                        <div class="timeline-info-col">
-                            <div class="location-info-block">
-                                <div class="city-title">
-                                    {{ ride.origin }} <i class="fa-regular fa-map"></i>
-                                </div>
-                                <div class="address-detail">
-                                    {% if ride.pickup_point %}
-                                        {{ ride.pickup_point }}
-                                    {% else %}
-                                        Main Bus Stop / Central Junction, {{ ride.origin }}
-                                    {% endif %}
-                                </div>
-                            </div>
+        <!-- TOP BAR (GET SUPPORT) -->
+        <div class="ride-plan-top-bar">
+            <a href="{% url 'core:safety' %}" class="get-support-link">Get support</a>
+        </div>
 
-                            <div class="location-info-block">
-                                <div class="city-title">
-                                    {{ ride.destination }} <i class="fa-regular fa-map"></i>
-                                </div>
-                                <div class="address-detail">
-                                    Central Dropoff Point / Highway Exit, {{ ride.destination }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <!-- MAIN TITLE -->
+        <h1 class="ride-plan-title">Ride plan</h1>
+
+        <!-- RIDE PLAN CARD CONTAINER -->
+        <article class="ride-plan-card">
+
+            <!-- DEPARTURE DATE & STATUS HEADER -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div class="plan-date-header" style="margin: 0;">
+                    {{ ride.departure_datetime|date:"l, d F" }}
                 </div>
-
-                <!-- 2. DRIVER & PREFERENCES CARD -->
-                <div class="blabla-card">
-                    <a href="{% url 'messaging:inbox' %}" class="driver-profile-row">
-                        <div class="driver-profile-left">
-                            <div class="driver-avatar-circle">
-                                {% if ride.driver.profile_picture %}
-                                    <img src="{{ ride.driver.profile_picture.url }}" alt="{{ ride.driver.username }}">
-                                {% else %}
-                                    <span>{{ ride.driver.username|slice:":2"|upper }}</span>
-                                {% endif %}
-                            </div>
-                            <div class="driver-name-title">
-                                {{ ride.driver.get_full_name|default:ride.driver.username }}
-                            </div>
-                        </div>
-                        <i class="fa-solid fa-chevron-right chevron-icon"></i>
-                    </a>
-
-                    <div class="trip-preferences-list">
-                        <div class="pref-item">
-                            <i class="fa-solid fa-bolt" style="color: var(--brand-amber);"></i>
-                            <span>Instant booking: Your booking is confirmed as soon as you reserve</span>
-                        </div>
-                        <div class="pref-item">
-                            <i class="fa-solid fa-ban-smoking"></i>
-                            <span>No smoking, please</span>
-                        </div>
-                        <div class="pref-item">
-                            <i class="fa-solid fa-paw"></i>
-                            <span>I'd prefer not to travel with pets</span>
-                        </div>
-                        {% if ride.vehicle_info %}
-                        <div class="pref-item">
-                            <i class="fa-solid fa-car-side"></i>
-                            <span>Vehicle: {{ ride.vehicle_info }}</span>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- 3. PASSENGERS CARD -->
-                <div class="blabla-card">
-                    <div class="card-section-heading">Passengers</div>
-                    <div class="passengers-list">
-                        {% for booking in ride.bookings.all %}
-                            <div class="passenger-row">
-                                <div class="passenger-left">
-                                    <div class="passenger-avatar">
-                                        {% if booking.passenger.profile_picture %}
-                                            <img src="{{ booking.passenger.profile_picture.url }}" alt="{{ booking.passenger.username }}">
-                                        {% else %}
-                                            <span>{{ booking.passenger.username|slice:":2"|upper }}</span>
-                                        {% endif %}
-                                    </div>
-                                    <div>
-                                        <div class="passenger-name">{{ booking.passenger.get_full_name|default:booking.passenger.username }}</div>
-                                        <div class="passenger-route-sub">{{ ride.origin }} &rarr; {{ ride.destination }}</div>
-                                    </div>
-                                </div>
-                                <i class="fa-solid fa-chevron-right chevron-icon"></i>
-                            </div>
-                        {% empty %}
-                            <p class="no-passengers-text">No passengers have joined this ride yet. Be the first to reserve a seat!</p>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <!-- 4. ECO IMPACT CARD -->
-                <div class="eco-impact-card">
-                    <div class="eco-leaf-icon">
-                        <i class="fa-solid fa-leaf"></i>
-                    </div>
-                    <div class="eco-text">
-                        By choosing this trip, you will help avoid ~41.2 kg of CO₂. A total of 16.9 kg CO₂ emissions are associated with this booking (71% less than travelling alone by car). <a href="{% url 'core:safety' %}">See our impact report</a>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- RIGHT COLUMN (STICKY SIDEBAR) -->
-            <div class="right-sidebar-stack">
-                <!-- TOP STATUS ALERT BOX -->
-                <div class="departed-alert-box">
-                    <i class="fa-regular fa-circle-info"></i>
-                    <span>{% if ride.available_seats > 0 %}{{ ride.available_seats }} seat(s) available for booking{% else %}This ride is fully booked{% endif %}</span>
-                </div>
-
-                <!-- SUMMARY CARD -->
-                <div class="summary-sidebar-card">
-                    <div class="sidebar-date-heading">
-                        {{ ride.departure_time|date:"l, j F" }}
-                    </div>
-
-                    <div class="sidebar-mini-timeline">
-                        <div class="mini-time-col">
-                            <span>{{ ride.departure_time|date:"H:i" }}</span>
-                            <span class="mini-duration">3h40</span>
-                            <span>{{ ride.departure_time|date:"H:i" }}</span>
-                        </div>
-
-                        <div class="mini-track-col">
-                            <span class="mini-node"></span>
-                            <span class="mini-line"></span>
-                            <span class="mini-node"></span>
-                        </div>
-
-                        <div class="mini-info-col">
-                            <div class="mini-city-row">
-                                {{ ride.origin }} <i class="fa-regular fa-map" style="font-size: 0.8rem; color: var(--brand-blue);"></i>
-                                <span class="mini-addr">{{ ride.pickup_point|default:ride.origin }}</span>
-                            </div>
-
-                            <div class="mini-city-row">
-                                {{ ride.destination }} <i class="fa-regular fa-map" style="font-size: 0.8rem; color: var(--brand-blue);"></i>
-                                <span class="mini-addr">{{ ride.destination }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="sidebar-driver-row">
-                        <i class="fa-solid fa-car" style="color: var(--text-secondary);"></i>
-                        <div class="sidebar-driver-avatar">
-                            {% if ride.driver.profile_picture %}
-                                <img src="{{ ride.driver.profile_picture.url }}" alt="{{ ride.driver.username }}">
-                            {% else %}
-                                <span>{{ ride.driver.username|slice:":2"|upper }}</span>
-                            {% endif %}
-                        </div>
-                        <span>{{ ride.driver.get_full_name|default:ride.driver.username }}</span>
-                    </div>
-                </div>
-
-                <!-- BOOKING ACTION CARD -->
-                <div class="booking-action-card">
-                    {% if user.is_authenticated %}
-                        {% if user == ride.driver %}
-                            <div class="notice-info-banner">
-                                <i class="fa-solid fa-circle-info"></i> You are offering this ride.
-                            </div>
-                        {% elif ride.available_seats <= 0 %}
-                            <div class="notice-info-banner" style="background:#fef2f2; border-color:#fecaca; color:#991b1b;">
-                                <i class="fa-solid fa-circle-xmark"></i> Fully booked
-                            </div>
-                        {% else %}
-                            <form action="{% url 'bookings:checkout' ride.id %}" method="get" id="booking-sidebar-form">
-                                <div class="booking-header-row">
-                                    <div class="passenger-select-box">
-                                        <select name="seats" id="seats-select">
-                                            {% for i in "x"|rjust:ride.available_seats %}
-                                                <option value="{{ forloop.counter }}">{{ forloop.counter }} passenger{% if forloop.counter > 1 %}s{% endif %}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="sidebar-price-tag" id="total-price-val">
-                                        ₹{{ ride.price_per_seat }}
-                                    </div>
-                                </div>
-
-                                <button type="submit" class="btn-book-action">
-                                    Book Ride <i class="fa-solid fa-arrow-right"></i>
-                                </button>
-                            </form>
-                        {% endif %}
+                <div>
+                    {% if ride.is_overdue and ride.status == 'scheduled' %}
+                        <span class="badge-status badge-overdue"><i class="fa-solid fa-clock-rotate-left"></i> Overdue</span>
+                    {% elif ride.status == 'in_progress' %}
+                        <span class="badge-status badge-in_progress"><i class="fa-solid fa-circle-notch fa-spin"></i> In progress</span>
+                    {% elif ride.status == 'completed' %}
+                        <span class="badge-status badge-completed"><i class="fa-solid fa-circle-check"></i> Completed</span>
+                    {% elif ride.status == 'cancelled' %}
+                        <span class="badge-status badge-cancelled"><i class="fa-solid fa-ban"></i> Cancelled</span>
+                    {% elif ride.status == 'expired' %}
+                        <span class="badge-status badge-expired"><i class="fa-solid fa-hourglass-end"></i> Expired</span>
                     {% else %}
-                        <div class="booking-header-row">
-                            <div class="passenger-select-box">
-                                <span>1 passenger</span>
-                            </div>
-                            <div class="sidebar-price-tag">
-                                ₹{{ ride.price_per_seat }}
-                            </div>
-                        </div>
-
-                        <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn-book-action">
-                            Book Ride <i class="fa-solid fa-arrow-right"></i>
-                        </a>
+                        <span class="badge-status badge-scheduled"><i class="fa-solid fa-calendar-check"></i> Scheduled</span>
                     {% endif %}
                 </div>
             </div>
-        </div>
+
+            <!-- ROUTE TIMELINE -->
+            <div class="plan-timeline-block">
+                <div class="timeline-dots-column">
+                    <div class="plan-dot-circle"></div>
+                    <div class="plan-line-connect"></div>
+                    <div class="plan-dot-circle"></div>
+                </div>
+
+                <div class="plan-stops-column">
+                    <div class="plan-stop-row">
+                        <div class="stop-time-city">
+                            <span>{{ ride.departure_time|date:"H:i" }}</span>
+                            <span>{{ ride.origin }}</span>
+                            <i class="fa-regular fa-map"></i>
+                        </div>
+                        <div class="stop-address-subtext">
+                            {{ ride.pickup_address|default:ride.pickup_point|default:ride.origin }}
+                        </div>
+                    </div>
+
+                    <div class="plan-stop-row">
+                        <div class="stop-time-city">
+                            <span>
+                                {% if ride.estimated_duration_mins %}
+                                    {{ ride.departure_time|date:"H:i" }}
+                                {% else %}
+                                    {{ ride.departure_time|date:"H:i" }}
+                                {% endif %}
+                            </span>
+                            <span>{{ ride.destination }}</span>
+                            <i class="fa-regular fa-map"></i>
+                        </div>
+                        <div class="stop-address-subtext">
+                            {{ ride.drop_address|default:ride.destination }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRICE & SEATS STRIP -->
+            <div class="plan-price-strip">
+                <div>
+                    <div class="pay-mode-title">Pay in cash</div>
+                    <div class="seats-count-sub">1 seat</div>
+                </div>
+                <div class="plan-total-price">
+                    ₹{{ ride.price_per_seat|floatformat:2 }}
+                </div>
+            </div>
+
+            <!-- SAFETY WARNING BANNER -->
+            <div class="plan-safety-alert">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div>
+                    If the driver asks you to send money or pay through a link, please ignore it. <a href="{% url 'core:safety' %}">Learn more</a>
+                </div>
+            </div>
+
+            <!-- BOOKING.COM ACCOMMODATION PROMO -->
+            <div class="plan-hotel-promo">
+                <div class="promo-text-side">
+                    <span class="promo-brand-name">Booking.com</span>
+                    <span class="promo-main-heading">Need a place to stay?</span>
+                    <span class="promo-subtext">Find the best accommodations in {{ ride.destination }}</span>
+                    <a href="https://www.booking.com" target="_blank" rel="noopener" class="promo-cta-link">Book now</a>
+                </div>
+                <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=200&q=80" alt="Resort" class="promo-img-thumb">
+            </div>
+
+            <!-- DRIVER PROFILE ROW -->
+            <a href="{% url 'messaging:inbox' %}" class="plan-user-profile-row">
+                <div class="plan-user-left">
+                    <div class="plan-user-avatar">
+                        {{ ride.driver.username|slice:":2"|upper }}
+                    </div>
+                    <div class="plan-user-name">
+                        <span>{{ ride.driver.get_full_name|default:ride.driver.username }}</span>
+                        <i class="fa-solid fa-circle-check verified-icon"></i>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right chevron-right"></i>
+            </a>
+
+            <!-- VEHICLE DETAILS -->
+            <div class="plan-vehicle-section">
+                <div class="vehicle-model-name">
+                    {{ ride.vehicle_info|default:"Standard Vehicle" }}
+                </div>
+                <div class="vehicle-type-sub">
+                    Comfortable Sedan / Hatchback
+                </div>
+                <div class="passengers-status-text">
+                    {% with confirmed_count=ride.bookings.all|length %}
+                        {% if confirmed_count > 0 %}
+                            {{ confirmed_count }} passenger{{ confirmed_count|pluralize }} booked
+                        {% else %}
+                            No other passengers yet
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+
+            <!-- ACTION LINKS -->
+            <div class="plan-actions-footer">
+                {% if is_driver %}
+                    {% if ride.status == 'in_progress' %}
+                        <form method="post" action="{% url 'rides:complete' ride.id %}" style="display: block; margin: 0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'rides:my_rides' %}?status=completed">
+                            <button type="submit" class="plan-action-btn-clean success-link" title="Mark ride as completed">
+                                <i class="fa-solid fa-flag-checkered"></i> Mark ride as completed
+                            </button>
+                        </form>
+                    {% elif ride.status == 'scheduled' %}
+                        <form method="post" action="{% url 'rides:start' ride.id %}" style="display: block; margin: 0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'rides:detail' ride.id %}">
+                            <button type="submit" class="plan-action-btn-clean primary-link" title="Start this ride">
+                                <i class="fa-solid fa-play"></i> Start ride
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <a href="{% url 'rides:publication' ride.id %}" class="plan-action-link">
+                        Edit your publication
+                    </a>
+
+                    {% if ride.status != 'cancelled' and ride.status != 'completed' %}
+                        <form method="post" action="{% url 'rides:cancel' ride.id %}" style="display: block; margin: 0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'rides:my_rides' %}?status=cancelled">
+                            <button type="submit" class="plan-action-btn-clean danger-link" onclick="return confirm('Are you sure you want to cancel this ride? All booked passengers will be notified.');" title="Cancel this ride">
+                                <i class="fa-solid fa-ban"></i> Cancel ride
+                            </button>
+                        </form>
+                    {% else %}
+                        <span style="color: #94a3b8; font-weight: 600; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0;">
+                            <i class="fa-solid fa-info-circle"></i> Ride is {{ ride.status|capfirst }}
+                        </span>
+                    {% endif %}
+                {% elif is_passenger %}
+                    <a href="{% url 'rides:search' %}" class="plan-action-link">
+                        See ride offer
+                    </a>
+                    {% if passenger_booking and passenger_booking.status != 'cancelled' %}
+                        <a href="{% url 'bookings:cancel_reason' passenger_booking.id %}" class="plan-action-link danger-link">
+                            <i class="fa-solid fa-ban"></i> Cancel your booking
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'rides:search' %}" class="plan-action-link">
+                        See ride offer
+                    </a>
+                {% endif %}
+            </div>
+
+        </article>
+
     </div>
 </div>
 {% endblock content %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const seatsSelect = document.getElementById('seats-select');
-    const totalPriceVal = document.getElementById('total-price-val');
-    const pricePerSeat = parseFloat("{{ ride.price_per_seat }}") || 0;
-
-    if (seatsSelect && totalPriceVal) {
-        seatsSelect.addEventListener('change', (e) => {
-            const count = parseInt(e.target.value) || 1;
-            const total = (pricePerSeat * count).toFixed(2);
-            totalPriceVal.textContent = '₹' + total;
-        });
-    }
-});
-</script>
-{% endblock extra_js %}

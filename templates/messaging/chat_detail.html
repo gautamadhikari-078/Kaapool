@@ -1,0 +1,391 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chat with {{ other_user.username }} - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+/* ==========================================================
+   IMAGE 3 REPLICA - CHAT CONVERSATION FULL PAGE VIEW
+   ========================================================== */
+.chat-page-wrapper {
+    background-color: #ffffff;
+    min-height: 90vh;
+    padding: 2rem 1rem 5rem 1rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+}
+
+.chat-page-container {
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 80vh;
+}
+
+/* 1. TOP HEADER BAR */
+.chat-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.header-user-block {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-back-inbox {
+    color: #f89516;
+    font-size: 1.2rem;
+    text-decoration: none !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    transition: background 0.15s ease;
+}
+
+.btn-back-inbox:hover {
+    background: #fff7ed;
+}
+
+.user-avatar-wrap {
+    position: relative;
+    width: 44px;
+    height: 44px;
+}
+
+.user-avatar-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #051528;
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.verified-badge-mini {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    background: #10b981;
+    color: #ffffff;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    font-size: 0.6rem;
+    border: 2px solid #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-title-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-user-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #051528;
+}
+
+.chat-user-sub {
+    font-size: 0.825rem;
+    font-weight: 600;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.chat-user-sub i.fa-star {
+    color: #f89516;
+}
+
+.btn-header-options {
+    color: #64748b;
+    font-size: 1.25rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+/* 2. ROUTE STRIP & GUIDELINES NOTICE */
+.chat-route-substrip {
+    padding: 1rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.route-heading {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #051528;
+    margin-bottom: 0.15rem;
+}
+
+.route-status-sub {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.chat-guidelines-banner {
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 0.9rem 0;
+    font-size: 0.85rem;
+    color: #64748b;
+    line-height: 1.45;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+}
+
+.chat-guidelines-banner i {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-top: 0.1rem;
+}
+
+.chat-guidelines-banner a {
+    color: #f89516;
+    font-weight: 700;
+    text-decoration: underline !important;
+}
+
+/* 3. MESSAGES STREAM */
+.chat-messages-stream {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem 0;
+    overflow-y: auto;
+}
+
+.date-divider {
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #94a3b8;
+    margin: 0.5rem 0;
+}
+
+.msg-bubble-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.msg-bubble-group.incoming {
+    align-items: flex-start;
+}
+
+.msg-bubble-group.outgoing {
+    align-items: flex-end;
+}
+
+.msg-bubble {
+    max-width: 75%;
+    padding: 0.85rem 1.15rem;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.msg-bubble-group.incoming .msg-bubble {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-radius: 18px 18px 18px 4px;
+}
+
+.msg-bubble-group.outgoing .msg-bubble {
+    background: #f89516;
+    color: #ffffff;
+    border-radius: 18px 18px 4px 18px;
+}
+
+.msg-time-stamp {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-top: 0.15rem;
+    padding: 0 0.25rem;
+}
+
+/* EVENT SYSTEM CHIP */
+.event-system-chip {
+    background: #fff7ed;
+    border: 1px solid #ffedd5;
+    border-radius: 14px;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: #475569;
+    font-weight: 600;
+    margin: 0.5rem 0;
+}
+
+.event-system-chip i {
+    color: #f89516;
+    font-size: 1rem;
+}
+
+/* 4. BOTTOM CHAT INPUT FORM */
+.chat-bottom-form-bar {
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.chat-input-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.chat-text-input {
+    flex: 1;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 9999px;
+    padding: 0.8rem 1.35rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.chat-text-input:focus {
+    border-color: #f89516;
+}
+
+.btn-submit-chat {
+    background: #f89516;
+    color: #ffffff;
+    border: none;
+    border-radius: 9999px;
+    padding: 0.8rem 1.6rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.btn-submit-chat:hover {
+    background: #e07f07;
+}
+
+.btn-submit-chat:hover {
+    background: #0056b3;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="chat-page-wrapper">
+    <div class="chat-page-container">
+
+        <!-- 1. TOP HEADER BAR -->
+        <header class="chat-page-header">
+            <div class="header-user-block">
+                <a href="{% url 'messaging:inbox' %}" class="btn-back-inbox" aria-label="Back to inbox">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <div class="user-avatar-wrap">
+                    <div class="user-avatar-circle">
+                        {{ other_user.username|slice:":2"|upper }}
+                    </div>
+                    <div class="verified-badge-mini">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                </div>
+                <div class="user-title-col">
+                    <span class="chat-user-title">{{ other_user.get_full_name|default:other_user.username }}</span>
+                    <span class="chat-user-sub">
+                        <i class="fa-solid fa-star"></i> 4.9/5 &bull; Replies in 1h
+                    </span>
+                </div>
+            </div>
+
+            <button class="btn-header-options" title="Options">
+                <i class="fa-solid fa-ellipsis"></i>
+            </button>
+        </header>
+
+        <!-- 2. ROUTE SUBHEADER STRIP -->
+        <div class="chat-route-substrip">
+            {% if ride %}
+                <div class="route-heading">{{ ride.origin }} &rarr; {{ ride.destination }}</div>
+                <div class="route-status-sub">Departure {{ ride.departure_time|date:"D, d M, H:i" }} &bull; Status: {{ ride.status|capfirst }}</div>
+            {% else %}
+                <div class="route-heading">Carpool Journey</div>
+                <div class="route-status-sub">Active conversation on Kaapool</div>
+            {% endif %}
+        </div>
+
+        <!-- SAFETY GUIDELINES NOTICE BANNER -->
+        <div class="chat-guidelines-banner">
+            <i class="fa-solid fa-circle-info"></i>
+            <div>
+                We may moderate messages. You can also report inappropriate ones from <a href="{% url 'core:safety' %}">See our guidelines</a>. Never transfer money in advance. Pay in cash in the car the day of the trip.
+            </div>
+        </div>
+
+        <!-- 3. MESSAGES STREAM -->
+        <div class="chat-messages-stream" id="chatStream">
+            <div class="date-divider">Today</div>
+
+            {% for msg in chat_messages %}
+                <div class="msg-bubble-group {% if msg.sender == user %}outgoing{% else %}incoming{% endif %}">
+                    <div class="msg-bubble">
+                        {{ msg.content }}
+                    </div>
+                    <span class="msg-time-stamp">{{ msg.timestamp|date:"H:i" }}</span>
+                </div>
+            {% empty %}
+                <div class="msg-bubble-group incoming">
+                    <div class="msg-bubble">
+                        Hey! I will be waiting near the main pickup location on time. Let me know if any delay.
+                    </div>
+                    <span class="msg-time-stamp">10:45 AM</span>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- 4. BOTTOM CHAT INPUT FORM -->
+        <div class="chat-bottom-form-bar">
+            <form method="post" action="{% url 'messaging:chat_detail' other_user.id %}" class="chat-input-row">
+                {% csrf_token %}
+                <input type="text" name="content" class="chat-text-input" placeholder="Write a message..." required autocomplete="off">
+                <button type="submit" class="btn-submit-chat">Send</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stream = document.getElementById('chatStream');
+    if (stream) {
+        stream.scrollTop = stream.scrollHeight;
+    }
+});
+</script>
+{% endblock content %}
+
+{% block footer %}{% endblock footer %}

@@ -1,21 +1,982 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}My Offered Rides - Kaapool{% endblock title %}
 
+{% block extra_css %}
+<style>
+/* ==========================================================
+   EXACT UI REPLICA - MY OFFERED RIDES
+   ========================================================== */
+.my-rides-page-wrapper {
+    background-color: #f8fafc;
+    min-height: 88vh;
+    padding: 3rem 1.5rem 6rem 1.5rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+    position: relative;
+}
+
+.my-rides-main-container {
+    max-width: 920px;
+    margin: 0 auto;
+}
+
+/* 1. HERO BANNER CARD */
+.my-rides-hero-card {
+    background: linear-gradient(16deg, #f1f1f1 0%, #f2f2f2 100%);
+    border-radius: 24px;
+    padding: 2.5rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 115, 230, 0.05);
+}
+
+.hero-content-left {
+    max-width: 520px;
+    z-index: 2;
+}
+
+.hero-pill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #ffffff;
+    color: #7c756c;
+    font-size: 0.825rem;
+    font-weight: 700;
+    padding: 0.35rem 0.9rem;
+    border-radius: 9999px;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+    border: 1px solid #aaa8a4;
+    margin-bottom: 0.85rem;
+}
+
+
+.hero-title-text {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 0.5rem 0;
+    letter-spacing: -0.8px;
+    line-height: 1.2;
+}
+
+.hero-subtitle-text {
+    font-size: 1.05rem;
+    color: #64748b;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* HERO RIGHT VECTOR ILLUSTRATION */
+.hero-illustration-right {
+    width: 260px;
+    height: 140px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-vector-svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* 2. FILTER PILLS ROW */
+.status-tabs-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+}
+
+.status-pill-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1.25rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+}
+
+.status-pill-tab:hover {
+    border-color: #cbd5e1;
+    color: #0f172a;
+    background: #f8fafc;
+}
+
+.status-pill-tab.active {
+    background: #1e293b;
+    color: #ffffff;
+    border-color: #1e293b;
+    font-weight: 700;
+}
+
+.status-pill-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 0.4rem;
+    border-radius: 9999px;
+    font-size: 0.775rem;
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.status-pill-tab.active .status-pill-count {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+/* 3. RIDE LIST CONTAINER */
+.rides-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.date-group-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.date-group-header {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-left: 0.25rem;
+    margin-bottom: 0.2rem;
+}
+
+/* RIDE CARD */
+.offered-ride-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.02);
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.offered-ride-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+    transform: translateY(-1px);
+}
+
+/* TOP MAIN SECTION */
+.card-top-content {
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+}
+
+/* VERTICAL ROUTE TIMELINE */
+.vertical-route-timeline {
+    display: flex;
+    gap: 1.1rem;
+    flex: 1;
+}
+
+.timeline-graphics {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 0.35rem;
+}
+
+.dot-origin {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #f89516;
+    flex-shrink: 0;
+}
+
+.line-connect {
+    width: 2px;
+    height: 38px;
+    background: #cbd5e1;
+    margin: 3px 0;
+}
+
+.dot-dest {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #0f172a;
+    flex-shrink: 0;
+}
+
+.timeline-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    flex: 1;
+}
+
+.stop-block-top, .stop-block-bottom {
+    display: flex;
+    flex-direction: column;
+}
+
+.stop-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.3;
+}
+
+.stop-subtext {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-top: 0.15rem;
+}
+
+/* RIGHT COLUMN (PRICE & STATUS) */
+.card-right-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.6rem;
+    flex-shrink: 0;
+}
+
+.price-amount {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.5px;
+}
+
+.badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.badge-status.badge-scheduled,
+.badge-status.badge-active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-status.badge-in_progress {
+    background: #fff4e0;
+    color: #b45309;
+}
+
+.badge-status.badge-completed {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.badge-status.badge-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-status.badge-expired {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.badge-status.badge-overdue {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    font-weight: 800;
+}
+
+/* 2.1 FILTER TOOLBAR & DATE CHIPS */
+.rides-controls-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    background: #ffffff;
+    padding: 0.75rem 1.25rem;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
+}
+
+.date-chips-group {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.date-chips-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 0.3rem;
+}
+
+.date-chip {
+    padding: 0.35rem 0.95rem;
+    border-radius: 9999px;
+    font-size: 0.825rem;
+    font-weight: 600;
+    color: #475569;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    text-decoration: none !important;
+    transition: all 0.15s ease;
+}
+
+.date-chip:hover {
+    border-color: #cbd5e1;
+    color: #0f172a;
+    background: #f1f5f9;
+}
+
+.date-chip.active {
+    background: #f89516;
+    color: #ffffff;
+    border-color: #f89516;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(248, 149, 22, 0.25);
+}
+
+.sort-dropdown-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sort-dropdown-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sort-select {
+    padding: 0.4rem 1rem;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+    background: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #0f172a;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sort-select:focus {
+    border-color: #f89516;
+    box-shadow: 0 0 0 3px rgba(248, 149, 22, 0.12);
+}
+
+/* OVERDUE ACTIONS */
+.overdue-actions-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.btn-action-start {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 9999px;
+    background: #f89516;
+    color: #ffffff;
+    font-size: 0.825rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(248, 149, 22, 0.25);
+    transition: all 0.2s ease;
+}
+
+.btn-action-start:hover {
+    background: #ea580c;
+    transform: translateY(-1px);
+}
+
+.btn-action-complete {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 9999px;
+    background: #10b981;
+    color: #ffffff;
+    font-size: 0.825rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+    transition: all 0.2s ease;
+}
+
+.btn-action-complete:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.btn-action-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 9999px;
+    background: #ffffff;
+    color: #ef4444;
+    border: 1.5px solid #fca5a5;
+    font-size: 0.825rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-action-cancel:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+}
+
+/* PAGINATION */
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2.5rem;
+    flex-wrap: wrap;
+}
+
+.page-link-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    color: #475569;
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+}
+
+.page-link-btn:hover:not(.disabled) {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.page-link-btn.active {
+    background: #f89516;
+    color: #ffffff;
+    border-color: #f89516;
+    box-shadow: 0 2px 8px rgba(248, 149, 22, 0.25);
+}
+
+.page-link-btn.disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* BOTTOM STRIP */
+.card-bottom-strip {
+    border-top: 1px solid #f1f5f9;
+    padding: 0.85rem 1.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+}
+
+.passenger-status-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.passenger-status-left i {
+    font-size: 0.95rem;
+    color: #94a3b8;
+}
+
+.manage-ride-link {
+    color: #f89516;
+    font-weight: 700;
+    font-size: 0.925rem;
+    text-decoration: none !important;
+    transition: color 0.15s ease;
+}
+
+.manage-ride-link:hover {
+    color: #d97d0d;
+    text-decoration: underline !important;
+}
+
+/* 4. EMPTY STATE CARD */
+.empty-state-card {
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    padding: 4rem 2rem;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.02);
+}
+
+.empty-icon-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #fff4e0;
+    color: #f89516;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    margin: 0 auto 1.25rem auto;
+}
+
+.empty-state-card h3 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 0.5rem 0;
+}
+
+.empty-state-card p {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin: 0 0 1.75rem 0;
+}
+
+.btn-empty-offer {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f89516;
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 0.925rem;
+    padding: 0.75rem 1.6rem;
+    border-radius: 9999px;
+    text-decoration: none !important;
+    box-shadow: 0 4px 14px rgba(248, 149, 22, 0.25);
+    transition: all 0.2s ease;
+}
+
+.btn-empty-offer:hover {
+    background: #d97d0d;
+    transform: translateY(-1px);
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+    .my-rides-hero-card {
+        padding: 2rem 1.5rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+
+    .hero-illustration-right {
+        width: 100%;
+        height: 100px;
+    }
+
+    .hero-title-text {
+        font-size: 1.85rem;
+    }
+
+    .card-top-content {
+        padding: 1.25rem;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .card-right-col {
+        align-items: flex-start;
+        flex-direction: row-reverse;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .card-bottom-strip {
+        padding: 0.85rem 1.25rem;
+    }
+}
+</style>
+{% endblock extra_css %}
+
 {% block content %}
-<section id="my-rides-section">
-    <h1>My Offered Rides</h1>
-    <a href="{% url 'rides:create' %}">+ Offer New Ride</a>
-    
-    <div class="my-rides-list">
-        {% for ride in offered_rides %}
-            <div class="ride-item">
-                <h3>{{ ride.origin }} to {{ ride.destination }}</h3>
-                <p>Departure: {{ ride.departure_time }} | Status: {{ ride.status }}</p>
+<div class="my-rides-page-wrapper">
+    <a href="javascript:history.back()" class="btn-page-back" title="Go back">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
+    <div class="my-rides-main-container">
+
+
+        <!-- 1. HERO BANNER CARD -->
+        <div class="my-rides-hero-card">
+            <div class="hero-content-left">
+                <div class="hero-pill-tag">
+                    <i class="fa-regular fa-star"></i> Rides you've offered
+                </div>
+                <h1 class="hero-title-text">My Offered Rides</h1>
+                <p class="hero-subtitle-text">Manage your rides, track status and find fellow travelers.</p>
             </div>
-        {% empty %}
-            <p>You haven't offered any rides yet.</p>
-        {% endfor %}
+            
+            <div class="hero-illustration-right">
+                <!-- SVG ROAD & CAR GRAPHIC -->
+                <svg class="hero-vector-svg" viewBox="0 0 260 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="210" cy="45" rx="35" ry="12" fill="#ffffff" opacity="0.6"/>
+                    <ellipse cx="50" cy="45" rx="30" ry="10" fill="#ffffff" opacity="0.5"/>
+                    <!-- Background city & hills -->
+                    <path d="M170 110L200 65L230 110H170Z" fill="#dbeafe" opacity="0.7"/>
+                    <rect x="220" y="70" width="20" height="40" rx="3" fill="#cbd5e1" opacity="0.6"/>
+                    <rect x="242" y="80" width="15" height="30" rx="2" fill="#94a3b8" opacity="0.5"/>
+                    <path d="M0 115C80 110 160 112 260 100" stroke="#ffffff" stroke-width="24" stroke-linecap="round"/>
+                    <path d="M0 115C80 110 160 112 260 100" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="6 6"/>
+                    <!-- Map Pin Marker -->
+                    <g transform="translate(195, 55)">
+                        <path d="M12 0C5.37 0 0 5.37 0 12C0 21 12 32 12 32C12 32 24 21 24 12C24 5.37 18.63 0 12 0Z" fill="#2563eb"/>
+                        <circle cx="12" cy="12" r="4" fill="#ffffff"/>
+                    </g>
+                    <!-- Blue Car -->
+                    <g transform="translate(198, 92)">
+                        <rect x="0" y="8" width="28" height="12" rx="4" fill="#1d4ed8"/>
+                        <path d="M5 8L9 2H19L23 8H5Z" fill="#3b82f6"/>
+                        <circle cx="6" cy="20" r="3.5" fill="#0f172a"/>
+                        <circle cx="22" cy="20" r="3.5" fill="#0f172a"/>
+                        <circle cx="26" cy="12" r="1.5" fill="#fbbf24"/>
+                    </g>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 2. FILTER PILLS ROW -->
+        <nav class="status-tabs-row" aria-label="Status Filter">
+            <a href="?status=all{% if current_date %}&date={{ current_date }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="status-pill-tab {% if current_status == 'all' or not current_status %}active{% endif %}">
+                All <span class="status-pill-count">{{ total_count }}</span>
+            </a>
+            <a href="?status=upcoming{% if current_date %}&date={{ current_date }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="status-pill-tab {% if current_status == 'upcoming' %}active{% endif %}">
+                Upcoming <span class="status-pill-count">{{ upcoming_count }}</span>
+            </a>
+            <a href="?status=in_progress{% if current_date %}&date={{ current_date }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="status-pill-tab {% if current_status == 'in_progress' %}active{% endif %}">
+                In progress <span class="status-pill-count">{{ in_progress_count }}</span>
+            </a>
+            <a href="?status=completed{% if current_date %}&date={{ current_date }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="status-pill-tab {% if current_status == 'completed' %}active{% endif %}">
+                Completed <span class="status-pill-count">{{ completed_count }}</span>
+            </a>
+            <a href="?status=cancelled{% if current_date %}&date={{ current_date }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="status-pill-tab {% if current_status == 'cancelled' %}active{% endif %}">
+                Cancelled <span class="status-pill-count">{{ cancelled_count }}</span>
+            </a>
+        </nav>
+
+        <!-- 2.1 EXTRA FILTERS: DATE CHIPS & SORT DROPDOWN -->
+        <div class="rides-controls-toolbar">
+            <div class="date-chips-group">
+                <span class="date-chips-label"><i class="fa-regular fa-calendar" style="margin-right: 0.2rem;"></i> Date:</span>
+                <a href="?status={{ current_status }}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="date-chip {% if not current_date %}active{% endif %}">
+                    All dates
+                </a>
+                <a href="?status={{ current_status }}&date=today{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="date-chip {% if current_date == 'today' %}active{% endif %}">
+                    Today
+                </a>
+                <a href="?status={{ current_status }}&date=tomorrow{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="date-chip {% if current_date == 'tomorrow' %}active{% endif %}">
+                    Tomorrow
+                </a>
+                <a href="?status={{ current_status }}&date=this_week{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="date-chip {% if current_date == 'this_week' %}active{% endif %}">
+                    This week
+                </a>
+            </div>
+
+            <div class="sort-dropdown-container">
+                <label for="rides-sort-select" class="sort-dropdown-label"><i class="fa-solid fa-arrow-down-short-wide" style="margin-right: 0.2rem;"></i> Sort:</label>
+                <select id="rides-sort-select" class="sort-select" onchange="applyRidesSort(this.value)">
+                    <option value="" {% if not current_sort %}selected{% endif %}>Tab Default</option>
+                    <option value="soonest" {% if current_sort == 'soonest' %}selected{% endif %}>Soonest first</option>
+                    <option value="latest" {% if current_sort == 'latest' %}selected{% endif %}>Latest first</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 3. RIDE CARDS LIST (GROUPED BY DATE) -->
+        <div class="rides-list-container">
+            {% for group in grouped_rides %}
+            <div class="date-group-block">
+                <!-- DATE HEADER ("Today", "Tomorrow", or formatted date) -->
+                <div class="date-group-header">
+                    {{ group.label }}
+                </div>
+
+                {% for ride in group.rides %}
+                <!-- OFFERED RIDE CARD -->
+                <article class="offered-ride-card">
+                    <!-- TOP CONTENT -->
+                    <div class="card-top-content">
+                        <!-- VERTICAL TIMELINE -->
+                        <div class="vertical-route-timeline">
+                            <div class="timeline-graphics">
+                                <div class="dot-origin"></div>
+                                <div class="line-connect"></div>
+                                <div class="dot-dest"></div>
+                            </div>
+                            <div class="timeline-details">
+                                <div class="stop-block-top">
+                                    <span class="stop-name">{{ ride.origin }}</span>
+                                    <span class="stop-subtext">Departs {{ ride.departure_datetime|date:"H:i" }}</span>
+                                </div>
+                                <div class="stop-block-bottom">
+                                    <span class="stop-name">{{ ride.destination }}</span>
+                                    <span class="stop-subtext">
+                                        {% if ride.estimated_duration_mins %}
+                                            ~{{ ride.estimated_duration_mins }} min drive
+                                        {% else %}
+                                            Direct route
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT COLUMN (PRICE & STATUS) -->
+                        <div class="card-right-col">
+                            <span class="price-amount">₹{{ ride.price_per_seat|floatformat:0 }}</span>
+                            {% if ride.is_overdue %}
+                                <span class="badge-status badge-overdue">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> Overdue
+                                </span>
+                            {% elif ride.status == 'in_progress' %}
+                                <span class="badge-status badge-in_progress">In progress</span>
+                            {% elif ride.status == 'scheduled' or ride.status == 'active' %}
+                                <span class="badge-status badge-scheduled">Scheduled</span>
+                            {% elif ride.status == 'completed' %}
+                                <span class="badge-status badge-completed">Completed</span>
+                            {% elif ride.status == 'cancelled' %}
+                                <span class="badge-status badge-cancelled">Cancelled</span>
+                            {% elif ride.status == 'expired' %}
+                                <span class="badge-status badge-expired">Expired</span>
+                            {% else %}
+                                <span class="badge-status badge-{{ ride.status }}">{{ ride.status|capfirst }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- BOTTOM STRIP -->
+                    <div class="card-bottom-strip">
+                        <div class="passenger-status-left">
+                            <i class="fa-regular fa-user"></i>
+                            {% with bookings_count=ride.bookings.all|length %}
+                                {% if bookings_count > 0 %}
+                                    <span style="color: #f89516; font-weight: 700;">{{ bookings_count }} passenger{{ bookings_count|pluralize }} booked</span>
+                                {% else %}
+                                    <span>No passengers yet</span>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
+                            {% if ride.status == 'in_progress' %}
+                                <div class="overdue-actions-box">
+                                    <form method="post" action="{% url 'rides:complete' ride.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button type="submit" class="btn-action-complete" title="Complete this ride">
+                                            <i class="fa-solid fa-flag-checkered"></i> Complete
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{% url 'rides:cancel' ride.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button type="submit" class="btn-action-cancel" onclick="return confirm('Are you sure you want to cancel this in-progress ride?');" title="Cancel this ride">
+                                            <i class="fa-solid fa-ban"></i> Cancel
+                                        </button>
+                                    </form>
+                                </div>
+                            {% elif ride.is_overdue and ride.status == 'scheduled' %}
+                                <div class="overdue-actions-box">
+                                    <form method="post" action="{% url 'rides:start' ride.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button type="submit" class="btn-action-start" title="Start ride now">
+                                            <i class="fa-solid fa-play"></i> Start
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{% url 'rides:cancel' ride.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button type="submit" class="btn-action-cancel" onclick="return confirm('Are you sure you want to cancel this overdue ride?');" title="Cancel this ride">
+                                            <i class="fa-solid fa-ban"></i> Cancel
+                                        </button>
+                                    </form>
+                                </div>
+                            {% elif ride.status == 'scheduled' and not ride.is_overdue %}
+                                <div class="overdue-actions-box">
+                                    <form method="post" action="{% url 'rides:cancel' ride.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button type="submit" class="btn-action-cancel" onclick="return confirm('Are you sure you want to cancel this ride?');" title="Cancel this ride">
+                                            <i class="fa-solid fa-ban"></i> Cancel
+                                        </button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                            <a href="{% url 'rides:detail' ride.id %}" class="manage-ride-link">
+                                Manage ride
+                            </a>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% empty %}
+            <!-- EMPTY STATE CARD -->
+            <div class="empty-state-card">
+                <div class="empty-icon-circle">
+                    {% if current_status == 'upcoming' %}
+                        <i class="fa-regular fa-calendar-plus"></i>
+                    {% elif current_status == 'in_progress' %}
+                        <i class="fa-solid fa-road"></i>
+                    {% elif current_status == 'completed' %}
+                        <i class="fa-solid fa-circle-check"></i>
+                    {% elif current_status == 'cancelled' %}
+                        <i class="fa-solid fa-ban"></i>
+                    {% else %}
+                        <i class="fa-solid fa-car-side"></i>
+                    {% endif %}
+                </div>
+                <h3>
+                    {% if current_status == 'upcoming' %}
+                        No Upcoming Rides
+                    {% elif current_status == 'in_progress' %}
+                        No Rides in Progress
+                    {% elif current_status == 'completed' %}
+                        No Completed Rides
+                    {% elif current_status == 'cancelled' %}
+                        No Cancelled Rides
+                    {% else %}
+                        No Rides Found
+                    {% endif %}
+                </h3>
+                <p>
+                    {% if current_date %}
+                        No rides found for the selected date filter ({{ current_date|title }}).
+                    {% elif current_status == 'upcoming' %}
+                        You don't have any upcoming scheduled rides. Ready to hit the road? Offer a ride now!
+                    {% elif current_status == 'in_progress' %}
+                        No rides are currently in progress. Start an overdue or scheduled ride to track it live.
+                    {% elif current_status == 'completed' %}
+                        You haven't completed any rides yet. Completed journeys will appear here.
+                    {% elif current_status == 'cancelled' %}
+                        No cancelled rides found.
+                    {% else %}
+                        You haven't offered any carpool rides yet. Publish your route and save on travel costs!
+                    {% endif %}
+                </p>
+                {% if current_date %}
+                    <a href="?status={{ current_status }}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn-empty-offer" style="background: #e2e8f0; color: #0f172a !important;">
+                        <i class="fa-solid fa-xmark"></i> Clear date filter
+                    </a>
+                {% else %}
+                    <a href="{% url 'rides:create' %}" class="btn-empty-offer">
+                        <i class="fa-solid fa-plus"></i> Offer a ride now
+                    </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- 4. PAGINATION -->
+        {% if is_paginated %}
+        <nav class="pagination-wrapper" aria-label="Rides pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if query_params_no_page %}&{{ query_params_no_page }}{% endif %}" class="page-link-btn">
+                    <i class="fa-solid fa-chevron-left" style="margin-right: 0.35rem;"></i> Previous
+                </a>
+            {% else %}
+                <span class="page-link-btn disabled">
+                    <i class="fa-solid fa-chevron-left" style="margin-right: 0.35rem;"></i> Previous
+                </span>
+            {% endif %}
+
+            {% for num in paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="page-link-btn active">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}{% if query_params_no_page %}&{{ query_params_no_page }}{% endif %}" class="page-link-btn">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if query_params_no_page %}&{{ query_params_no_page }}{% endif %}" class="page-link-btn">
+                    Next <i class="fa-solid fa-chevron-right" style="margin-left: 0.35rem;"></i>
+                </a>
+            {% else %}
+                <span class="page-link-btn disabled">
+                    Next <i class="fa-solid fa-chevron-right" style="margin-left: 0.35rem;"></i>
+                </span>
+            {% endif %}
+        </nav>
+        {% endif %}
+
     </div>
-</section>
+</div>
+
+<script>
+function applyRidesSort(val) {
+    const url = new URL(window.location.href);
+    if (val) {
+        url.searchParams.set('sort', val);
+    } else {
+        url.searchParams.delete('sort');
+    }
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+}
+</script>v>
+
+    </div>
+</div>
 {% endblock content %}
+
+{% block footer %}{% endblock footer %}

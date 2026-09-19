@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}How to stay updated - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+/* ==========================================================
+   IMAGE 4 REPLICA - HOW TO STAY UPDATED
+   ========================================================== */
+.info-page-wrapper {
+    background-color: #ffffff;
+    min-height: 88vh;
+    padding: 2.5rem 1rem 6rem 1rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+}
+
+.info-page-container {
+    max-width: 620px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* TOP BACK BAR */
+.info-top-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+.btn-nav-back {
+    color: #f89516;
+    font-size: 1.25rem;
+    text-decoration: none !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: background 0.15s ease;
+}
+
+.btn-nav-back:hover {
+    background: #fff7ed;
+}
+
+.info-header-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #051528;
+}
+
+.brand-icon-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #f89516;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+/* HEADING */
+.info-main-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #051528;
+    margin: 0 0 2rem 0;
+    letter-spacing: -0.5px;
+}
+
+/* VECTOR GRAPHIC */
+.info-vector-container {
+    margin: 0 auto 2.5rem auto;
+    width: 260px;
+    height: 170px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info-vector-svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* DESCRIPTION TEXT */
+.info-body-text {
+    color: #475569;
+    font-size: 0.975rem;
+    line-height: 1.6;
+    max-width: 520px;
+    margin: 0 auto 2.25rem auto;
+}
+
+.info-body-text p {
+    margin: 0;
+}
+
+/* CTA BUTTON */
+.btn-cta-orange {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #f89516;
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 0.85rem 2rem;
+    border-radius: 9999px;
+    text-decoration: none !important;
+    box-shadow: 0 4px 14px rgba(248, 149, 22, 0.25);
+    transition: all 0.2s ease;
+}
+
+.btn-cta-orange:hover {
+    background: #e07f07;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(248, 149, 22, 0.35);
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="info-page-wrapper">
+    <div class="info-page-container">
+        <!-- TOP NAV -->
+        <div class="info-top-nav">
+            <a href="{% url 'messaging:inbox' %}" class="btn-nav-back" aria-label="Back to inbox">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div class="info-header-brand">
+                <div class="brand-icon-circle">
+                    <i class="fa-solid fa-quote-left"></i>
+                </div>
+                <span>Kaapool</span>
+            </div>
+        </div>
+
+        <!-- MAIN HEADING -->
+        <h1 class="info-main-title">How to stay updated</h1>
+
+        <!-- BELL VECTOR ILLUSTRATION -->
+        <div class="info-vector-container">
+            <svg class="info-vector-svg" viewBox="0 0 260 170" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Background soft orange cloud circle -->
+                <ellipse cx="130" cy="95" rx="75" ry="45" fill="#ffedd5" opacity="0.8"/>
+                <!-- Bell Body -->
+                <path d="M130 35C110 35 95 50 95 72V102L85 112V118H175V112L165 102V72C165 50 150 35 130 35Z" fill="#f89516"/>
+                <!-- Bell Clapper -->
+                <path d="M118 124C118 130.627 123.373 136 130 136C136.627 136 142 130.627 142 124H118Z" fill="#e07f07"/>
+                <!-- Sound Rays -->
+                <path d="M72 60L60 52" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
+                <path d="M62 82L48 82" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
+                <path d="M72 104L60 112" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <!-- DESCRIPTION TEXT -->
+        <div class="info-body-text">
+            <p>
+                We're making a change to how we send you booking and cancellation updates. You'll now receive these updates via push. Switch back to SMS in your contact preferences.
+            </p>
+        </div>
+
+        <!-- CTA BUTTON -->
+        <a href="{% url 'notifications:list' %}" class="btn-cta-orange">
+            Turn on notifications
+        </a>
+    </div>
+</div>
+{% endblock content %}
+
+{% block footer %}{% endblock footer %}

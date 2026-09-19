@@ -107,7 +107,7 @@
 
         <div class="top-rides-grid">
             {% for route in popular_routes %}
-            <a href="{% url 'rides:search' %}?origin={{ route.origin }}&destination={{ route.destination }}"
+            <a href="{% url 'rides:search' %}?origin={{ route.search_origin|default:route.origin }}&destination={{ route.search_dest|default:route.destination }}"
                 class="route-card">
                 <div class="route-info">
                     <span class="route-cities">{{ route.origin }} <i class="fa-solid fa-arrow-right"></i> {{ route.destination }}</span>
@@ -208,20 +208,40 @@
     <div class="section-container">
         <div class="stats-grid">
             <div class="stat-box">
-                <span class="stat-number">21L+</span>
-                <span class="stat-label">Happy Commuters</span>
+                <span class="stat-number animated-counter"
+                      data-target="{{ stats_data.stat1_target }}"
+                      data-prefix="{{ stats_data.stat1_prefix }}"
+                      data-suffix="{{ stats_data.stat1_suffix }}">
+                    {{ stats_data.stat1_prefix }}{{ stats_data.stat1_target|floatformat:"0" }}{{ stats_data.stat1_suffix }}
+                </span>
+                <span class="stat-label">{{ stats_data.stat1_label }}</span>
             </div>
             <div class="stat-box">
-                <span class="stat-number">180+</span>
-                <span class="stat-label">Cities Connected</span>
+                <span class="stat-number animated-counter"
+                      data-target="{{ stats_data.stat2_target }}"
+                      data-prefix="{{ stats_data.stat2_prefix }}"
+                      data-suffix="{{ stats_data.stat2_suffix }}">
+                    {{ stats_data.stat2_prefix }}{{ stats_data.stat2_target|floatformat:"0" }}{{ stats_data.stat2_suffix }}
+                </span>
+                <span class="stat-label">{{ stats_data.stat2_label }}</span>
             </div>
             <div class="stat-box">
-                <span class="stat-number">9,400 t</span>
-                <span class="stat-label">CO₂ Emissions Saved</span>
+                <span class="stat-number animated-counter"
+                      data-target="{{ stats_data.stat3_target }}"
+                      data-prefix="{{ stats_data.stat3_prefix }}"
+                      data-suffix="{{ stats_data.stat3_suffix }}">
+                    {{ stats_data.stat3_prefix }}{{ stats_data.stat3_target|floatformat:"0" }}{{ stats_data.stat3_suffix }}
+                </span>
+                <span class="stat-label">{{ stats_data.stat3_label }}</span>
             </div>
             <div class="stat-box">
-                <span class="stat-number">₹41 Cr+</span>
-                <span class="stat-label">Member Cost Saved</span>
+                <span class="stat-number animated-counter"
+                      data-target="{{ stats_data.stat4_target }}"
+                      data-prefix="{{ stats_data.stat4_prefix }}"
+                      data-suffix="{{ stats_data.stat4_suffix }}">
+                    {{ stats_data.stat4_prefix }}{{ stats_data.stat4_target|floatformat:"0" }}{{ stats_data.stat4_suffix }}
+                </span>
+                <span class="stat-label">{{ stats_data.stat4_label }}</span>
             </div>
         </div>
     </div>
@@ -381,4 +401,56 @@
         </div>
     </div>
 </section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const counters = document.querySelectorAll(".animated-counter");
+    if (!counters.length) return;
+
+    const animateCounter = (el) => {
+        const rawTarget = el.getAttribute("data-target");
+        const target = parseFloat(rawTarget) || 0;
+        const prefix = el.getAttribute("data-prefix") || "";
+        const suffix = el.getAttribute("data-suffix") || "";
+        const duration = 2200; // 2.2 seconds animation
+        const frameRate = 1000 / 60;
+        const totalFrames = Math.round(duration / frameRate);
+        let frame = 0;
+
+        const countUp = () => {
+            frame++;
+            const progress = frame / totalFrames;
+            // Smooth easeOutCubic curve
+            const easeProgress = 1 - Math.pow(1 - progress, 3);
+            const currentVal = Math.floor(target * easeProgress);
+
+            const formattedVal = currentVal.toLocaleString('en-US');
+            el.textContent = `${prefix}${formattedVal}${suffix}`;
+
+            if (frame < totalFrames) {
+                requestAnimationFrame(countUp);
+            } else {
+                el.textContent = `${prefix}${target.toLocaleString('en-US')}${suffix}`;
+            }
+        };
+
+        countUp();
+    };
+
+    const observerOptions = {
+        threshold: 0.2
+    };
+
+    const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateCounter(entry.target);
+                obs.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    counters.forEach(counter => observer.observe(counter));
+});
+</script>
 {% endblock content %}

@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Crop Profile Picture - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+.pic-edit-wrapper {
+    background: #ffffff;
+    min-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+    position: relative;
+}
+
+
+.cropper-main-box {
+    width: 100%;
+    max-width: 720px;
+    height: 480px;
+    background: #333945;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22);
+    user-select: none;
+}
+
+.cropper-viewport {
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 0 0 9999px #333945;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.cropper-viewport:active {
+    cursor: grabbing;
+}
+
+#targetImage {
+    position: absolute;
+    transform-origin: center center;
+    max-width: none;
+    max-height: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+}
+
+.crop-controls-overlay {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    right: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 20;
+    pointer-events: none;
+}
+
+.crop-btn-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #0f172a;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+    pointer-events: auto;
+}
+
+.crop-btn-circle:hover {
+    background: #f8fafc;
+    transform: scale(1.08);
+}
+
+.zoom-group {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-save-cropped {
+    margin-top: 2rem;
+    padding: 0.95rem 4rem;
+    background: #f89516;
+    color: #ffffff;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.15rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 9999px;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(248, 149, 22, 0.35);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-save-cropped:hover {
+    background: #d97d0d;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(248, 149, 22, 0.45);
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="pic-edit-wrapper">
+    <a href="{% url 'accounts:personal_details' %}" class="btn-page-back" title="Go back">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
+    <div class="cropper-main-box">
+
+        <div class="cropper-viewport" id="viewport">
+            <img id="targetImage" src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800{% endif %}" alt="Image to crop">
+        </div>
+
+        <div class="crop-controls-overlay">
+            <button type="button" class="crop-btn-circle" onclick="rotateImage()" title="Rotate 90deg">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+
+            <div class="zoom-group">
+                <button type="button" class="crop-btn-circle" onclick="zoomImage(-0.1)" title="Zoom Out">
+                    <i class="fa-solid fa-minus"></i>
+                </button>
+                <button type="button" class="crop-btn-circle" onclick="zoomImage(0.1)" title="Zoom In">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <form id="cropForm" method="post" action="{% url 'accounts:profile_picture_edit' %}">
+        {% csrf_token %}
+        <input type="hidden" name="cropped_image_data" id="croppedImageData">
+        <button type="button" class="btn-save-cropped" onclick="saveCroppedImage()">Save</button>
+    </form>
+</div>
+
+<script>
+let scale = 1.0;
+let rotation = 0;
+let posX = 0;
+let posY = 0;
+let isDragging = false;
+let startX, startY;
+
+const img = document.getElementById('targetImage');
+const viewport = document.getElementById('viewport');
+
+document.addEventListener('DOMContentLoaded', function() {
+    const storedPic = sessionStorage.getItem('tempProfilePic');
+    if (storedPic) {
+        img.src = storedPic;
+    }
+    
+    img.onload = function() {
+        const viewportSize = 380;
+        if (img.naturalWidth && img.naturalHeight) {
+            const aspect = img.naturalWidth / img.naturalHeight;
+            if (aspect > 1) {
+                img.style.height = viewportSize + 'px';
+                img.style.width = (viewportSize * aspect) + 'px';
+            } else {
+                img.style.width = viewportSize + 'px';
+                img.style.height = (viewportSize / aspect) + 'px';
+            }
+        }
+        updateTransform();
+    };
+});
+
+function updateTransform() {
+    img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale}) rotate(${rotation}deg)`;
+}
+
+function zoomImage(delta) {
+    scale = Math.max(0.1, Math.min(5.0, scale + delta));
+    updateTransform();
+}
+
+function rotateImage() {
+    rotation = (rotation + 90) % 360;
+    updateTransform();
+}
+
+// Drag / Pan mouse & touch controls
+viewport.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    startX = e.clientX - posX;
+    startY = e.clientY - posY;
+});
+
+window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    posX = e.clientX - startX;
+    posY = e.clientY - startY;
+    updateTransform();
+});
+
+window.addEventListener('mouseup', () => {
+    isDragging = false;
+});
+
+// Touch support for mobile
+viewport.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+        isDragging = true;
+        startX = e.touches[0].clientX - posX;
+        startY = e.touches[0].clientY - posY;
+    }
+});
+
+window.addEventListener('touchmove', (e) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    posX = e.touches[0].clientX - startX;
+    posY = e.touches[0].clientY - startY;
+    updateTransform();
+});
+
+window.addEventListener('touchend', () => {
+    isDragging = false;
+});
+
+function saveCroppedImage() {
+    const canvas = document.createElement('canvas');
+    const size = 600;
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Fill white background for clean output
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, size, size);
+
+    // Apply circular clip
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.clip();
+
+    ctx.save();
+    ctx.translate(size / 2, size / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.scale(scale, scale);
+
+    const viewportSize = 380;
+    const ratio = size / viewportSize;
+
+    let drawW = parseFloat(img.style.width) || viewportSize;
+    let drawH = parseFloat(img.style.height) || viewportSize;
+
+    ctx.drawImage(img, (-drawW / 2 + posX) * ratio, (-drawH / 2 + posY) * ratio, drawW * ratio, drawH * ratio);
+    ctx.restore();
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    document.getElementById('croppedImageData').value = dataUrl;
+    document.getElementById('cropForm').submit();
+}
+</script>
+{% endblock content %}
+
+{% block footer %}{% endblock footer %}

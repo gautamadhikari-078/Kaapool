@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Select Document Type - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+.doc-select-wrapper {
+    background: #ffffff;
+    min-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+    position: relative;
+}
+
+.doc-select-card {
+    max-width: 580px;
+    width: 100%;
+    text-align: center;
+}
+
+.doc-select-heading {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.25;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.5px;
+}
+
+.doc-select-sub {
+    font-size: 1.05rem;
+    color: #475569;
+    margin-bottom: 2.5rem;
+}
+
+.doc-options-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+}
+
+.doc-option-card {
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: left;
+}
+
+.doc-option-card:hover {
+    border-color: #f89516;
+    background: #fff8ed;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(248, 149, 22, 0.12);
+}
+
+.doc-option-card.selected {
+    border-color: #f89516;
+    background: #fff8ed;
+    box-shadow: 0 0 0 4px rgba(248, 149, 22, 0.15);
+}
+
+.doc-option-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.doc-option-icon {
+    width: 54px;
+    height: 38px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #475569;
+}
+
+.btn-doc-continue {
+    width: 100%;
+    padding: 1rem;
+    background: #f89516;
+    color: #ffffff;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(248, 149, 22, 0.35);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-doc-continue:hover {
+    background: #d97d0d;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(248, 149, 22, 0.45);
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="doc-select-wrapper">
+    <a href="{% url 'accounts:verify_id' %}" class="btn-page-back" title="Go back">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
+    <div class="doc-select-card">
+        <h1 class="doc-select-heading">Select document type</h1>
+        <p class="doc-select-sub">Please select the type of document you are using to verify your identity:</p>
+
+        <form id="docTypeForm" method="get" action="{% url 'accounts:document_upload' %}">
+            <input type="hidden" name="type" id="selectedDocType" value="id_card">
+
+            <div class="doc-options-stack">
+                <!-- OPTION 1: ID CARD -->
+                <div class="doc-option-card selected" onclick="selectDocType(this, 'id_card')">
+                    <div>
+                        <span class="doc-option-title" style="display: block;">Aadhaar / ID Card</span>
+                        <span style="font-size: 0.825rem; color: #64748b; font-weight: 500;">Front &amp; Back side photos required</span>
+                    </div>
+                    <div class="doc-option-icon" style="color: #f89516;">
+                        <i class="fa-solid fa-id-card"></i>
+                    </div>
+                </div>
+
+                <!-- OPTION 2: PASSPORT -->
+                <div class="doc-option-card" onclick="selectDocType(this, 'passport')">
+                    <div>
+                        <span class="doc-option-title" style="display: block;">Passport</span>
+                        <span style="font-size: 0.825rem; color: #64748b; font-weight: 500;">Front main data page photo required</span>
+                    </div>
+                    <div class="doc-option-icon" style="color: #8b5cf6;">
+                        <i class="fa-solid fa-passport"></i>
+                    </div>
+                </div>
+
+                <!-- OPTION 3: DRIVER LICENSE -->
+                <div class="doc-option-card" onclick="selectDocType(this, 'driver_license')">
+                    <div>
+                        <span class="doc-option-title" style="display: block;">Driver's License</span>
+                        <span style="font-size: 0.825rem; color: #64748b; font-weight: 500;">Front &amp; Back side photos required</span>
+                    </div>
+                    <div class="doc-option-icon" style="color: #059669;">
+                        <i class="fa-solid fa-address-card"></i>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-doc-continue">Continue</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function selectDocType(element, typeVal) {
+    document.querySelectorAll('.doc-option-card').forEach(card => card.classList.remove('selected'));
+    element.classList.add('selected');
+    document.getElementById('selectedDocType').value = typeVal;
+}
+</script>
+{% endblock content %}
+
+{% block footer %}{% endblock footer %}

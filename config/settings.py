@@ -20,11 +20,27 @@ DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
 
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') if host.strip()]
 
+# OpenRouteService API Key
+OPENROUTESERVICE_API_KEY = os.getenv('OPENROUTESERVICE_API_KEY', '')
+
+# Google Maps Platform API Key
+GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY', '')
+
+# Mapbox Access Token
+MAPBOX_ACCESS_TOKEN = os.getenv('MAPBOX_ACCESS_TOKEN', '')
+
+# Sumsub Identity Verification API Credentials
+SUMSUB_APP_TOKEN = os.getenv('SUMSUB_APP_TOKEN', '')
+SUMSUB_SECRET_KEY = os.getenv('SUMSUB_SECRET_KEY', '')
+SUMSUB_BASE_URL = os.getenv('SUMSUB_BASE_URL', 'https://api.sumsub.com')
+SUMSUB_LEVEL_NAME = os.getenv('SUMSUB_LEVEL_NAME', 'id-only')
+
 # Custom User Model definition
 AUTH_USER_MODEL = 'accounts.User'
 
 # Application definition
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -34,6 +50,7 @@ INSTALLED_APPS = [
 
     # Third-party packages
     'rest_framework',
+    'channels',
 
     # Kaapool local applications
     'apps.core',
@@ -43,7 +60,17 @@ INSTALLED_APPS = [
     'apps.payments',
     'apps.notifications',
     'apps.messaging',
+    'apps.admin_panel',
 ]
+
+ASGI_APPLICATION = 'config.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -118,7 +145,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Login / Logout Redirect URLs
 LOGIN_URL = 'accounts:login'
-LOGIN_REDIRECT_URL = 'accounts:dashboard'
+LOGIN_REDIRECT_URL = 'accounts:profile'
 LOGOUT_REDIRECT_URL = 'core:home'
 
 # Internationalization
@@ -165,3 +192,25 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
+
+# Email & SMTP Settings
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'gautamadhikari071@gmail.com')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'xcrmswfdxquftzmv')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Kaapool <gautamadhikari071@gmail.com>')
+
+# CSRF Security & Trusted Origins
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
+    'http://127.0.0.1',
+    'http://localhost',
+]
+
+# Graceful custom CSRF failure handler
+CSRF_FAILURE_VIEW = 'apps.core.views.custom_csrf_failure'
+
+

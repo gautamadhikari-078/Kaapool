@@ -1,0 +1,55 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Administrator Users & Roles - Kaapool Admin{% endblock %}
+{% block page_heading %}Admin Users & RBAC Permissions{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Administrator Accounts & Roles</h2>
+        <p class="page-subtitle">Assign granular system roles (Super Admin, Operations, Verification, Support, Content, Finance).</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Admin User</th>
+                    <th>Email</th>
+                    <th>Current Role</th>
+                    <th>Staff Status</th>
+                    <th>Superuser</th>
+                    <th>Change Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in admins %}
+                <tr>
+                    <td><strong>{{ a.get_full_name|default:a.username }}</strong> (@{{ a.username }})</td>
+                    <td>{{ a.email|default:"N/A" }}</td>
+                    <td><span class="badge badge-info">{{ a.role|upper }}</span></td>
+                    <td>{% if a.is_staff %}<span class="badge badge-success">Staff</span>{% else %}<span class="badge badge-secondary">No</span>{% endif %}</td>
+                    <td>{% if a.is_superuser %}<span class="badge badge-danger">Superuser</span>{% else %}<span class="badge badge-secondary">No</span>{% endif %}</td>
+                    <td>
+                        <form method="POST" action="{% url 'admin_panel:admins_list' %}" style="display: flex; gap: 0.5rem; align-items: center;">
+                            {% csrf_token %}
+                            <input type="hidden" name="user_id" value="{{ a.id }}">
+                            <select name="role" class="select-input" style="padding: 4px 8px; font-size: 0.8rem;">
+                                {% for r_code, r_label in role_choices %}
+                                    <option value="{{ r_code }}" {% if a.role == r_code %}selected{% endif %}>{{ r_label }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-primary btn-sm">Update</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No admin accounts configured.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

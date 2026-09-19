@@ -1,0 +1,152 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .change-form-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .change-form-title {
+        font-family: var(--font-heading);
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .form-card {
+        background: #ffffff;
+        border: 1px solid var(--border-card);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        max-width: 900px;
+    }
+
+    .form-row {
+        margin-bottom: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .form-row label {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--text-main);
+    }
+
+    .form-row input[type="text"],
+    .form-row input[type="password"],
+    .form-row input[type="email"],
+    .form-row input[type="number"],
+    .form-row input[type="datetime-local"],
+    .form-row select,
+    .form-row textarea {
+        padding: 0.6rem 0.85rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-card);
+        outline: none;
+        font-family: inherit;
+        font-size: 0.9rem;
+        background: #ffffff;
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .form-row input:focus,
+    .form-row select:focus,
+    .form-row textarea:focus {
+        border-color: #d4a737;
+        box-shadow: 0 0 0 3px rgba(212, 167, 55, 0.15);
+    }
+
+    .submit-row {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 2rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .submit-row input[type="submit"] {
+        background: #2b251d;
+        color: #ffffff;
+        padding: 0.65rem 1.4rem;
+        border-radius: 10px;
+        border: none;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .submit-row input[type="submit"]:hover {
+        background: #3d352b;
+    }
+
+    .submit-row a.deletelink {
+        background: var(--badge-red-bg);
+        color: var(--badge-red-text);
+        padding: 0.65rem 1.4rem;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-left: auto;
+    }
+
+    fieldset {
+        border: none;
+        padding: 0;
+        margin-bottom: 1.5rem;
+    }
+
+    fieldset h2 {
+        font-family: var(--font-heading);
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .help {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="change-form-header">
+    <h1 class="change-form-title">
+        {% if add %}Add {{ opts.verbose_name }}{% else %}Edit {{ original }}{% endif %}
+    </h1>
+</div>
+
+<div class="form-card">
+    <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.model_name }}_form" novalidate>
+        {% csrf_token %}
+        {% block field_sets %}
+            {% for fieldset in adminform %}
+                {% include "admin/includes/fieldset.html" %}
+            {% endfor %}
+        {% endblock %}
+
+        {% block after_field_sets %}{% endblock %}
+
+        {% block inline_field_sets %}
+            {% for inline_admin_formset in inline_admin_formsets %}
+                {% include "admin/edit_inline/stacked.html" %}
+            {% endfor %}
+        {% endblock %}
+
+        {% block after_related_objects %}{% endblock %}
+
+        {% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
+    </form>
+</div>
+{% endblock %}

@@ -87,7 +87,15 @@ class BookingCreateView(LoginRequiredMixin, View):
         ride.available_seats -= seats_booked
         ride.save()
 
+        if request.user.email:
+            try:
+                from apps.core.email_service import EmailService
+                EmailService.send_booking_confirmation(booking)
+            except Exception:
+                pass
+
         return redirect('bookings:success', pk=booking.pk)
+
 
 
 class BookingSuccessView(LoginRequiredMixin, DetailView):

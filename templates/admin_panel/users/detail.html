@@ -1,0 +1,212 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}User #{{ target_user.id }} Profile - Kaapool Admin{% endblock %}
+{% block page_heading %}User Profile Details{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">{{ target_user.get_full_name|default:target_user.username }}</h2>
+        <p class="page-subtitle">User ID: #{{ target_user.id }} | Member since {{ target_user.date_joined|date:"F d, Y" }}</p>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+        <button onclick="document.getElementById('editUserModal').style.display='flex'" class="btn btn-primary"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>
+        <a href="{% url 'admin_panel:user_list' %}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back to Users</a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem;">
+    <!-- Left Column: User Card & Status Actions -->
+    <div>
+        <div class="card">
+            <div style="text-align: center; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 1rem;">
+                <div class="user-avatar" style="width: 72px; height: 72px; font-size: 1.75rem; margin: 0 auto 0.75rem;">
+                    {{ target_user.username|slice:":1"|upper }}
+                </div>
+                <h3 style="font-size: 1.2rem; font-weight: 700;">{{ target_user.get_full_name|default:target_user.username }}</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">@{{ target_user.username }}</p>
+                <div style="margin-top: 0.5rem;">
+                    {% if target_user.is_blocked %}
+                        <span class="badge badge-danger">Blocked</span>
+                    {% else %}
+                        <span class="badge badge-success">Active</span>
+                    {% endif %}
+                    {% if target_user.is_verified_driver %}
+                        <span class="badge badge-info">Verified Driver</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
+                <div><strong>Email:</strong> {{ target_user.email|default:"N/A" }}</div>
+                <div><strong>Phone:</strong> {{ target_user.phone_number|default:"N/A" }}</div>
+                <div><strong>Role:</strong> {{ target_user.role|title }}</div>
+                <div><strong>Bio:</strong> {{ target_user.bio|default:"No bio added." }}</div>
+                {% if target_user.is_blocked %}
+                    <div style="padding: 0.75rem; background: var(--status-danger-bg); color: var(--status-danger-text); border-radius: 8px;">
+                        <strong>Block Reason:</strong> {{ target_user.block_reason }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Admin Actions -->
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem;">Administrative Controls</h4>
+                <form method="POST" action="{% url 'admin_panel:user_action' pk=target_user.pk %}">
+                    {% csrf_token %}
+                    {% if target_user.is_blocked %}
+                        <input type="hidden" name="action" value="unblock">
+                        <button type="submit" class="btn btn-secondary" style="width: 100%; justify-content: center; margin-bottom: 0.5rem;"><i class="fa-solid fa-lock-open"></i> Unblock Account</button>
+                    {% else %}
+                        <input type="hidden" name="action" value="block">
+                        <input type="text" name="reason" placeholder="Reason for blocking user..." class="search-input" style="width: 100%; margin-bottom: 0.5rem;" required>
+                        <button type="submit" class="btn btn-danger" style="width: 100%; justify-content: center; margin-bottom: 0.5rem;"><i class="fa-solid fa-ban"></i> Block Account</button>
+                    {% endif %}
+                </form>
+
+                <form method="POST" action="{% url 'admin_panel:user_action' pk=target_user.pk %}" style="margin-bottom: 0.5rem;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="toggle_driver_verify">
+                    <button type="submit" class="btn btn-secondary" style="width: 100%; justify-content: center;">
+                        <i class="fa-solid fa-certificate"></i> Toggle Driver Verification
+                    </button>
+                </form>
+
+                <form method="POST" action="{% url 'admin_panel:user_delete' pk=target_user.pk %}" onsubmit="return confirm('Permanently delete this user account?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger" style="width: 100%; justify-content: center;">
+                        <i class="fa-solid fa-trash"></i> Delete User Account
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Rides, Bookings, Vehicles, Complaints -->
+    <div>
+        <!-- Offered Rides -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fa-solid fa-car"></i> Offered Rides ({{ user_rides.count }})</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Route</th>
+                            <th>Departure</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in user_rides %}
+                        <tr>
+                            <td>#{{ r.id }}</td>
+                            <td>{{ r.origin }} &rarr; {{ r.destination }}</td>
+                            <td>{{ r.departure_time|date:"M d, H:i" }}</td>
+                            <td>&#8377;{{ r.price_per_seat }}</td>
+                            <td><span class="badge badge-secondary">{{ r.status }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No rides offered.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bookings -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fa-solid fa-ticket"></i> Ride Bookings ({{ user_bookings.count }})</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Ride Route</th>
+                            <th>Seats</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in user_bookings %}
+                        <tr>
+                            <td>#{{ b.id }}</td>
+                            <td>{{ b.ride.origin }} &rarr; {{ b.ride.destination }}</td>
+                            <td>{{ b.seats_booked }}</td>
+                            <td>&#8377;{{ b.total_price }}</td>
+                            <td><span class="badge badge-secondary">{{ b.status }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No bookings made.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Edit User -->
+<div id="editUserModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 14px; width: 100%; max-width: 500px; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+            <h3 style="font-size: 1.15rem; font-weight: 700;"><i class="fa-solid fa-pen-to-square" style="color: var(--brand-orange);"></i> Edit User Profile</h3>
+            <button onclick="document.getElementById('editUserModal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form method="POST" action="{% url 'admin_panel:user_edit' pk=target_user.pk %}">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">First Name</label>
+                    <input type="text" name="first_name" value="{{ target_user.first_name }}" class="search-input" style="width: 100%;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Last Name</label>
+                    <input type="text" name="last_name" value="{{ target_user.last_name }}" class="search-input" style="width: 100%;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Email Address</label>
+                    <input type="email" name="email" value="{{ target_user.email }}" class="search-input" style="width: 100%;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Phone Number</label>
+                    <input type="text" name="phone_number" value="{{ target_user.phone_number }}" class="search-input" style="width: 100%;">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Role</label>
+                <select name="role" class="select-input" style="width: 100%;">
+                    <option value="user" {% if target_user.role == 'user' %}selected{% endif %}>Normal User</option>
+                    <option value="super_admin" {% if target_user.role == 'super_admin' %}selected{% endif %}>Super Admin</option>
+                    <option value="operations_admin" {% if target_user.role == 'operations_admin' %}selected{% endif %}>Operations Admin</option>
+                    <option value="verification_admin" {% if target_user.role == 'verification_admin' %}selected{% endif %}>Verification Admin</option>
+                    <option value="support_admin" {% if target_user.role == 'support_admin' %}selected{% endif %}>Support Admin</option>
+                    <option value="content_admin" {% if target_user.role == 'content_admin' %}selected{% endif %}>Content Admin</option>
+                    <option value="finance_admin" {% if target_user.role == 'finance_admin' %}selected{% endif %}>Finance Admin</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Reset Password (Leave blank to keep current)</label>
+                <input type="password" name="password" class="search-input" style="width: 100%;" placeholder="New password...">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <button type="button" onclick="document.getElementById('editUserModal').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1148 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ user.first_name|default:user.username }}'s Profile - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+    .details-page-wrapper {
+        background-color: #ffffff;
+        min-height: 90vh;
+        padding: 2.5rem 1.5rem 5rem 1.5rem;
+        font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+        position: relative;
+    }
+
+    .details-container {
+        max-width: 660px;
+        margin: 0 auto;
+        position: relative;
+        padding-top: 1rem;
+    }
+
+    /* TOP BACK & EDIT BAR */
+    .btn-top-edit {
+        position: absolute;
+        top: 0;
+        right: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 1.15rem;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #0f172a;
+        border: 1.5px solid #e2e8f0;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.92rem;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        cursor: pointer;
+        z-index: 10;
+        text-decoration: none;
+    }
+
+    .btn-top-edit:hover {
+        background: #f89516;
+        color: #ffffff;
+        border-color: #f89516;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(248, 149, 22, 0.35);
+    }
+
+    @media (max-width: 768px) {
+        .btn-top-edit {
+            top: -0.5rem;
+            right: 0;
+            padding: 0.45rem 0.9rem;
+            font-size: 0.85rem;
+        }
+    }
+
+    /* TOP MEMBER HEADER (BLABLACAR SPEC) */
+    .member-header-block {
+        display: flex;
+        align-items: center;
+        gap: 1.75rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .member-avatar-wrapper {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        flex-shrink: 0;
+    }
+
+    .member-avatar-circle {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: #f89516;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.75rem;
+        font-weight: 800;
+        overflow: hidden;
+        box-shadow: 0 6px 20px rgba(248, 149, 22, 0.3);
+        border: 3px solid #ffffff;
+    }
+
+    .member-avatar-edit-badge {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #0f172a;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s ease, background 0.2s ease;
+        text-decoration: none;
+    }
+
+    .member-avatar-edit-badge:hover {
+        background: #f89516;
+        transform: scale(1.1);
+    }
+
+    .member-name-heading {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.15;
+    }
+
+    .member-age-sub {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-top: 0.2rem;
+    }
+
+    .member-exp-level {
+        font-size: 0.9rem;
+        color: #475569;
+        font-weight: 500;
+        margin-top: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .member-rating-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.85rem 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .member-rating-row:hover {
+        color: #f89516;
+    }
+
+    /* PERSONAL DETAILS DISPLAY CARD */
+    .personal-details-card {
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
+    }
+
+    .card-section-title {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .details-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem 1.5rem;
+    }
+
+    @media (max-width: 600px) {
+        .details-info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .detail-info-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px dashed #f1f5f9;
+    }
+
+    .detail-info-row.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .detail-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+        font-size: 0.98rem;
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    /* VERIFICATIONS LIST */
+    .verifications-list-box {
+        padding: 1.25rem 0;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+    }
+
+    .verification-check-item {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .verification-icon-check {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #10b981;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    /* UPLOADED DOCUMENTS CARD */
+    .uploaded-docs-card {
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 1.5rem;
+        margin: 1.75rem 0;
+    }
+
+    .docs-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .docs-card-title {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .doc-status-badge {
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .doc-status-badge.verified {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .doc-status-badge.pending {
+        background: #fffbeb;
+        color: #b45309;
+    }
+
+    .docs-list-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .doc-item-row {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.9rem;
+    }
+
+    .doc-item-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .doc-type-icon {
+        font-size: 1.25rem;
+        color: #f89516;
+    }
+
+    /* ABOUT SECTION */
+    .about-member-section {
+        padding: 1.5rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .about-section-title {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 1.25rem;
+    }
+
+    .pref-row-item {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.65rem 0;
+        font-size: 0.95rem;
+        color: #334155;
+        font-weight: 500;
+    }
+
+    .pref-row-item i {
+        font-size: 1.1rem;
+        color: #64748b;
+        width: 22px;
+    }
+
+    .member-meta-note {
+        font-size: 0.9rem;
+        color: #64748b;
+        padding: 1rem 0 0.5rem 0;
+        line-height: 1.6;
+    }
+
+    /* EDIT SECTION FORM */
+    .edit-details-form-box {
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 1.75rem;
+        margin-top: 2rem;
+        display: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    }
+
+    .edit-details-form-box.active {
+        display: block;
+    }
+
+    .form-field-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-field-group label {
+        display: block;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.4rem;
+    }
+
+    .form-field-group input,
+    .form-field-group textarea {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        outline: none;
+        font-family: inherit;
+        transition: border-color 0.2s ease;
+    }
+
+    .form-field-group input:focus,
+    .form-field-group textarea:focus {
+        border-color: #f89516;
+    }
+
+    .btn-toggle-edit {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.75rem;
+        background: #f89516;
+        color: #ffffff;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.95rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        box-shadow: 0 4px 14px rgba(248, 149, 22, 0.3);
+        transition: all 0.2s ease;
+        margin-top: 1.5rem;
+    }
+
+    .btn-toggle-edit:hover {
+        background: #d97d0d;
+        transform: translateY(-2px);
+    }
+
+    /* DOCUMENT BUTTONS & MODAL STYLES */
+    .btn-view-doc-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 1.25rem;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1.5px solid #f89516;
+        color: #f89516;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.88rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 2px 8px rgba(248, 149, 22, 0.12);
+    }
+
+    .btn-view-doc-pill:hover {
+        background: #f89516;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(248, 149, 22, 0.35);
+    }
+
+    .btn-add-doc-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 1.25rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #f89516 0%, #e07e06 100%);
+        color: #ffffff;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.88rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(248, 149, 22, 0.3);
+    }
+
+    .btn-add-doc-pill:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(248, 149, 22, 0.4);
+        color: #ffffff;
+    }
+
+    .doc-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(6px);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem;
+        animation: fadeInModal 0.25s ease-out;
+    }
+
+    @keyframes fadeInModal {
+        from {
+            opacity: 0;
+            transform: scale(0.96);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .doc-modal-card {
+        background: #ffffff;
+        border-radius: 26px;
+        width: 100%;
+        max-width: 920px;
+        max-height: 92vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.35);
+        border: 1px solid #e2e8f0;
+    }
+
+    .doc-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.35rem 2rem;
+        border-bottom: 1.5px solid #f1f5f9;
+        background: #ffffff;
+    }
+
+    .doc-modal-title {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .doc-modal-close-btn {
+        background: #f1f5f9;
+        border: none;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        font-size: 1.4rem;
+        color: #64748b;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .doc-modal-close-btn:hover {
+        background: #ef4444;
+        color: #ffffff;
+    }
+
+    .doc-modal-body {
+        padding: 1.75rem 2rem;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .doc-meta-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .meta-banner-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .meta-banner-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .meta-banner-val {
+        font-size: 1.08rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .badge-modal-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 1rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .badge-modal-status.verified {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+    }
+
+    .badge-modal-status.pending {
+        background: #fef3c7;
+        color: #b45309;
+        border: 1px solid #fde68a;
+    }
+
+    .badge-modal-status.declined {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+
+    .doc-number-strip {
+        font-size: 0.92rem;
+        color: #475569;
+        margin-bottom: 1.5rem;
+        background: #fff7ed;
+        border: 1px solid #ffedd5;
+        padding: 0.75rem 1.25rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .doc-images-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .doc-image-card {
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .doc-image-label {
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.85rem;
+        width: 100%;
+        text-align: left;
+    }
+
+    .doc-img-frame {
+        width: 100%;
+        height: 320px;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .doc-img-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        cursor: pointer;
+        transition: transform 0.25s ease;
+    }
+
+    .doc-img-frame img:hover {
+        transform: scale(1.03);
+    }
+
+    .doc-pdf-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .doc-modal-footer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1.35rem 2rem;
+        border-top: 1.5px solid #f1f5f9;
+        background: #ffffff;
+    }
+
+    .btn-modal-upload-new {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.65rem;
+        padding: 0.85rem 2.25rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #f89516 0%, #e07e06 100%);
+        color: #ffffff;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 1rem;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 6px 20px rgba(248, 149, 22, 0.35);
+        transition: all 0.25s ease;
+    }
+
+    .btn-modal-upload-new:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(248, 149, 22, 0.45);
+        color: #ffffff;
+    }
+
+    .doc-img-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        cursor: pointer;
+        transition: transform 0.25s ease;
+    }
+
+    .doc-img-frame img:hover {
+        transform: scale(1.05);
+    }
+
+    .doc-pdf-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .doc-zoom-link {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #f89516;
+        text-decoration: none;
+        margin-top: 0.65rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .doc-zoom-link:hover {
+        text-decoration: underline;
+    }
+
+    .digital-cert-card {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #ffffff;
+        border-radius: 20px;
+        padding: 2.25rem 1.75rem;
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+    }
+
+    .cert-seal-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: rgba(248, 149, 22, 0.18);
+        color: #f89516;
+        border: 2px solid #f89516;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.85rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .cert-title {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 1.35rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        color: #ffffff;
+    }
+
+    .cert-desc {
+        font-size: 0.9rem;
+        color: #94a3b8;
+        line-height: 1.55;
+        margin-bottom: 1.25rem;
+    }
+
+    .cert-meta-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #f89516;
+        background: rgba(248, 149, 22, 0.1);
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid rgba(248, 149, 22, 0.25);
+    }
+
+    .btn-modal-close-gray {
+        padding: 0.75rem 1.4rem;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 0.92rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn-modal-close-gray:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="details-page-wrapper">
+    <a href="{% url 'accounts:profile' %}" class="btn-page-back" title="Go back">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
+    <div class="details-container">
+        <!-- TOP RIGHT EDIT BUTTON (ICON & TEXT EDIT) -->
+        <a href="{% url 'accounts:edit_personal_details' %}" class="btn-top-edit">
+            <i class="fa-solid fa-pen-to-square"></i> Edit
+        </a>
+
+        <!-- MEMBER HEADER -->
+        <div class="member-header-block">
+            <div class="member-avatar-wrapper">
+                <div class="member-avatar-circle">
+                    {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}"
+                        style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <span>{{ user.first_name|default:user.username|slice:":1"|upper }}</span>
+                    {% endif %}
+                </div>
+                <input type="file" id="cameraAvatarFileInput" accept="image/*" style="display: none;"
+                    onchange="handleCameraAvatarSelect(event)">
+                <a href="{% url 'accounts:profile_picture_edit' %}"
+                    onclick="event.preventDefault(); document.getElementById('cameraAvatarFileInput').click();"
+                    class="member-avatar-edit-badge" title="Change Profile Photo">
+                    <i class="fa-solid fa-camera"></i>
+                </a>
+            </div>
+
+            <div>
+                <div class="member-name-heading">
+                    {{ user.first_name|default:user.username }} {{ user.last_name }}
+                </div>
+                <div class="member-age-sub">
+                    {% if user.age %}{{ user.age }} y/o{% else %}Member{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="member-exp-level">
+            Experience level: <strong>{% if user.is_verified_driver %}Verified Member{% else %}Newcomer{% endif %}</strong>
+        </div>
+
+        <a href="{% url 'accounts:ratings' %}" class="member-rating-row">
+            <span><i class="fa-solid fa-star" style="color: #f89516; margin-right: 4px;"></i> 1/5 – 1 rating</span>
+            <i class="fa-solid fa-chevron-right" style="color: #94a3b8; font-size: 0.9rem;"></i>
+        </a>
+
+
+        <!-- PERSONAL DETAILS DISPLAY CARD -->
+        <div class="personal-details-card">
+            <div class="card-section-title">
+                <i class="fa-solid fa-user" style="color: #f89516;"></i>
+                Personal Information
+            </div>
+            <div class="details-info-grid">
+                <div class="detail-info-row">
+                    <span class="detail-label">First Name</span>
+                    <span class="detail-value">{{ user.first_name|default:"Not specified" }}</span>
+                </div>
+                <div class="detail-info-row">
+                    <span class="detail-label">Last Name</span>
+                    <span class="detail-value">{{ user.last_name|default:"Not specified" }}</span>
+                </div>
+                <div class="detail-info-row">
+                    <span class="detail-label">Date of Birth</span>
+                    <span class="detail-value">{% if user.date_of_birth %}{{ user.date_of_birth|date:"F d, Y" }}{% else
+                        %}Not specified{% endif %}</span>
+                </div>
+                <div class="detail-info-row">
+                    <span class="detail-label">Email Address</span>
+                    <span class="detail-value">{{ user.email|default:"Not specified" }}</span>
+                </div>
+                <div class="detail-info-row">
+                    <span class="detail-label">Mobile Phone</span>
+                    <span class="detail-value">{% if user.phone_number %}{{ user.phone_number }}{% else %}Not
+                        specified{% endif %}</span>
+                </div>
+                <div class="detail-info-row full-width">
+                    <span class="detail-label">Mini Bio</span>
+                    <span class="detail-value">{% if user.bio %}{{ user.bio }}{% else %}I'm chatty when I feel
+                        comfortable{% endif %}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- VERIFICATIONS LIST -->
+        <div class="verifications-list-box">
+            {% if user.email %}
+            <div class="verification-check-item">
+                <div class="verification-icon-check"><i class="fa-solid fa-check"></i></div>
+                <span>Confirmed email</span>
+            </div>
+            {% endif %}
+
+            {% if user.phone_number or user.is_phone_verified %}
+            <div class="verification-check-item">
+                <div class="verification-icon-check"><i class="fa-solid fa-check"></i></div>
+                <span>Confirmed phone number</span>
+            </div>
+            {% endif %}
+
+            {% if user.is_verified_driver %}
+            <div class="verification-check-item">
+                <div class="verification-icon-check"><i class="fa-solid fa-shield-halved"></i></div>
+                <span>Government ID verified (Sumsub Authenticated)</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- UPLOADED VERIFIED DOCUMENTS CARD -->
+        <div class="uploaded-docs-card">
+            <div class="docs-card-header">
+                <div class="docs-card-title">
+                    <i class="fa-solid fa-id-card" style="color: #f89516;"></i>
+                    Identity Documents
+                </div>
+                {% if user.is_verified_driver or user.document_status == 'VERIFIED' %}
+                <span class="doc-status-badge verified">Verified</span>
+                {% elif user.has_uploaded_documents %}
+                <span class="doc-status-badge pending">Uploaded</span>
+                {% else %}
+                <span class="doc-status-badge pending">Not Uploaded</span>
+                {% endif %}
+            </div>
+
+            <div class="docs-list-grid">
+                <div class="doc-item-row">
+                    <div class="doc-item-left">
+                        <i class="fa-solid fa-shield-check doc-type-icon"></i>
+                        <div>
+                            <div>Govt. Identity Verification</div>
+                            <div style="font-size: 0.8rem; color: #64748b; font-weight: 500;">
+                                {% if user.has_uploaded_documents %}
+                                    {% if user.govt_id_type %}{{ user.govt_id_type|title }}{% else %}Identity Document Uploaded{% endif %}
+                                {% else %}
+                                    No document uploaded yet
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        {% if user.has_uploaded_documents or user.is_verified_driver %}
+                        <button type="button" onclick="openDocViewerModal()" class="btn-view-doc-pill">
+                            <i class="fa-solid fa-eye"></i> View Document
+                        </button>
+                        {% else %}
+                        <a href="{% url 'accounts:verify_id' %}" class="btn-add-doc-pill">
+                            <i class="fa-solid fa-plus"></i> Add Document
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABOUT MEMBER SECTION -->
+        <div class="about-member-section">
+            <h2 class="about-section-title">About {{ user.first_name|default:user.username }}</h2>
+
+            <div class="pref-row-item">
+                <i class="fa-solid fa-comment-dots"></i>
+                <span>{% if user.bio %}{{ user.bio }}{% else %}I'm chatty when I feel comfortable{% endif %}</span>
+            </div>
+
+            <div class="pref-row-item">
+                <i class="fa-solid fa-ban-smoking"></i>
+                <span>Smoking allowed</span>
+            </div>
+
+            <div class="member-meta-note">
+                {{ user.first_name|default:user.username }} is a non-professional member
+            </div>
+
+            <div class="member-meta-note" style="padding-top: 0.5rem;">
+                No published and completed rides
+            </div>
+
+            <div class="member-meta-note" style="padding-top: 0.25rem;">
+                Member since {{ user.date_joined|date:"F Y" }}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- DOCUMENT VIEWER POPUP MODAL -->
+<div id="docViewerModal" class="doc-modal-overlay" style="display: none;">
+    <div class="doc-modal-card">
+        <!-- Modal Header -->
+        <div class="doc-modal-header">
+            <div class="doc-modal-title">
+                <i class="fa-solid fa-id-card" style="color: #f89516;"></i>
+                <span>Uploaded Identity Document</span>
+            </div>
+            <button type="button" onclick="closeDocViewerModal()" class="doc-modal-close-btn">&times;</button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="doc-modal-body">
+            <!-- Meta Info Banner -->
+            <div class="doc-meta-banner">
+                <div class="meta-banner-item">
+                    <span class="meta-banner-label">Document Type</span>
+                    <span class="meta-banner-val">
+                        {% if user.govt_id_type %}{{ user.govt_id_type|title }}{% else %}Government Identity Document{% endif %}
+                    </span>
+                </div>
+                <div class="meta-banner-item">
+                    <span class="meta-banner-label">Verification Status</span>
+                    {% if user.is_verified_driver or user.document_status == 'VERIFIED' %}
+                    <span class="badge-modal-status verified"><i class="fa-solid fa-circle-check"></i> Verified</span>
+                    {% elif user.document_status == 'DECLINED' %}
+                    <span class="badge-modal-status declined"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
+                    {% else %}
+                    <span class="badge-modal-status pending"><i class="fa-solid fa-clock"></i> Under Review</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if user.govt_id_number %}
+            <div class="doc-number-strip">
+                <div>
+                    <strong style="color: #0f172a;">ID / Document Reference:</strong>
+                    <span style="font-weight: 700; margin-left: 0.35rem;">{{ user.govt_id_number }}</span>
+                </div>
+                <i class="fa-solid fa-shield-check" style="color: #f89516;"></i>
+            </div>
+            {% endif %}
+
+            <!-- Document Display Canvas -->
+            <div class="doc-display-canvas">
+                {% if user.govt_id_front or user.govt_id_back %}
+                <div class="doc-images-grid">
+                    {% if user.govt_id_front %}
+                    <div class="doc-image-card">
+                        <div class="doc-image-label">Front Side</div>
+                        <div class="doc-img-frame">
+                            {% if ".pdf" in user.govt_id_front.url|lower %}
+                            <iframe src="{{ user.govt_id_front.url }}" class="doc-pdf-iframe"></iframe>
+                            {% else %}
+                            <img src="{{ user.govt_id_front.url }}" alt="Govt ID Front"
+                                onclick="window.open('{{ user.govt_id_front.url }}', '_blank')"
+                                title="Click image to open full size">
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if user.govt_id_back %}
+                    <div class="doc-image-card">
+                        <div class="doc-image-label">Back Side</div>
+                        <div class="doc-img-frame">
+                            {% if ".pdf" in user.govt_id_back.url|lower %}
+                            <iframe src="{{ user.govt_id_back.url }}" class="doc-pdf-iframe"></iframe>
+                            {% else %}
+                            <img src="{{ user.govt_id_back.url }}" alt="Govt ID Back"
+                                onclick="window.open('{{ user.govt_id_back.url }}', '_blank')"
+                                title="Click image to open full size">
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <!-- Digital Govt Identity Certificate Card -->
+                <div class="digital-cert-card">
+                    <div class="cert-seal-icon"><i class="fa-solid fa-shield-check"></i></div>
+                    <h4 class="cert-title">Verified Government Identity</h4>
+                    <p class="cert-desc">This account's identity document has been authenticated and verified via
+                        official Sumsub identity verification services.</p>
+                    <div class="cert-meta-tag"><i class="fa-solid fa-lock"></i> Encrypted & Secured Document Record
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Modal Footer / Action Bar -->
+        <div class="doc-modal-footer">
+            <a href="{% url 'accounts:verify_id' %}" class="btn-modal-upload-new">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload New Document
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openDocViewerModal() {
+        document.getElementById('docViewerModal').style.display = 'flex';
+    }
+
+    function closeDocViewerModal() {
+        document.getElementById('docViewerModal').style.display = 'none';
+    }
+
+    // Close modal when clicking on overlay background
+    document.addEventListener('DOMContentLoaded', function () {
+        const docModal = document.getElementById('docViewerModal');
+        if (docModal) {
+            docModal.addEventListener('click', function (e) {
+                if (e.target === docModal) {
+                    closeDocViewerModal();
+                }
+            });
+        }
+    });
+
+    function handleCameraAvatarSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                sessionStorage.setItem('tempProfilePic', e.target.result);
+                window.location.href = "{% url 'accounts:profile_picture_edit' %}";
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
+{% endblock content %}
+
+{% block footer %}{% endblock footer %}

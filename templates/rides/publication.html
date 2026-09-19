@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Your publication - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+/* ==========================================================
+   BLABLACAR STYLE YOUR PUBLICATION DESIGN
+   ========================================================== */
+.publication-page-wrapper {
+    background-color: #ffffff;
+    min-height: 85vh;
+    padding: 3rem 1rem 6rem 1rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+}
+
+.publication-container {
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.publication-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.publication-header h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #051528;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.publication-card {
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+    overflow: hidden;
+}
+
+.pub-option-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.35rem 1.75rem;
+    color: #f89516;
+    font-weight: 700;
+    font-size: 1.05rem;
+    text-decoration: none !important;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.pub-option-item:last-child {
+    border-bottom: none;
+}
+
+.pub-option-item:hover {
+    background: #fff7ed;
+    color: #e07f07;
+}
+
+.pub-option-item i {
+    color: #64748b;
+    font-size: 0.95rem;
+    transition: transform 0.2s ease;
+}
+
+.pub-option-item:hover i {
+    transform: translateX(3px);
+    color: #f89516;
+}
+
+.pub-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 2rem;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none !important;
+}
+
+.pub-back-link:hover {
+    color: #0f172a;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="publication-page-wrapper">
+    <div class="publication-container">
+        <div class="publication-header">
+            <h1>Your publication</h1>
+        </div>
+
+        <div class="publication-card">
+            <a href="{% url 'rides:create' %}?duplicate={{ ride.id }}" class="pub-option-item">
+                <span>Duplicate your ride</span>
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+
+            <a href="{% url 'rides:create' %}?return_from={{ ride.id }}" class="pub-option-item">
+                <span>Publish your return ride</span>
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="{% url 'rides:detail' ride.id %}" class="pub-back-link">
+                <i class="fa-solid fa-arrow-left"></i> Back to Ride plan
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock content %}

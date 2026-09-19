@@ -1,0 +1,415 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ title }} | Kaapoo ops console{% endblock %}</title>
+    
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-page: #f8f6f0;
+            --bg-sidebar: #faf8f2;
+            --bg-card: #ffffff;
+            --text-main: #2b251d;
+            --text-muted: #7d7567;
+            --text-sub: #9e9585;
+            --border-light: #ece6d8;
+            --border-card: #e8e1d2;
+            --active-pill-bg: #f3edd9;
+            --active-pill-text: #2b251d;
+            --badge-green-bg: #e2f0d9;
+            --badge-green-text: #367822;
+            --badge-amber-bg: #fef0c7;
+            --badge-amber-text: #b55a00;
+            --badge-red-bg: #fde8e8;
+            --badge-red-text: #9b1c1c;
+            --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-heading: 'Outfit', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* SIDEBAR */
+        #admin-sidebar {
+            width: 260px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 1rem;
+            flex-shrink: 0;
+        }
+
+        .brand-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            padding: 0 0.5rem;
+            text-decoration: none;
+        }
+
+        .brand-avatar {
+            width: 36px;
+            height: 36px;
+            background: #d4a737;
+            color: #ffffff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-heading);
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        .brand-text-block {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-name {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1.1;
+        }
+
+        .brand-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            padding: 0 0.75rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .sidebar-menu-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .sidebar-menu-item a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 0.75rem;
+            border-radius: 10px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-menu-item a:hover {
+            background: rgba(0, 0, 0, 0.03);
+            color: var(--text-main);
+        }
+
+        .sidebar-menu-item.active a {
+            background: var(--active-pill-bg);
+            color: var(--active-pill-text);
+            font-weight: 700;
+        }
+
+        .sidebar-link-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-link-left i {
+            font-size: 1rem;
+            width: 18px;
+            text-align: center;
+        }
+
+        .count-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: var(--border-light);
+            padding: 0.15rem 0.5rem;
+            border-radius: 12px;
+            line-height: 1;
+        }
+
+        /* MAIN CONTENT AREA */
+        #admin-main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* TOP HEADER */
+        #admin-header {
+            height: 70px;
+            background: var(--bg-page);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .header-search-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #ffffff;
+            border: 1px solid var(--border-card);
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            width: 380px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .header-search-bar i {
+            color: var(--text-sub);
+            font-size: 0.9rem;
+        }
+
+        .header-search-bar input {
+            border: none;
+            outline: none;
+            background: transparent;
+            width: 100%;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            font-family: inherit;
+        }
+
+        .search-shortcut {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-sub);
+            border: 1px solid var(--border-card);
+            padding: 0.15rem 0.35rem;
+            border-radius: 4px;
+            background: #fbf9f5;
+        }
+
+        .header-right-tools {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .header-date {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .header-icon-btn {
+            background: #ffffff;
+            border: 1px solid var(--border-card);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .header-icon-btn:hover {
+            border-color: var(--text-muted);
+            color: var(--text-main);
+        }
+
+        .user-avatar-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #b5cb88;
+            color: #2b3a16;
+            font-weight: 800;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        /* PAGE BODY */
+        #admin-content-container {
+            padding: 2rem;
+            flex: 1;
+        }
+
+        /* DJANGO DEFAULT OVERRIDES */
+        .breadcrumbs { display: none; }
+        div.breadcrumbs { display: none; }
+    </style>
+    {% block extrahead %}{% endblock %}
+</head>
+<body>
+
+    <!-- LEFT SIDEBAR -->
+    <aside id="admin-sidebar">
+        <a href="{% url 'admin:index' %}" class="brand-wrapper">
+            <div class="brand-avatar">K</div>
+            <div class="brand-text-block">
+                <span class="brand-name">Kaapoo</span>
+                <span class="brand-sub">ops console</span>
+            </div>
+        </a>
+
+        <div class="sidebar-nav">
+            <ul class="sidebar-menu-list">
+                <li class="sidebar-menu-item {% if request.path == '/admin/' %}active{% endif %}">
+                    <a href="{% url 'admin:index' %}">
+                        <span class="sidebar-link-left"><i class="fa-solid fa-grid-2"></i> Overview</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div>
+                <div class="sidebar-section-title">RIDES & CARPOOLING</div>
+                <ul class="sidebar-menu-list">
+                    <li class="sidebar-menu-item {% if 'rides/ride' in request.path %}active{% endif %}">
+                        <a href="{% url 'admin:rides_ride_changelist' %}">
+                            <span class="sidebar-link-left"><i class="fa-solid fa-car"></i> Rides</span>
+                            <span class="count-badge">{{ counts.rides|default:"128" }}</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item {% if 'bookings/booking' in request.path %}active{% endif %}">
+                        <a href="{% url 'admin:bookings_booking_changelist' %}">
+                            <span class="sidebar-link-left"><i class="fa-solid fa-ticket"></i> Bookings</span>
+                            <span class="count-badge">{{ counts.bookings|default:"342" }}</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div>
+                <div class="sidebar-section-title">PAYMENTS</div>
+                <ul class="sidebar-menu-list">
+                    <li class="sidebar-menu-item {% if 'payments/payment' in request.path %}active{% endif %}">
+                        <a href="{% url 'admin:payments_payment_changelist' %}">
+                            <span class="sidebar-link-left"><i class="fa-solid fa-credit-card"></i> Transactions</span>
+                            <span class="count-badge">{{ counts.payments|default:"96" }}</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div>
+                <div class="sidebar-section-title">PEOPLE</div>
+                <ul class="sidebar-menu-list">
+                    <li class="sidebar-menu-item {% if 'accounts/user' in request.path %}active{% endif %}">
+                        <a href="{% url 'admin:accounts_user_changelist' %}">
+                            <span class="sidebar-link-left"><i class="fa-solid fa-users"></i> Users</span>
+                            <span class="count-badge">{{ counts.users|default:"1.8k" }}</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item {% if 'auth/group' in request.path %}active{% endif %}">
+                        <a href="{% url 'admin:auth_group_changelist' %}">
+                            <span class="sidebar-link-left"><i class="fa-solid fa-folder-tree"></i> Groups</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div>
+                <div class="sidebar-section-title">MESSAGING</div>
+                <ul class="sidebar-menu-list">
+                    <li class="sidebar-menu-item {% if 'messaging/message' in request.path %}active{% endif %}">
+                        <a href="{% url 'admin:messaging_message_changelist' %}">
+                            <span class="sidebar-link-left"><i class="fa-solid fa-envelope"></i> Messages</span>
+                            <span class="count-badge">{{ counts.messages|default:"14" }}</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item {% if 'notifications/notification' in request.path %}active{% endif %}">
+                        <a href="{% url 'admin:notifications_notification_changelist' %}">
+                            <span class="sidebar-link-left"><i class="fa-solid fa-bell"></i> Notifications</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-light);">
+                <ul class="sidebar-menu-list">
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'core:home' %}" target="_blank">
+                            <span class="sidebar-link-left"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Website</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:logout' %}">
+                            <span class="sidebar-link-left"><i class="fa-solid fa-right-from-bracket"></i> Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTAINER -->
+    <div id="admin-main-wrapper">
+        <header id="admin-header">
+            <div class="header-search-bar">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Search bookings, rides, users..." id="global-admin-search">
+                <span class="search-shortcut">⌘K</span>
+            </div>
+
+            <div class="header-right-tools">
+                <span class="header-date">{{ today_date|default:"Mon, 14 Sep" }}</span>
+                <a href="{% url 'admin:notifications_notification_changelist' %}" class="header-icon-btn">
+                    <i class="fa-regular fa-bell"></i>
+                </a>
+                <a href="{% url 'admin:accounts_user_changelist' %}" class="user-avatar-badge" title="{{ request.user.username }}">
+                    {{ user_initials|default:"GA" }}
+                </a>
+            </div>
+        </header>
+
+        <main id="admin-content-container">
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Frequently Asked Questions - Kaapool{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; margin: 3rem auto; padding: 0 1.5rem;">
+    <div style="text-align: center; margin-bottom: 3rem;">
+        <h1 style="font-size: 2.25rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem;">Frequently Asked Questions</h1>
+        <p style="color: #64748b; font-size: 1.1rem;">Everything you need to know about intercity carpooling with Kaapool.</p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+        {% for faq in faqs %}
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #0f172a; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-circle-question" style="color: #f89516;"></i> {{ faq.question }}
+            </h3>
+            <p style="color: #475569; line-height: 1.6; font-size: 0.95rem;">{{ faq.answer }}</p>
+        </div>
+        {% empty %}
+        <p style="text-align: center; color: #64748b; padding: 3rem;">No FAQs available at the moment.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

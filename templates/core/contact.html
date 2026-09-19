@@ -1,10 +1,434 @@
 {% extends 'base.html' %}
 
-{% block title %}Contact - Kaapool{% endblock title %}
+{% block title %}Contact Us - Kaapool{% endblock title %}
 
 {% block content %}
-<section id="contact-section">
-    <h1>Contact Us</h1>
-    <p>Reach out to the Kaapool support team.</p>
-</section>
+<style>
+    /* ARTISTIC MODERN LIGHT CANVAS (INSPIRED BY REFERENCE DESIGN) */
+    .contact-page-wrapper {
+        position: relative;
+        background: #fafbfc;
+        overflow: hidden;
+        padding-bottom: 6rem;
+    }
+
+    /* ORGANIC GLOWING GRADIENT BLOBS */
+    .blob-ambient {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .blob-top-left {
+        top: -120px;
+        left: -120px;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(254, 215, 170, 0.55) 0%, rgba(253, 230, 138, 0.25) 50%, transparent 70%);
+        filter: blur(70px);
+    }
+
+    .blob-top-right {
+        top: -100px;
+        right: -100px;
+        width: 650px;
+        height: 650px;
+        background: radial-gradient(circle, rgba(186, 230, 253, 0.55) 0%, rgba(199, 210, 254, 0.25) 50%, transparent 70%);
+        filter: blur(75px);
+    }
+
+    .blob-center-left {
+        top: 40%;
+        left: -150px;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(187, 247, 208, 0.4) 0%, rgba(167, 243, 208, 0.15) 50%, transparent 70%);
+        filter: blur(80px);
+    }
+
+    .blob-bottom-right {
+        bottom: 5%;
+        right: -100px;
+        width: 550px;
+        height: 550px;
+        background: radial-gradient(circle, rgba(254, 215, 170, 0.4) 0%, rgba(253, 230, 138, 0.2) 50%, transparent 70%);
+        filter: blur(70px);
+    }
+
+    /* ABSTRACT FLOWING SVG VECTOR ACCENTS */
+    .svg-accent-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    /* HERO SECTION */
+    .contact-hero {
+        position: relative;
+        z-index: 10;
+        padding: 4.5rem 1.5rem 3rem;
+        text-align: center;
+    }
+
+    .contact-hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 800;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: var(--primary-orange);
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(248, 149, 22, 0.25);
+        padding: 7px 18px;
+        border-radius: var(--radius-full);
+        margin-bottom: 1.25rem;
+        box-shadow: 0 4px 15px rgba(248, 149, 22, 0.1);
+    }
+
+    .contact-hero h1 {
+        font-family: var(--font-heading);
+        font-size: 3.25rem;
+        font-weight: 800;
+        color: #051528;
+        margin: 0 0 1.25rem;
+        letter-spacing: -1px;
+        line-height: 1.15;
+    }
+
+    .contact-hero p {
+        font-size: 1.15rem;
+        color: #475569;
+        max-width: 660px;
+        margin: 0 auto;
+        line-height: 1.65;
+        font-weight: 500;
+    }
+
+    /* MAIN CONTAINER GRID */
+    .contact-main-container {
+        position: relative;
+        z-index: 10;
+        max-width: 1200px;
+        margin: 2.5rem auto 0;
+        padding: 0 1.5rem;
+    }
+
+    .contact-grid {
+        display: grid;
+        grid-template-columns: 1.8fr 1fr;
+        gap: 2.5rem;
+        align-items: start;
+    }
+
+    /* GLASS FORM BOX */
+    .contact-form-box {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        border-radius: 24px;
+        padding: 2.75rem;
+        box-shadow: 0 25px 50px -12px rgba(5, 21, 40, 0.07), 0 0 0 1px rgba(248, 149, 22, 0.05);
+    }
+
+    .form-header {
+        margin-bottom: 2rem;
+    }
+
+    .form-header h2 {
+        font-family: var(--font-heading);
+        font-size: 1.85rem;
+        font-weight: 800;
+        color: #051528;
+        margin: 0 0 0.5rem;
+        letter-spacing: -0.3px;
+    }
+
+    .form-header p {
+        font-size: 0.95rem;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #051528;
+    }
+
+    .form-input, .form-select, .form-textarea {
+        width: 100%;
+        padding: 0.9rem 1.15rem;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 12px;
+        font-family: var(--font-body);
+        font-size: 0.95rem;
+        color: #051528;
+        background: rgba(248, 250, 252, 0.8);
+        outline: none;
+        transition: all 0.25s ease;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+        background: #ffffff;
+        border-color: var(--primary-orange);
+        box-shadow: 0 0 0 4px rgba(248, 149, 22, 0.15);
+    }
+
+    .btn-submit-contact {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.65rem;
+        padding: 1.05rem 2rem;
+        background: linear-gradient(135deg, #f89516 0%, #e07e06 100%);
+        color: #ffffff;
+        font-family: var(--font-heading);
+        font-size: 1.05rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        width: 100%;
+        box-shadow: 0 8px 25px rgba(248, 149, 22, 0.35);
+    }
+
+    .btn-submit-contact:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(248, 149, 22, 0.45);
+    }
+
+    /* SIDEBAR HELP CARDS */
+    .contact-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .help-card {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        border-radius: 20px;
+        padding: 1.85rem;
+        box-shadow: 0 15px 35px -10px rgba(5, 21, 40, 0.05);
+    }
+
+    .help-card h3 {
+        font-family: var(--font-heading);
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #051528;
+        margin: 0 0 0.75rem;
+    }
+
+    .help-card p {
+        font-size: 0.9rem;
+        color: #64748b;
+        margin: 0 0 1.25rem;
+        line-height: 1.55;
+    }
+
+    .help-links {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .help-link-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.85rem 1.15rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        color: #051528;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .help-link-btn:hover {
+        background: #fff7ed;
+        border-color: #fdba74;
+        color: var(--primary-orange);
+        transform: translateX(3px);
+    }
+
+    .social-connect-box {
+        display: flex;
+        gap: 0.85rem;
+        margin-top: 1rem;
+    }
+
+    .social-icon-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #051528;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 1.05rem;
+        transition: all 0.25s ease;
+    }
+
+    .social-icon-btn:hover {
+        background: var(--primary-orange);
+        color: #ffffff;
+        border-color: var(--primary-orange);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(248, 149, 22, 0.3);
+    }
+
+    @media (max-width: 992px) {
+        .contact-hero h1 { font-size: 2.5rem; }
+        .contact-grid { grid-template-columns: 1fr; }
+        .form-row { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="contact-page-wrapper">
+
+    <!-- 1. AMBIENT GLOWING GRADIENT BLOBS -->
+    <div class="blob-ambient blob-top-left"></div>
+    <div class="blob-ambient blob-top-right"></div>
+    <div class="blob-ambient blob-center-left"></div>
+    <div class="blob-ambient blob-bottom-right"></div>
+
+    <!-- 2. HERO HEADER -->
+    <section class="contact-hero">
+        <div class="contact-hero-tag">
+            <i class="fa-solid fa-sparkles"></i> GET IN TOUCH
+        </div>
+        <h1>Contact Us</h1>
+        <p>We are here to assist you with your intercity bookings, driver verification, safety concerns, or payments.</p>
+    </section>
+
+    <!-- 4. MAIN FORM CONTAINER & SIDEBAR -->
+    <div class="contact-main-container">
+        <div class="contact-grid">
+            
+            <!-- Contact Form Box -->
+            <div class="contact-form-box">
+                <div class="form-header">
+                    <h2>Send Us a Message</h2>
+                    <p>Fill out the form below and our support team will get back to you within minutes.</p>
+                </div>
+
+                <form method="POST" action="{% url 'core:contact' %}" autocomplete="off">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div>
+                            <label>Your Full Name</label>
+                            <input type="text" name="name" class="form-input" placeholder="e.g. John Doe" required>
+                        </div>
+                        <div>
+                            <label>Email Address</label>
+                            <input type="email" name="email" class="form-input" placeholder="e.g. john.doe@example.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label>Phone Number</label>
+                            <input type="text" name="phone" class="form-input" placeholder="e.g. +1 (555) 000-1234">
+                        </div>
+                        <div>
+                            <label>Topic / Category</label>
+                            <select name="category" class="form-select" required>
+                                <option value="" disabled selected>Select category...</option>
+                                <option value="other">General Inquiry</option>
+                                <option value="ride">Ride Booking Issue</option>
+                                <option value="driver">Driver Verification</option>
+                                <option value="payment">Payment & Refunds</option>
+                                <option value="passenger">Safety & Feedback</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <input type="text" name="subject" class="form-input" placeholder="e.g. Inquiry regarding booking..." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Message Content</label>
+                        <textarea name="message" rows="5" class="form-textarea" placeholder="Write your message here..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit-contact">
+                        <i class="fa-solid fa-paper-plane"></i> Send Message
+                    </button>
+                </form>
+            </div>
+
+            <!-- Sidebar Help Box -->
+            <div class="contact-sidebar">
+                
+                <div class="help-card">
+                    <h3>Quick Support Resources</h3>
+                    <p>Looking for quick answers regarding ride booking, cancellations, or driver verification?</p>
+                    
+                    <div class="help-links">
+                        <a href="{% url 'core:faq' %}" class="help-link-btn">
+                            <span><i class="fa-solid fa-circle-question" style="color: var(--primary-orange); margin-right: 0.5rem;"></i> Frequently Asked Questions</span>
+                            <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: #94a3b8;"></i>
+                        </a>
+                        <a href="{% url 'core:how_it_works' %}" class="help-link-btn">
+                            <span><i class="fa-solid fa-route" style="color: #0284c7; margin-right: 0.5rem;"></i> How Kaapool Works</span>
+                            <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: #94a3b8;"></i>
+                        </a>
+                        <a href="{% url 'core:safety' %}" class="help-link-btn">
+                            <span><i class="fa-solid fa-shield-halved" style="color: #16a34a; margin-right: 0.5rem;"></i> Safety Guidelines</span>
+                            <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: #94a3b8;"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="help-card">
+                    <h3>Connect With Us</h3>
+                    <p>Follow our official social channels for community updates, safety announcements, and carpool offers.</p>
+                    <div class="social-connect-box">
+                        <a href="#" class="social-icon-btn" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                        <a href="#" class="social-icon-btn" title="Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
+                        <a href="#" class="social-icon-btn" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="social-icon-btn" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
 {% endblock content %}

@@ -1,0 +1,154 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Vehicle Management - Kaapool Admin{% endblock %}
+{% block page_heading %}Vehicle Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Registered Vehicles</h2>
+        <p class="page-subtitle">Inspect, register, edit, and delete vehicle records.</p>
+    </div>
+    <div>
+        <button onclick="document.getElementById('createVehicleModal').style.display='flex'" class="btn btn-primary"><i class="fa-solid fa-car"></i> Add New Vehicle</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Vehicle ID</th>
+                    <th>Make & Model</th>
+                    <th>License Plate</th>
+                    <th>Color</th>
+                    <th>Features</th>
+                    <th>Owner</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in vehicles %}
+                <tr>
+                    <td>#{{ v.id }}</td>
+                    <td><strong>{{ v.make_model }}</strong></td>
+                    <td><code>{{ v.license_plate|default:"N/A" }}</code></td>
+                    <td>{{ v.color|default:"N/A" }}</td>
+                    <td>{{ v.features|default:"Standard" }}</td>
+                    <td><a href="{% url 'admin_panel:user_detail' pk=v.user.pk %}">{{ v.user.get_full_name|default:v.user.username }}</a></td>
+                    <td>{{ v.created_at|date:"Y-m-d" }}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.35rem; align-items: center;">
+                            <button onclick="editVehicle('{{ v.id }}', '{{ v.make_model|escapejs }}', '{{ v.license_plate|escapejs }}', '{{ v.color|escapejs }}', '{{ v.features|escapejs }}')" class="btn btn-secondary btn-sm" title="Edit Vehicle"><i class="fa-solid fa-pen-to-square"></i></button>
+                            
+                            <form method="POST" action="{% url 'admin_panel:vehicle_delete' pk=v.pk %}" style="display: inline;" onsubmit="return confirm('Delete vehicle {{ v.make_model }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm" title="Delete Vehicle"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">No vehicles registered yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: Create Vehicle -->
+<div id="createVehicleModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 14px; width: 100%; max-width: 480px; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+            <h3 style="font-size: 1.15rem; font-weight: 700;"><i class="fa-solid fa-car" style="color: var(--brand-orange);"></i> Add Vehicle Record</h3>
+            <button onclick="document.getElementById('createVehicleModal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form method="POST" action="{% url 'admin_panel:vehicle_create' %}">
+            {% csrf_token %}
+            <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Owner User ID</label>
+                <input type="number" name="user_id" class="search-input" style="width: 100%;" placeholder="e.g. 1" required>
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Make & Model</label>
+                <input type="text" name="make_model" class="search-input" style="width: 100%;" placeholder="e.g. Honda City 2022" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">License Plate</label>
+                    <input type="text" name="license_plate" class="search-input" style="width: 100%;" placeholder="RJ 14 AB 1234">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Color</label>
+                    <input type="text" name="color" class="search-input" style="width: 100%;" placeholder="White">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Features (Comma separated)</label>
+                <input type="text" name="features" class="search-input" style="width: 100%;" placeholder="AC, USB Charger, Bluetooth">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <button type="button" onclick="document.getElementById('createVehicleModal').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Vehicle</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Vehicle -->
+<div id="editVehicleModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 14px; width: 100%; max-width: 480px; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+            <h3 style="font-size: 1.15rem; font-weight: 700;"><i class="fa-solid fa-pen-to-square" style="color: var(--brand-orange);"></i> Edit Vehicle Details</h3>
+            <button onclick="document.getElementById('editVehicleModal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form id="editVehicleForm" method="POST" action="">
+            {% csrf_token %}
+            <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Make & Model</label>
+                <input type="text" name="make_model" id="edit_make_model" class="search-input" style="width: 100%;" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">License Plate</label>
+                    <input type="text" name="license_plate" id="edit_license_plate" class="search-input" style="width: 100%;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Color</label>
+                    <input type="text" name="color" id="edit_color" class="search-input" style="width: 100%;">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Features</label>
+                <input type="text" name="features" id="edit_features" class="search-input" style="width: 100%;">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <button type="button" onclick="document.getElementById('editVehicleModal').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function editVehicle(id, makeModel, plate, color, features) {
+    document.getElementById('editVehicleForm').action = "/admin/vehicles/" + id + "/edit/";
+    document.getElementById('edit_make_model').value = makeModel;
+    document.getElementById('edit_license_plate').value = plate;
+    document.getElementById('edit_color').value = color;
+    document.getElementById('edit_features').value = features;
+    document.getElementById('editVehicleModal').style.display = 'flex';
+}
+</script>
+{% endblock %}

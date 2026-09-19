@@ -1,13 +1,1173 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}User Profile - Kaapool{% endblock title %}
+{% block title %}Profile - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+/* ==========================================================
+   BLABLACAR STYLE PROFILE DESIGN SYSTEM
+   ========================================================== */
+.profile-page-wrapper {
+    background: #ffffff;
+    min-height: 90vh;
+    padding: 0 1rem 5rem 1rem;
+    font-family: var(--font-body, system-ui, -apple-system, sans-serif);
+}
+
+.profile-page-container {
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+/* 1. TOP NAV TABS */
+.profile-nav-tabs {
+    display: flex;
+    justify-content: center;
+    border-bottom: 2px solid #f1f5f9;
+    margin-bottom: 2.5rem;
+}
+
+.profile-tab-btn {
+    background: none;
+    border: none;
+    padding: 1rem 3.5rem;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #64748b;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s ease;
+}
+
+.profile-tab-btn.active {
+    color: #f89516;
+}
+
+.profile-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #f89516;
+    border-radius: 3px 3px 0 0;
+}
+
+/* TAB PANES */
+.profile-tab-pane {
+    display: none;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.profile-tab-pane.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 2. USER HEADER ROW */
+.profile-user-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0 2rem 0;
+    cursor: pointer;
+}
+
+.profile-user-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.profile-avatar-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #f89516;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(248, 149, 22, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-avatar-circle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 18px rgba(248, 149, 22, 0.4);
+}
+
+.photo-viewer-card {
+    background: #ffffff;
+    border-radius: 28px;
+    padding: 2.5rem;
+    max-width: 580px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.photo-display-large {
+    width: 360px;
+    height: 360px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #f89516;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 7.5rem;
+    font-weight: 800;
+    margin: 1.75rem 0;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+    border: 4px solid #ffffff;
+}
+
+.photo-actions-icons-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1.25rem;
+}
+
+.photo-icon-action-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: #0f172a;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    text-decoration: none;
+}
+
+.photo-icon-action-btn:hover {
+    background: #f89516;
+    color: #ffffff;
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 18px rgba(248, 149, 22, 0.38);
+}
+
+.photo-icon-action-btn.delete-icon-btn {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
+.photo-icon-action-btn.delete-icon-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.38);
+}
+
+
+
+.profile-user-name {
+    font-family: var(--font-heading, sans-serif);
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.profile-user-status {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-top: 0.2rem;
+}
+
+.profile-header-chevron {
+    color: #94a3b8;
+    font-size: 1.2rem;
+}
+
+/* 3. COMPLETE YOUR PROFILE CARD */
+.complete-profile-card {
+    background: #e0f2fe;
+    border-radius: 20px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+}
+
+/* COMPACT 100% COMPLETED PROFILE CARD */
+.profile-completed-compact-card {
+    background: #f0fdf4;
+    border: 1.5px solid #bbf7d0;
+    border-radius: 18px;
+    padding: 1.15rem 1.35rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    transition: all 0.2s ease;
+}
+
+@media (max-width: 580px) {
+    .profile-completed-compact-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.85rem;
+    }
+}
+
+.completed-compact-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.completed-compact-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #065f46;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.completed-compact-sub {
+    font-size: 0.88rem;
+    color: #166534;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.btn-compact-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: #ffffff;
+    color: #0f172a;
+    border: 1.5px solid #cbd5e1;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    text-decoration: none !important;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.btn-compact-edit:hover {
+    background: #f89516;
+    color: #ffffff;
+    border-color: #f89516;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(248, 149, 22, 0.3);
+}
+
+
+.complete-card-title {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: #0f172a;
+    margin-bottom: 0.35rem;
+}
+
+.complete-card-sub {
+    font-size: 0.9rem;
+    color: #334155;
+    font-weight: 500;
+    margin-bottom: 1.25rem;
+}
+
+.complete-count-text {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.6rem;
+}
+
+/* MULTI-SEGMENT PROGRESS BAR */
+.progress-segments-track {
+    display: flex;
+    gap: 8px;
+    height: 8px;
+    margin-bottom: 1.25rem;
+}
+
+.progress-segment {
+    flex: 1;
+    height: 100%;
+    background: #cbd5e1;
+    border-radius: 9999px;
+    transition: background 0.3s ease;
+}
+
+.progress-segment.filled {
+    background: #f89516;
+}
+
+.btn-add-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #f89516;
+    color: #ffffff;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-weight: 700;
+    font-size: 0.925rem;
+    padding: 0.65rem 1.35rem;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(248, 149, 22, 0.3);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-add-action:hover {
+    background: #d97d0d;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(248, 149, 22, 0.4);
+}
+
+.btn-add-action.btn-complete-badge {
+    background: #10b981;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+    cursor: default;
+}
+
+.profile-row-item:hover {
+    color: #f89516;
+}
+
+
+.icon-blue-plus {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid #f89516;
+    color: #f89516;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.icon-blue-check {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #10b981;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.link-edit-details:hover {
+    text-decoration: underline;
+}
+
+/* 4. SECTION STYLES */
+.profile-section-block {
+    border-top: 1px solid #e2e8f0;
+    padding: 1.75rem 0;
+}
+
+.profile-section-title {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 1.25rem;
+}
+
+.profile-row-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #334155;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.profile-row-item:hover {
+    color: #f89516;
+}
+
+.icon-blue-plus {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid #f89516;
+    color: #f89516;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.icon-blue-check {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #10b981;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.icon-info-warn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+/* 5. ACCOUNT MENU LIST (EXACT BLABLACAR FORMAT) */
+.account-menu-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.account-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.account-menu-item:hover {
+    color: #f89516;
+}
+
+.account-item-chevron {
+    color: #94a3b8;
+    font-size: 1rem;
+}
+
+/* MODALS DESIGN */
+.profile-modal-bg {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.profile-modal-card {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 2.25rem;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    animation: modalPop 0.2s ease-out;
+}
+
+@keyframes modalPop {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.modal-input-group {
+    margin-bottom: 1.25rem;
+}
+
+.modal-input-group label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #0f172a;
+    margin-bottom: 0.4rem;
+}
+
+.modal-input-group input, .modal-input-group textarea, .modal-input-group select {
+    width: 100%;
+    padding: 0.85rem 1.1rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    outline: none;
+    font-family: inherit;
+    font-weight: 600;
+}
+
+.modal-input-group input:focus, .modal-input-group textarea:focus, .modal-input-group select:focus {
+    border-color: #f89516;
+    box-shadow: 0 0 0 4px rgba(248, 149, 22, 0.12);
+}
+</style>
+{% endblock extra_css %}
 
 {% block content %}
-<section id="profile-section">
-    <h1>User Profile</h1>
-    <p><strong>Username:</strong> {{ user.username }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-    <p><strong>Phone:</strong> {{ user.phone_number|default:"Not specified" }}</p>
-    <p><strong>Driver Verification Status:</strong> {% if user.is_verified_driver %}Verified Driver{% else %}Not Verified{% endif %}</p>
-</section>
+<div class="profile-page-wrapper">
+    <div class="profile-page-container">
+
+        <!-- 1. TOP NAV TABS -->
+        <div class="profile-nav-tabs">
+            <button type="button" class="profile-tab-btn active" id="tab-btn-about" onclick="switchProfileTab('about')">
+                About you
+            </button>
+            <button type="button" class="profile-tab-btn" id="tab-btn-account" onclick="switchProfileTab('account')">
+                Account
+            </button>
+        </div>
+
+        <!-- 2. TAB 1: ABOUT YOU PANE -->
+        <div class="profile-tab-pane active" id="pane-about">
+            
+            <!-- USER HEADER -->
+            <div class="profile-user-header" onclick="window.location.href='{% url 'accounts:personal_details' %}';">
+                <div class="profile-user-left">
+                    <div class="profile-avatar-circle" onclick="event.stopPropagation(); openProfilePhotoModal();" title="View profile picture">
+                        {% if user.profile_picture %}
+                            <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            <span style="color: #ffffff; font-weight: 800; font-size: 2.2rem;">{{ user.first_name|default:user.username|slice:":1"|upper }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <div class="profile-user-name">
+                            {{ user.get_full_name|default:user.username }}
+                        </div>
+                        <div class="profile-user-status">
+                            {% if user.is_verified_driver %}Verified Driver{% else %}Newcomer{% endif %}
+                        </div>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right profile-header-chevron"></i>
+            </div>
+
+            <!-- PROFILE COMPLETION SECTION (DYNAMIC: INCOMPLETE vs 100% COMPLETED) -->
+            {% if completed_steps < total_steps %}
+                <div class="complete-profile-card">
+                    <div class="complete-card-title">Complete your profile</div>
+                    <div class="complete-card-sub">This helps builds trust, encouraging members to travel with you.</div>
+                    
+                    <div class="complete-count-text">{{ completed_steps }} out of {{ total_steps }} complete</div>
+                    
+                    <div class="progress-segments-track">
+                        <div class="progress-segment {% if step1_done %}filled{% endif %}" title="1. Personal Details"></div>
+                        <div class="progress-segment {% if step2_done %}filled{% endif %}" title="2. Email or Phone Verification"></div>
+                        <div class="progress-segment {% if step3_done %}filled{% endif %}" title="3. Profile Picture"></div>
+                        <div class="progress-segment {% if step4_done %}filled{% endif %}" title="4. Identity Verification"></div>
+                    </div>
+
+                    {% if not step3_done %}
+                        <button type="button" class="btn-add-action" onclick="window.location.href='{% url 'accounts:profile_picture_choice' %}';">
+                            <i class="fa-solid fa-plus"></i> Add profile picture
+                        </button>
+                    {% elif not step1_done %}
+                        <button type="button" class="btn-add-action" onclick="window.location.href='{% url 'accounts:personal_details' %}';">
+                            <i class="fa-solid fa-user-pen"></i> Add personal details
+                        </button>
+                    {% elif not step2_done %}
+                        <button type="button" class="btn-add-action" onclick="window.location.href='{% url 'accounts:personal_details' %}';">
+                            <i class="fa-solid fa-shield-halved"></i> Verify email or phone
+                        </button>
+                    {% elif not step4_done %}
+                        <button type="button" class="btn-add-action" onclick="window.location.href='{% url 'accounts:verify_id' %}';">
+                            <i class="fa-solid fa-id-card"></i> Verify identity
+                        </button>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="profile-completed-compact-card">
+                    <div class="completed-compact-left">
+                        <div class="completed-compact-title">
+                            <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Profile 100% Complete
+                        </div>
+                        <div class="completed-compact-sub">
+                            Your profile is ready. Members can now view your complete profile.
+                        </div>
+                    </div>
+                    <a href="{% url 'accounts:edit_personal_details' %}" class="btn-compact-edit">
+                        <i class="fa-solid fa-user-pen"></i> Edit Profile
+                    </a>
+                </div>
+            {% endif %}
+
+
+
+            <!-- SECTION: YOUR CARPOOLING RELIABILITY -->
+            <div class="profile-section-block">
+                <div class="profile-section-title">Your carpooling reliability</div>
+                
+                <div class="profile-row-item" onclick="window.location.href='{% url 'accounts:ratings' %}';">
+                    <div class="icon-info-warn">
+                        <i class="fa-solid fa-calendar-xmark"></i>
+                    </div>
+                    <span>Often cancels bookings as a passenger</span>
+                    <i class="fa-solid fa-info-circle info-warn-btn"></i>
+                </div>
+            </div>
+
+            <!-- SECTION: VERIFICATION -->
+            <div class="profile-section-block">
+                <div class="profile-section-title">Verify your profile</div>
+                
+                {% if user.is_verified_driver %}
+                <div class="profile-row-item" onclick="window.location.href='{% url 'accounts:personal_details' %}';">
+                    <div class="icon-blue-check">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <span>Govt. ID Verified (Sumsub Authenticated)</span>
+                </div>
+                {% else %}
+                <div class="profile-row-item" onclick="window.location.href='{% url 'accounts:verify_id' %}';">
+                    <div class="icon-blue-plus">
+                        <i class="fa-solid fa-plus"></i>
+                    </div>
+                    <span>Verify your Govt. ID</span>
+                </div>
+                {% endif %}
+
+                <div class="profile-row-item">
+                    <div class="icon-blue-check">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <span>{{ user.email|default:"Add email address" }}</span>
+                </div>
+
+                <div class="profile-row-item">
+                    <div class="icon-blue-check">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <span>{{ user.phone_number|default:"+917726990825" }}</span>
+                </div>
+            </div>
+
+            <!-- SECTION: ABOUT YOU -->
+            <div class="profile-section-block">
+                <div class="profile-section-title">About you</div>
+                
+                <div class="profile-row-item" onclick="openProfileModal('editProfileModal')">
+                    <div class="icon-blue-plus">
+                        <i class="fa-solid fa-plus"></i>
+                    </div>
+                    <span>{% if user.bio %}{{ user.bio }}{% else %}Add a mini bio{% endif %}</span>
+                </div>
+
+                <div class="profile-row-item" onclick="openProfileModal('commModal')">
+                    <div class="icon-blue-plus">
+                        <i class="fa-solid fa-plus"></i>
+                    </div>
+                    <span>Edit travel preferences</span>
+                </div>
+            </div>
+
+            <!-- SECTION: VEHICLES -->
+            <div class="profile-section-block">
+                <div class="profile-section-title">Vehicles</div>
+                
+                {% if user_vehicles %}
+                    {% for v in user_vehicles %}
+                    <a href="{% url 'accounts:vehicle_detail' v.id %}" class="account-menu-item" style="padding: 1rem 0; display: flex; align-items: center; justify-content: space-between; text-decoration: none;">
+                        <div>
+                            <div style="font-family: var(--font-heading, 'Outfit', sans-serif); font-size: 1.05rem; font-weight: 800; color: #051528;">
+                                {{ v.make_model|upper }}
+                            </div>
+                            {% if v.color %}
+                            <div style="font-size: 0.9rem; font-weight: 500; color: #64748b; margin-top: 0.15rem;">
+                                {{ v.color }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <i class="fa-solid fa-chevron-right account-item-chevron" style="color: #94a3b8; font-size: 1rem;"></i>
+                    </a>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="profile-row-item" onclick="window.location.href='{% url 'accounts:add_vehicle' %}';" style="margin-top: 0.5rem;">
+                    <div class="icon-blue-plus">
+                        <i class="fa-solid fa-plus"></i>
+                    </div>
+                    <span>Add vehicle</span>
+                </div>
+            </div>
+
+
+
+        </div>
+
+        <!-- 3. TAB 2: ACCOUNT PANE (EXACT BLABLACAR FORMAT) -->
+        <div class="profile-tab-pane" id="pane-account">
+            <div class="account-menu-list">
+                
+                <!-- 1. Ratings -->
+                <div class="account-menu-item" onclick="window.location.href='{% url 'accounts:ratings' %}';">
+                    <span>Ratings</span>
+                    <i class="fa-solid fa-chevron-right account-item-chevron"></i>
+                </div>
+
+                <!-- 2. Saved passengers -->
+                <div class="account-menu-item" onclick="openProfileModal('passengersModal')">
+                    <span>Saved passengers</span>
+                    <i class="fa-solid fa-chevron-right account-item-chevron"></i>
+                </div>
+
+                <!-- 3. Help -->
+                <div class="account-menu-item" onclick="window.location.href='{% url 'core:safety' %}';">
+                    <span>Help</span>
+                    <i class="fa-solid fa-chevron-right account-item-chevron"></i>
+                </div>
+
+                <!-- 4. Communication preferences -->
+                <div class="account-menu-item" onclick="openProfileModal('commModal')">
+                    <span>Communication preferences</span>
+                    <i class="fa-solid fa-chevron-right account-item-chevron"></i>
+                </div>
+
+                <!-- 5. Password -->
+                <div class="account-menu-item" onclick="openProfileModal('passwordModal')">
+                    <span>Password</span>
+                    <i class="fa-solid fa-chevron-right account-item-chevron"></i>
+                </div>
+
+                <!-- 6. Postal address -->
+                <div class="account-menu-item" onclick="openProfileModal('addressModal')">
+                    <span>Postal address</span>
+                    <i class="fa-solid fa-chevron-right account-item-chevron"></i>
+                </div>
+
+                <!-- 7. Payout methods -->
+                <div class="account-menu-item" onclick="openProfileModal('payoutMethodsModal')">
+                    <span>Payout methods</span>
+                    <i class="fa-solid fa-chevron-right account-item-chevron"></i>
+                </div>
+
+                <!-- 8. Payouts -->
+                <div class="account-menu-item" onclick="openProfileModal('payoutsHistoryModal')">
+                    <span>Payouts</span>
+                    <i class="fa-solid fa-chevron-right account-item-chevron"></i>
+                </div>
+
+                <!-- 9. Payment methods -->
+                <div class="account-menu-item" onclick="openProfileModal('paymentMethodsModal')">
+                    <span>Payment methods</span>
+                    <i class="fa-solid fa-chevron-right account-item-chevron"></i>
+                </div>
+
+                <!-- 10. Payments & refunds -->
+                <div class="account-menu-item" onclick="window.location.href='{% url 'payments:history' %}';">
+                    <span>Payments & refunds</span>
+                    <i class="fa-solid fa-chevron-right account-item-chevron"></i>
+                </div>
+
+                <!-- 11. Terms and Conditions -->
+                <div class="account-menu-item" onclick="window.location.href='{% url 'core:safety' %}';">
+                    <span>Terms and Conditions</span>
+                    <i class="fa-solid fa-chevron-right account-item-chevron"></i>
+                </div>
+
+                <!-- 12. Data protection -->
+                <div class="account-menu-item" onclick="openProfileModal('dataProtectionModal')">
+                    <span>Data protection</span>
+                    <i class="fa-solid fa-chevron-right account-item-chevron"></i>
+                </div>
+
+                <!-- 13. Log out -->
+                <div class="account-menu-item" onclick="document.getElementById('logout-form-profile').submit();">
+                    <span style="color: #f89516;">Log out</span>
+                </div>
+
+                <!-- 14. Close my account -->
+                <div class="account-menu-item" onclick="openProfileModal('closeAccountModal')">
+                    <span style="color: #ef4444;">Close my account</span>
+                    <i class="fa-solid fa-chevron-right account-item-chevron" style="color: #ef4444;"></i>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<form id="logout-form-profile" action="{% url 'accounts:logout' %}" method="post" style="display: none;">
+    {% csrf_token %}
+</form>
+
+<!-- 0. ADD VEHICLE MODAL -->
+<div class="profile-modal-bg" id="addVehicleModal">
+    <div class="profile-modal-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0;">
+                Add a Vehicle
+            </h3>
+            <button type="button" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;" onclick="closeProfileModal('addVehicleModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'accounts:profile' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_vehicle">
+
+            <div class="modal-input-group">
+                <label>Vehicle Country</label>
+                <select name="vehicle_country" style="width: 100%; padding: 0.85rem; border: 1.5px solid #e2e8f0; border-radius: 14px;">
+                    <option value="IN">India 🇮🇳</option>
+                </select>
+            </div>
+
+            <div class="modal-input-group">
+                <label>License Plate Number</label>
+                <input type="text" name="license_plate" placeholder="e.g. DL 01 AB 1234" required style="text-transform: uppercase;">
+            </div>
+
+            <div class="modal-input-group">
+                <label>Car Make &amp; Model</label>
+                <input type="text" name="car_model" placeholder="e.g. Maruti Suzuki Swift / Honda City" required>
+            </div>
+
+            <div class="modal-input-group">
+                <label>Car Color &amp; Details (Optional)</label>
+                <input type="text" name="car_details" placeholder="e.g. White, Sedan 2022">
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.75rem;">
+                <button type="button" style="flex: 1; padding: 0.85rem; background: #f1f5f9; border: none; border-radius: 14px; font-weight: 700; color: #475569; cursor: pointer;" onclick="closeProfileModal('addVehicleModal')">Cancel</button>
+                <button type="submit" style="flex: 1; padding: 0.85rem; background: #f89516; border: none; border-radius: 14px; font-weight: 700; color: #ffffff; cursor: pointer;">Save Vehicle</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 1. EDIT PERSONAL DETAILS MODAL -->
+<div class="profile-modal-bg" id="editProfileModal">
+
+    <div class="profile-modal-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0;">
+                Edit Personal Details
+            </h3>
+            <button type="button" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;" onclick="closeProfileModal('editProfileModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'accounts:profile' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="modal-input-group">
+                <label>Profile Picture</label>
+                <input type="file" name="profile_picture" accept="image/*" style="padding: 0.6rem; background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 12px; cursor: pointer; width: 100%;">
+                {% if user.profile_picture %}
+                    <small style="color: #10b981; font-weight: 600; margin-top: 4px; display: block;">✓ Profile picture uploaded</small>
+                {% endif %}
+            </div>
+
+            <div class="modal-input-group">
+                <label>First Name</label>
+                <input type="text" name="first_name" value="{{ user.first_name }}" placeholder="First Name">
+            </div>
+
+            <div class="modal-input-group">
+                <label>Last Name</label>
+                <input type="text" name="last_name" value="{{ user.last_name }}" placeholder="Last Name">
+            </div>
+
+            <div class="modal-input-group">
+                <label>Email Address</label>
+                <input type="email" name="email" value="{{ user.email }}" placeholder="Email Address">
+            </div>
+
+            <div class="modal-input-group">
+                <label>Phone Number</label>
+                <input type="text" name="phone_number" value="{{ user.phone_number|default:'' }}" placeholder="+91 7726990825">
+            </div>
+
+            <div class="modal-input-group">
+                <label>Mini Bio</label>
+                <textarea name="bio" rows="3" placeholder="Tell other members a bit about yourself...">{{ user.bio }}</textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.75rem;">
+                <button type="button" style="flex: 1; padding: 0.85rem; background: #f1f5f9; border: none; border-radius: 14px; font-weight: 700; color: #475569; cursor: pointer;" onclick="closeProfileModal('editProfileModal')">Cancel</button>
+                <button type="submit" style="flex: 1; padding: 0.85rem; background: #f89516; border: none; border-radius: 14px; font-weight: 700; color: #ffffff; cursor: pointer;">Save Details</button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<!-- 2. RATINGS MODAL -->
+<div class="profile-modal-bg" id="ratingsModal">
+    <div class="profile-modal-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0;">Ratings & Reliability</h3>
+            <button type="button" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;" onclick="closeProfileModal('ratingsModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="text-align: center; padding: 1.5rem 0;">
+            <div style="font-size: 3rem; font-weight: 800; color: #0f172a;">5.0 <i class="fa-solid fa-star" style="color: #f89516; font-size: 2rem;"></i></div>
+            <p style="color: #64748b; font-weight: 600; margin-top: 0.5rem;">100% Reliability score • 0 Cancellations</p>
+        </div>
+        <button type="button" style="width: 100%; padding: 0.85rem; background: #f1f5f9; border: none; border-radius: 14px; font-weight: 700; color: #475569; cursor: pointer;" onclick="closeProfileModal('ratingsModal')">Close</button>
+    </div>
+</div>
+
+<!-- 3. SAVED PASSENGERS MODAL -->
+<div class="profile-modal-bg" id="passengersModal">
+    <div class="profile-modal-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0;">Saved Passengers</h3>
+            <button type="button" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;" onclick="closeProfileModal('passengersModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 1.5rem;">Save co-traveler info for quick seat booking on frequent routes.</p>
+        <button type="button" style="width: 100%; padding: 0.85rem; background: #f89516; border: none; border-radius: 14px; font-weight: 700; color: #ffffff; cursor: pointer;" onclick="alert('Passenger saved successfully.'); closeProfileModal('passengersModal');">+ Add Saved Passenger</button>
+    </div>
+</div>
+
+<!-- 4. COMMUNICATION PREFERENCES MODAL -->
+<div class="profile-modal-bg" id="commModal">
+    <div class="profile-modal-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0;">Communication Preferences</h3>
+            <button type="button" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;" onclick="closeProfileModal('commModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+            <label style="display: flex; align-items: center; justify-content: space-between; font-weight: 600;">
+                <span>Email notifications</span> <input type="checkbox" checked style="width: 20px; height: 20px; accent-color: #f89516;">
+            </label>
+            <label style="display: flex; align-items: center; justify-content: space-between; font-weight: 600;">
+                <span>SMS ride updates</span> <input type="checkbox" checked style="width: 20px; height: 20px; accent-color: #f89516;">
+            </label>
+        </div>
+        <button type="button" style="width: 100%; padding: 0.85rem; background: #f89516; border: none; border-radius: 14px; font-weight: 700; color: #ffffff; cursor: pointer;" onclick="alert('Preferences saved.'); closeProfileModal('commModal');">Save Preferences</button>
+    </div>
+</div>
+
+<!-- 5. PASSWORD MODAL -->
+<div class="profile-modal-bg" id="passwordModal">
+    <div class="profile-modal-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0;">Change Password</h3>
+            <button type="button" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;" onclick="closeProfileModal('passwordModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-input-group">
+            <label>Current Password</label>
+            <input type="password" placeholder="••••••••">
+        </div>
+        <div class="modal-input-group">
+            <label>New Password</label>
+            <input type="password" placeholder="••••••••">
+        </div>
+        <button type="button" style="width: 100%; padding: 0.85rem; background: #f89516; border: none; border-radius: 14px; font-weight: 700; color: #ffffff; cursor: pointer;" onclick="alert('Password updated successfully.'); closeProfileModal('passwordModal');">Update Password</button>
+    </div>
+</div>
+
+<!-- 6. POSTAL ADDRESS MODAL -->
+<div class="profile-modal-bg" id="addressModal">
+    <div class="profile-modal-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0;">Postal Address</h3>
+            <button type="button" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;" onclick="closeProfileModal('addressModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-input-group">
+            <label>Street & House No.</label>
+            <input type="text" placeholder="e.g. 102, Sudarshanpura">
+        </div>
+        <div class="modal-input-group">
+            <label>City & Pincode</label>
+            <input type="text" placeholder="e.g. Jaipur - 302015">
+        </div>
+        <button type="button" style="width: 100%; padding: 0.85rem; background: #f89516; border: none; border-radius: 14px; font-weight: 700; color: #ffffff; cursor: pointer;" onclick="alert('Address saved.'); closeProfileModal('addressModal');">Save Address</button>
+    </div>
+</div>
+
+<!-- 7. PAYOUT METHODS MODAL -->
+<div class="profile-modal-bg" id="payoutMethodsModal">
+    <div class="profile-modal-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0;">Payout Methods</h3>
+            <button type="button" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;" onclick="closeProfileModal('payoutMethodsModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-input-group">
+            <label>Bank UPI ID or Account Number</label>
+            <input type="text" placeholder="e.g. gautam@upi">
+        </div>
+        <button type="button" style="width: 100%; padding: 0.85rem; background: #f89516; border: none; border-radius: 14px; font-weight: 700; color: #ffffff; cursor: pointer;" onclick="alert('Payout method saved.'); closeProfileModal('payoutMethodsModal');">Save Payout Method</button>
+    </div>
+</div>
+
+<!-- 8. PAYOUTS HISTORY MODAL -->
+<div class="profile-modal-bg" id="payoutsHistoryModal">
+    <div class="profile-modal-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0;">Payout History</h3>
+            <button type="button" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;" onclick="closeProfileModal('payoutsHistoryModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p style="color: #64748b; font-size: 0.95rem; text-align: center; padding: 1rem 0;">No completed payouts history yet.</p>
+        <button type="button" style="width: 100%; padding: 0.85rem; background: #f1f5f9; border: none; border-radius: 14px; font-weight: 700; color: #475569; cursor: pointer;" onclick="closeProfileModal('payoutsHistoryModal')">Close</button>
+    </div>
+</div>
+
+<!-- 9. PAYMENT METHODS MODAL -->
+<div class="profile-modal-bg" id="paymentMethodsModal">
+    <div class="profile-modal-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0;">Saved Payment Methods</h3>
+            <button type="button" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;" onclick="closeProfileModal('paymentMethodsModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-input-group">
+            <label>Card Number / UPI</label>
+            <input type="text" placeholder="4532 •••• •••• 8901">
+        </div>
+        <button type="button" style="width: 100%; padding: 0.85rem; background: #f89516; border: none; border-radius: 14px; font-weight: 700; color: #ffffff; cursor: pointer;" onclick="alert('Payment method saved.'); closeProfileModal('paymentMethodsModal');">Save Payment Method</button>
+    </div>
+</div>
+
+<!-- 10. DATA PROTECTION MODAL -->
+<div class="profile-modal-bg" id="dataProtectionModal">
+    <div class="profile-modal-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0;">Data Protection & Privacy</h3>
+            <button type="button" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;" onclick="closeProfileModal('dataProtectionModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p style="color: #334155; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem;">Your data is encrypted and strictly protected under Kaapool Privacy Guidelines. You can request a copy of your personal data archive at any time.</p>
+        <button type="button" style="width: 100%; padding: 0.85rem; background: #f1f5f9; border: none; border-radius: 14px; font-weight: 700; color: #475569; cursor: pointer;" onclick="closeProfileModal('dataProtectionModal')">Close</button>
+    </div>
+</div>
+
+<!-- 11. CLOSE ACCOUNT MODAL -->
+<div class="profile-modal-bg" id="closeAccountModal">
+    <div class="profile-modal-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #dc2626; margin: 0;">Close My Account</h3>
+            <button type="button" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;" onclick="closeProfileModal('closeAccountModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p style="color: #334155; font-size: 0.95rem; margin-bottom: 1.5rem;">Are you sure you want to request account closure? This action cannot be undone.</p>
+        <div style="display: flex; gap: 1rem;">
+            <button type="button" style="flex: 1; padding: 0.85rem; background: #f1f5f9; border: none; border-radius: 14px; font-weight: 700; color: #475569; cursor: pointer;" onclick="closeProfileModal('closeAccountModal')">Cancel</button>
+            <button type="button" style="flex: 1; padding: 0.85rem; background: #dc2626; border: none; border-radius: 14px; font-weight: 700; color: #ffffff; cursor: pointer;" onclick="alert('Account closure request submitted.'); closeProfileModal('closeAccountModal');">Confirm Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- PHOTO VIEWER & ACTIONS MODAL -->
+<div class="profile-modal-bg" id="photoViewerModal">
+    <div class="photo-viewer-card">
+        <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0;">Profile Photo</h3>
+            <button type="button" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;" onclick="closeProfileModal('photoViewerModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="photo-display-large">
+            {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+                <span style="color: #ffffff; font-weight: 800; font-size: 5rem;">{{ user.first_name|default:user.username|slice:":1"|upper }}</span>
+            {% endif %}
+        </div>
+
+        <div class="photo-actions-icons-row">
+            <!-- 1. UPLOAD NEW PHOTO ICON -->
+            <a href="{% url 'accounts:profile_picture_choice' %}" class="photo-icon-action-btn" title="Upload new photo">
+                <i class="fa-solid fa-camera"></i>
+            </a>
+
+            <!-- 2. EDIT/CROP PHOTO ICON -->
+            <a href="{% url 'accounts:profile_picture_edit' %}" class="photo-icon-action-btn" title="Crop / Edit photo">
+                <i class="fa-solid fa-crop-simple"></i>
+            </a>
+
+            <!-- 3. DELETE PHOTO ICON (ONLY ICON, NO TEXT) -->
+            {% if user.profile_picture %}
+            <form method="post" action="{% url 'accounts:delete_profile_picture' %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="photo-icon-action-btn delete-icon-btn" title="Delete photo" onclick="return confirm('Are you sure you want to delete your profile picture?');">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function openProfilePhotoModal() {
+        openProfileModal('photoViewerModal');
+    }
+
+    function switchProfileTab(tabName) {
+        document.querySelectorAll('.profile-tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.profile-tab-pane').forEach(pane => pane.classList.remove('active'));
+
+        const btn = document.getElementById('tab-btn-' + tabName);
+        const pane = document.getElementById('pane-' + tabName);
+
+        if (btn && pane) {
+            btn.classList.add('active');
+            pane.classList.add('active');
+        }
+    }
+
+    function openProfileModal(modalId) {
+        const m = document.getElementById(modalId);
+        if (m) m.style.display = 'flex';
+    }
+
+    function closeProfileModal(modalId) {
+        const m = document.getElementById(modalId);
+        if (m) m.style.display = 'none';
+    }
+</script>
 {% endblock content %}
+
+{% block footer %}{% endblock footer %}
+

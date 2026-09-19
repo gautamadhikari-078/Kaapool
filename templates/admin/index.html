@@ -1,0 +1,671 @@
+{% extends "admin/base_site.html" %}
+{% load static i18n %}
+
+{% block content %}
+<style>
+    /* OVERVIEW DASHBOARD STYLES */
+    .dashboard-header {
+        margin-bottom: 2rem;
+    }
+    .dashboard-title {
+        font-family: var(--font-heading);
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--text-main);
+        line-height: 1.2;
+    }
+    .dashboard-sub {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+
+    /* KPI METRICS GRID */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .kpi-card {
+        background: #ffffff;
+        border: 1px solid var(--border-card);
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .kpi-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+
+    .kpi-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+
+    .kpi-badge {
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.15rem 0.5rem;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .kpi-badge.green {
+        background: var(--badge-green-bg);
+        color: var(--badge-green-text);
+    }
+
+    .kpi-badge.red {
+        background: var(--badge-red-bg);
+        color: var(--badge-red-text);
+    }
+
+    .kpi-number {
+        font-family: var(--font-heading);
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--text-main);
+        line-height: 1.1;
+        margin-bottom: 1.25rem;
+    }
+
+    /* MINI SPARKLINE BAR CHART */
+    .mini-chart {
+        display: flex;
+        align-items: flex-end;
+        gap: 4px;
+        height: 24px;
+    }
+
+    .mini-bar {
+        flex: 1;
+        background: #ebdcc3;
+        border-radius: 3px;
+        min-height: 4px;
+    }
+
+    .mini-bar.active {
+        background: #8b9924;
+    }
+
+    .mini-bar.red-active {
+        background: #d94343;
+    }
+
+    /* MAIN DASHBOARD CONTENT GRID */
+    .dashboard-main-grid {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .panel-card {
+        background: #ffffff;
+        border: 1px solid var(--border-card);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-light);
+        background: #ffffff;
+    }
+
+    .panel-header h3 {
+        font-family: var(--font-heading);
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .panel-link {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-decoration: none;
+    }
+
+    .panel-link:hover {
+        color: var(--text-main);
+        text-decoration: underline;
+    }
+
+    /* TABLE STYLES */
+    .bookings-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .bookings-table th {
+        background: #fcfaf4;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        color: var(--text-sub);
+        padding: 0.85rem 1.25rem;
+        border-bottom: 1px solid var(--border-light);
+        text-transform: uppercase;
+    }
+
+    .bookings-table td {
+        padding: 0.9rem 1.25rem;
+        border-bottom: 1px solid var(--border-light);
+        font-size: 0.9rem;
+        color: var(--text-main);
+    }
+
+    .bookings-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .rider-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .rider-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #f0e6ce;
+        color: #7d6226;
+        font-weight: 700;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .status-pill {
+        display: inline-block;
+        padding: 0.2rem 0.65rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .status-pill.confirmed {
+        background: var(--badge-green-bg);
+        color: var(--badge-green-text);
+    }
+
+    .status-pill.pending {
+        background: var(--badge-amber-bg);
+        color: var(--badge-amber-text);
+    }
+
+    .status-pill.cancelled {
+        background: var(--badge-red-bg);
+        color: var(--badge-red-text);
+    }
+
+    /* LIVE RIDES TIMELINE */
+    .live-rides-list {
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .live-ride-item {
+        position: relative;
+        padding-left: 1.5rem;
+    }
+
+    .live-ride-dot {
+        position: absolute;
+        left: 0;
+        top: 4px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #7a9c24;
+    }
+
+    .live-ride-item::before {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 17px;
+        bottom: -16px;
+        width: 1px;
+        background: var(--border-card);
+    }
+
+    .live-ride-item:last-child::before {
+        display: none;
+    }
+
+    .live-origin {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--text-main);
+        margin-bottom: 0.35rem;
+    }
+
+    .live-destination {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 0.4rem;
+    }
+
+    .live-meta {
+        font-size: 0.78rem;
+        color: var(--text-sub);
+    }
+
+    /* APP MODULES QUICK MANAGERS */
+    .app-modules-section {
+        margin-top: 2rem;
+    }
+
+    .app-modules-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+    }
+
+    .app-module-card {
+        background: #ffffff;
+        border: 1px solid var(--border-card);
+        border-radius: 14px;
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .app-module-title {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--text-main);
+        margin-bottom: 0.2rem;
+    }
+
+    .app-module-sub {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .app-module-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-admin-action {
+        padding: 0.35rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-decoration: none;
+        background: var(--bg-page);
+        color: var(--text-main);
+        border: 1px solid var(--border-card);
+        transition: all 0.2s ease;
+    }
+
+    .btn-admin-action:hover {
+        background: var(--active-pill-bg);
+        border-color: var(--border-card);
+    }
+
+    @media (max-width: 1024px) {
+        .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+        .dashboard-main-grid { grid-template-columns: 1fr; }
+        .app-modules-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<!-- HEADER -->
+<div class="dashboard-header">
+    <h1 class="dashboard-title">Overview</h1>
+    <p class="dashboard-sub">Here's what's moving across the network today.</p>
+</div>
+
+<!-- KPI METRICS GRID -->
+<div class="kpi-grid">
+    <!-- Card 1 -->
+    <div class="kpi-card">
+        <div>
+            <div class="kpi-top">
+                <span class="kpi-label">Active rides</span>
+                <span class="kpi-badge green">+12%</span>
+            </div>
+            <div class="kpi-number">{{ stats.active_rides|default:"64" }}</div>
+        </div>
+        <div class="mini-chart">
+            <div class="mini-bar" style="height: 25%;"></div>
+            <div class="mini-bar" style="height: 35%;"></div>
+            <div class="mini-bar" style="height: 30%;"></div>
+            <div class="mini-bar" style="height: 50%;"></div>
+            <div class="mini-bar" style="height: 45%;"></div>
+            <div class="mini-bar" style="height: 60%;"></div>
+            <div class="mini-bar active" style="height: 85%;"></div>
+            <div class="mini-bar active" style="height: 100%;"></div>
+        </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="kpi-card">
+        <div>
+            <div class="kpi-top">
+                <span class="kpi-label">Bookings today</span>
+                <span class="kpi-badge green">+8%</span>
+            </div>
+            <div class="kpi-number">{{ stats.bookings_today|default:"342" }}</div>
+        </div>
+        <div class="mini-chart">
+            <div class="mini-bar" style="height: 40%;"></div>
+            <div class="mini-bar" style="height: 30%;"></div>
+            <div class="mini-bar" style="height: 45%;"></div>
+            <div class="mini-bar" style="height: 55%;"></div>
+            <div class="mini-bar" style="height: 35%;"></div>
+            <div class="mini-bar active" style="height: 75%;"></div>
+            <div class="mini-bar active" style="height: 90%;"></div>
+            <div class="mini-bar active" style="height: 100%;"></div>
+        </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="kpi-card">
+        <div>
+            <div class="kpi-top">
+                <span class="kpi-label">Revenue today</span>
+                <span class="kpi-badge red">-3%</span>
+            </div>
+            <div class="kpi-number">{{ stats.revenue_today|default:"₹48.2 k" }}</div>
+        </div>
+        <div class="mini-chart">
+            <div class="mini-bar" style="height: 50%;"></div>
+            <div class="mini-bar" style="height: 45%;"></div>
+            <div class="mini-bar" style="height: 40%;"></div>
+            <div class="mini-bar" style="height: 60%;"></div>
+            <div class="mini-bar" style="height: 55%;"></div>
+            <div class="mini-bar" style="height: 50%;"></div>
+            <div class="mini-bar red-active" style="height: 70%;"></div>
+            <div class="mini-bar red-active" style="height: 65%;"></div>
+        </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="kpi-card">
+        <div>
+            <div class="kpi-top">
+                <span class="kpi-label">New users</span>
+                <span class="kpi-badge green">+21%</span>
+            </div>
+            <div class="kpi-number">{{ stats.new_users|default:"57" }}</div>
+        </div>
+        <div class="mini-chart">
+            <div class="mini-bar" style="height: 20%;"></div>
+            <div class="mini-bar" style="height: 30%;"></div>
+            <div class="mini-bar" style="height: 35%;"></div>
+            <div class="mini-bar" style="height: 50%;"></div>
+            <div class="mini-bar" style="height: 45%;"></div>
+            <div class="mini-bar" style="height: 65%;"></div>
+            <div class="mini-bar active" style="height: 80%;"></div>
+            <div class="mini-bar active" style="height: 95%;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN DASHBOARD CONTENT GRID -->
+<div class="dashboard-main-grid">
+
+    <!-- RECENT BOOKINGS TABLE PANEL -->
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3>Recent bookings</h3>
+            <a href="{% url 'admin:bookings_booking_changelist' %}" class="panel-link">view all</a>
+        </div>
+
+        <table class="bookings-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Rider</th>
+                    <th>Route</th>
+                    <th>Fare</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if recent_bookings %}
+                    {% for b in recent_bookings %}
+                    <tr>
+                        <td><strong>BK-{{ b.id|stringformat:"04d" }}</strong></td>
+                        <td>
+                            <div class="rider-cell">
+                                <div class="rider-avatar">{{ b.passenger.first_name|default:b.passenger.username|slice:":2"|upper }}</div>
+                                <span>{{ b.passenger.get_full_name|default:b.passenger.username }}</span>
+                            </div>
+                        </td>
+                        <td>{{ b.ride.origin }} → {{ b.ride.destination }}</td>
+                        <td>₹{{ b.total_price|floatformat:0 }}</td>
+                        <td>
+                            {% if b.status == 'confirmed' %}
+                                <span class="status-pill confirmed">• Confirmed</span>
+                            {% elif b.status == 'pending' %}
+                                <span class="status-pill pending">• Pending</span>
+                            {% else %}
+                                <span class="status-pill cancelled">• {{ b.status|title }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <!-- DEFAULT UI REFERENCE BROUGHT LIVE FROM SCREENSHOT -->
+                    <tr>
+                        <td><strong>BK-3391</strong></td>
+                        <td>
+                            <div class="rider-cell">
+                                <div class="rider-avatar">PS</div>
+                                <span>Priya Sharma</span>
+                            </div>
+                        </td>
+                        <td>Jaipur → Delhi</td>
+                        <td>₹840</td>
+                        <td><span class="status-pill confirmed">• Confirmed</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>BK-3390</strong></td>
+                        <td>
+                            <div class="rider-cell">
+                                <div class="rider-avatar">RK</div>
+                                <span>Rohit Kumar</span>
+                            </div>
+                        </td>
+                        <td>Jaipur → Ajmer</td>
+                        <td>₹260</td>
+                        <td><span class="status-pill pending">• Pending</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>BK-3389</strong></td>
+                        <td>
+                            <div class="rider-cell">
+                                <div class="rider-avatar">AN</div>
+                                <span>Anjali Nair</span>
+                            </div>
+                        </td>
+                        <td>Jaipur → Udaipur</td>
+                        <td>₹610</td>
+                        <td><span class="status-pill confirmed">• Confirmed</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>BK-3388</strong></td>
+                        <td>
+                            <div class="rider-cell">
+                                <div class="rider-avatar">VS</div>
+                                <span>Vikram Singh</span>
+                            </div>
+                        </td>
+                        <td>Jaipur → Kota</td>
+                        <td>₹390</td>
+                        <td><span class="status-pill cancelled">• Cancelled</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>BK-3387</strong></td>
+                        <td>
+                            <div class="rider-cell">
+                                <div class="rider-avatar">MD</div>
+                                <span>Meera Deshmukh</span>
+                            </div>
+                        </td>
+                        <td>Jaipur → Pushkar</td>
+                        <td>₹210</td>
+                        <td><span class="status-pill confirmed">• Confirmed</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>BK-3386</strong></td>
+                        <td>
+                            <div class="rider-cell">
+                                <div class="rider-avatar">SJ</div>
+                                <span>Sanjay Joshi</span>
+                            </div>
+                        </td>
+                        <td>Jaipur → Bikaner</td>
+                        <td>₹720</td>
+                        <td><span class="status-pill pending">• Pending</span></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- LIVE RIDES PANEL -->
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3>Live rides</h3>
+            <span class="status-pill confirmed" style="font-size: 0.75rem;">• 3 en route</span>
+        </div>
+
+        <div class="live-rides-list">
+            {% if live_rides %}
+                {% for r in live_rides %}
+                <div class="live-ride-item">
+                    <div class="live-ride-dot"></div>
+                    <div class="live-origin">{{ r.origin }}, {{ r.pickup_point|default:"Central Point" }}</div>
+                    <div class="live-destination">{{ r.destination }}</div>
+                    <div class="live-meta">{{ r.available_seats }} seats &nbsp;·&nbsp; Driver: {{ r.driver.get_full_name|default:r.driver.username }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="live-ride-item">
+                    <div class="live-ride-dot"></div>
+                    <div class="live-origin">Jaipur, Malviya Nagar</div>
+                    <div class="live-destination">Delhi, Connaught Place</div>
+                    <div class="live-meta">4 seats &nbsp;·&nbsp; ETA 3h 40m<br>Driver: Deepak Rathore</div>
+                </div>
+
+                <div class="live-ride-item">
+                    <div class="live-ride-dot"></div>
+                    <div class="live-origin">Jaipur, Vaishali Nagar</div>
+                    <div class="live-destination">Ajmer, Vaishali Nagar</div>
+                    <div class="live-meta">2 seats &nbsp;·&nbsp; ETA 1h 10m<br>Driver: Kavita Rawat</div>
+                </div>
+
+                <div class="live-ride-item">
+                    <div class="live-ride-dot"></div>
+                    <div class="live-origin">Jaipur, C-Scheme</div>
+                    <div class="live-destination">Udaipur, City Palace Rd</div>
+                    <div class="live-meta">3 seats &nbsp;·&nbsp; ETA 4h 55m<br>Driver: Arjun Mehta</div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- APP MANAGERS LIST -->
+<div class="app-modules-section">
+    <div class="dashboard-header" style="margin-bottom: 1rem;">
+        <h2 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800;">Management Models</h2>
+    </div>
+
+    <div class="app-modules-grid">
+        <div class="app-module-card">
+            <div>
+                <div class="app-module-title"><i class="fa-solid fa-car"></i> Rides</div>
+                <div class="app-module-sub">Manage driver listings & routes</div>
+            </div>
+            <div class="app-module-actions">
+                <a href="{% url 'admin:rides_ride_add' %}" class="btn-admin-action">+ Add</a>
+                <a href="{% url 'admin:rides_ride_changelist' %}" class="btn-admin-action">Manage</a>
+            </div>
+        </div>
+
+        <div class="app-module-card">
+            <div>
+                <div class="app-module-title"><i class="fa-solid fa-ticket"></i> Bookings</div>
+                <div class="app-module-sub">Manage passenger seat reservations</div>
+            </div>
+            <div class="app-module-actions">
+                <a href="{% url 'admin:bookings_booking_add' %}" class="btn-admin-action">+ Add</a>
+                <a href="{% url 'admin:bookings_booking_changelist' %}" class="btn-admin-action">Manage</a>
+            </div>
+        </div>
+
+        <div class="app-module-card">
+            <div>
+                <div class="app-module-title"><i class="fa-solid fa-users"></i> Users</div>
+                <div class="app-module-sub">Manage accounts, drivers & verification</div>
+            </div>
+            <div class="app-module-actions">
+                <a href="{% url 'admin:accounts_user_add' %}" class="btn-admin-action">+ Add</a>
+                <a href="{% url 'admin:accounts_user_changelist' %}" class="btn-admin-action">Manage</a>
+            </div>
+        </div>
+
+        <div class="app-module-card">
+            <div>
+                <div class="app-module-title"><i class="fa-solid fa-credit-card"></i> Payments</div>
+                <div class="app-module-sub">Transactions, refunds & status</div>
+            </div>
+            <div class="app-module-actions">
+                <a href="{% url 'admin:payments_payment_add' %}" class="btn-admin-action">+ Add</a>
+                <a href="{% url 'admin:payments_payment_changelist' %}" class="btn-admin-action">Manage</a>
+            </div>
+        </div>
+
+        <div class="app-module-card">
+            <div>
+                <div class="app-module-title"><i class="fa-solid fa-envelope"></i> Messages</div>
+                <div class="app-module-sub">In-app chats between drivers & riders</div>
+            </div>
+            <div class="app-module-actions">
+                <a href="{% url 'admin:messaging_message_changelist' %}" class="btn-admin-action">Manage</a>
+            </div>
+        </div>
+
+        <div class="app-module-card">
+            <div>
+                <div class="app-module-title"><i class="fa-solid fa-bell"></i> Notifications</div>
+                <div class="app-module-sub">Push alerts & system logs</div>
+            </div>
+            <div class="app-module-actions">
+                <a href="{% url 'admin:notifications_notification_changelist' %}" class="btn-admin-action">Manage</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

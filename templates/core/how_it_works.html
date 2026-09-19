@@ -453,9 +453,27 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 2. Category Filter Sidebar
+    // 2. Category Filter Sidebar with Dynamic Renumbering
     const catBtns = document.querySelectorAll('.faq-cat-btn');
     const faqItems = document.querySelectorAll('.faq-item');
+
+    function filterAndNumberFaqs(category) {
+        let visibleCount = 0;
+        faqItems.forEach(item => {
+            const itemCat = item.getAttribute('data-category');
+            const numSpan = item.querySelector('.faq-number');
+
+            if (category === 'all' || itemCat === category) {
+                item.style.display = 'block';
+                visibleCount++;
+                if (numSpan) {
+                    numSpan.textContent = visibleCount + '.';
+                }
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
 
     catBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -464,14 +482,7 @@ document.addEventListener('DOMContentLoaded', function() {
             catBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            faqItems.forEach(item => {
-                const itemCat = item.getAttribute('data-category');
-                if (category === 'all' || itemCat === category) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
+            filterAndNumberFaqs(category);
         });
     });
 });

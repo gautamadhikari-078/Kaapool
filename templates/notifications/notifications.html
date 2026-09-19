@@ -1,21 +1,296 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Notifications - Kaapool{% endblock title %}
 
+{% block extra_css %}
+<style>
+/* ==========================================================
+   BLABLACAR STYLE NOTIFICATIONS DESIGN
+   ========================================================== */
+.notifications-page-wrapper {
+    background-color: #ffffff;
+    min-height: 88vh;
+    padding: 2.5rem 1rem 6rem 1rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+    position: relative;
+}
+
+
+.notifications-container {
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+/* CENTERED TITLE */
+.notifications-page-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #051528;
+    text-align: center;
+    margin: 0 0 2.25rem 0;
+    letter-spacing: -0.5px;
+}
+
+/* NOTIFICATIONS CARD LIST */
+.notifications-card-box {
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+    overflow: hidden;
+}
+
+.notif-item-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.15rem;
+    padding: 1.35rem 1.6rem;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s ease;
+    position: relative;
+}
+
+.notif-item-row:last-child {
+    border-bottom: none;
+}
+
+.notif-item-row.unread {
+    background: #f8fafc;
+}
+
+.notif-item-row:hover {
+    background: #f1f5f9;
+}
+
+/* TYPE ICON CIRCLES */
+.notif-icon-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.notif-icon-circle.booking_confirmed {
+    background: #dcfce7;
+    color: #10b981;
+}
+
+.notif-icon-circle.booking_cancelled {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.notif-icon-circle.ride_reminder {
+    background: #fef3c7;
+    color: #f89516;
+}
+
+.notif-icon-circle.new_message {
+    background: #ffedd5;
+    color: #f89516;
+}
+
+.notif-icon-circle.payment_update {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.notif-icon-circle.system {
+    background: #f1f5f9;
+    color: #051528;
+}
+
+.notif-content-col {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.notif-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.notif-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #051528;
+}
+
+.notif-time {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.notif-message-text {
+    font-size: 0.925rem;
+    color: #475569;
+    line-height: 1.45;
+    margin: 0;
+}
+
+.notif-unread-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f89516;
+    flex-shrink: 0;
+    margin-top: 0.5rem;
+}
+
+/* EMPTY STATE */
+.notif-empty-card {
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    padding: 4.5rem 2rem;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+}
+
+.empty-bell-graphic {
+    width: 220px;
+    height: 140px;
+    margin: 0 auto 2rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-bell-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.notif-empty-card h3 {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: #051528;
+    margin: 0 0 0.5rem 0;
+}
+
+.notif-empty-card p {
+    color: #64748b;
+    font-size: 0.975rem;
+    margin: 0 0 2rem 0;
+    line-height: 1.5;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn-notif-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f89516;
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 0.925rem;
+    padding: 0.75rem 1.6rem;
+    border-radius: 9999px;
+    text-decoration: none !important;
+    box-shadow: 0 4px 14px rgba(248, 149, 22, 0.25);
+    transition: all 0.2s ease;
+}
+
+.btn-notif-cta:hover {
+    background: #e07f07;
+    transform: translateY(-1px);
+}
+</style>
+{% endblock extra_css %}
+
 {% block content %}
-<section id="notifications-section">
-    <h1>Your Notifications</h1>
-    
-    <div class="notifications-list">
-        {% for notification in notifications %}
-            <div class="notification-card {% if not notification.is_read %}unread{% endif %}">
-                <h3>{{ notification.title }}</h3>
-                <p>{{ notification.message }}</p>
-                <small>{{ notification.created_at }}</small>
+<div class="notifications-page-wrapper">
+    <a href="javascript:history.back()" class="btn-page-back" title="Go back">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
+    <div class="notifications-container">
+
+
+        <!-- CENTERED TITLE -->
+        <h1 class="notifications-page-title">Notifications</h1>
+
+        {% if notifications %}
+        <!-- NOTIFICATIONS LIST BOX -->
+        <div class="notifications-card-box">
+            {% for notification in notifications %}
+            <article class="notif-item-row {% if not notification.is_read %}unread{% endif %}">
+                <!-- TYPE ICON -->
+                <div class="notif-icon-circle {{ notification.notification_type }}">
+                    {% if notification.notification_type == 'booking_confirmed' %}
+                        <i class="fa-solid fa-circle-check"></i>
+                    {% elif notification.notification_type == 'booking_cancelled' %}
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    {% elif notification.notification_type == 'ride_reminder' %}
+                        <i class="fa-solid fa-bell"></i>
+                    {% elif notification.notification_type == 'new_message' %}
+                        <i class="fa-solid fa-comment-dots"></i>
+                    {% elif notification.notification_type == 'payment_update' %}
+                        <i class="fa-solid fa-wallet"></i>
+                    {% else %}
+                        <i class="fa-solid fa-shield-halved"></i>
+                    {% endif %}
+                </div>
+
+                <!-- CONTENT -->
+                <div class="notif-content-col">
+                    <div class="notif-title-row">
+                        <span class="notif-title">{{ notification.title }}</span>
+                        <span class="notif-time">{{ notification.created_at|date:"d M • H:i" }}</span>
+                    </div>
+                    <p class="notif-message-text">{{ notification.message }}</p>
+                </div>
+
+                {% if not notification.is_read %}
+                    <span class="notif-unread-dot" title="Unread notification"></span>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <!-- EMPTY STATE (BLABLACAR STYLE) -->
+        <div class="notif-empty-card">
+            <!-- BELL GRAPHIC -->
+            <div class="empty-bell-graphic">
+                <svg class="empty-bell-svg" viewBox="0 0 220 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="110" cy="75" rx="70" ry="40" fill="#ffedd5" opacity="0.8"/>
+                    <path d="M110 25C92 25 78 38 78 58V85L70 93V98H150V93L142 85V58C142 38 128 25 110 25Z" fill="#f89516"/>
+                    <path d="M98 104C98 110 103 115 110 115C117 115 122 110 122 104H98Z" fill="#e07f07"/>
+                    <circle cx="155" cy="40" r="5" fill="#f89516"/>
+                    <circle cx="65" cy="50" r="4" fill="#f97316"/>
+                </svg>
             </div>
-        {% empty %}
-            <p>You have no notifications.</p>
-        {% endfor %}
+
+            <h3>No notifications yet</h3>
+            <p>We'll notify you about booking requests, ride arrival updates, and trip status alerts here.</p>
+
+            <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                <a href="{% url 'rides:search' %}" class="btn-notif-cta">
+                    <i class="fa-solid fa-magnifying-glass"></i> Find a ride
+                </a>
+                <a href="{% url 'rides:create' %}" class="btn-notif-cta" style="background: #1e293b;">
+                    <i class="fa-solid fa-plus"></i> Offer a ride
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
     </div>
-</section>
+</div>
 {% endblock content %}
+
+{% block footer %}{% endblock footer %}

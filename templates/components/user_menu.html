@@ -1,10 +1,11 @@
 <div id="user-account-menu">
-    <span class="user-name">Hello, {{ user.username }}</span>
-    <ul class="dropdown-menu">
-        <li><a href="{% url 'accounts:dashboard' %}">Dashboard</a></li>
+    <button type="button" class="user-name-btn" id="user-menu-trigger" aria-expanded="false" onclick="toggleUserDropdown(event)">
+        <span>Hello, {{ user.username }}</span>
+        <i class="fa-solid fa-chevron-down" id="user-menu-chevron" style="font-size: 0.75rem; margin-left: 0.25rem; transition: transform 0.2s ease;"></i>
+    </button>
+    <ul class="dropdown-menu" id="user-dropdown-list">
         <li><a href="{% url 'accounts:profile' %}">Profile</a></li>
         <li><a href="{% url 'rides:my_rides' %}">My Rides</a></li>
-        <li><a href="{% url 'bookings:my_bookings' %}">My Bookings</a></li>
         <li><a href="{% url 'messaging:inbox' %}">Inbox</a></li>
         <li><a href="{% url 'payments:history' %}">Payments & Refunds</a></li>
         <li><a href="{% url 'notifications:list' %}">Notifications</a></li>
@@ -16,3 +17,43 @@
         </li>
     </ul>
 </div>
+
+<script>
+    function toggleUserDropdown(event) {
+        if (event) {
+            event.stopPropagation();
+        }
+        const menu = document.getElementById('user-account-menu');
+        const dropdown = document.getElementById('user-dropdown-list');
+        const chevron = document.getElementById('user-menu-chevron');
+        const trigger = document.getElementById('user-menu-trigger');
+        
+        const isShowing = menu.classList.contains('active') || dropdown.classList.contains('show');
+        
+        if (isShowing) {
+            menu.classList.remove('active');
+            dropdown.classList.remove('show');
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        } else {
+            menu.classList.add('active');
+            dropdown.classList.add('show');
+            if (chevron) chevron.style.transform = 'rotate(180deg)';
+            if (trigger) trigger.setAttribute('aria-expanded', 'true');
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        const menu = document.getElementById('user-account-menu');
+        const dropdown = document.getElementById('user-dropdown-list');
+        const chevron = document.getElementById('user-menu-chevron');
+        const trigger = document.getElementById('user-menu-trigger');
+
+        if (menu && !menu.contains(e.target)) {
+            menu.classList.remove('active');
+            if (dropdown) dropdown.classList.remove('show');
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        }
+    });
+</script>

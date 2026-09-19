@@ -10,7 +10,7 @@ class RideSerializer(serializers.ModelSerializer):
         model = Ride
         fields = (
             'id', 'driver', 'driver_detail', 'origin', 'destination',
-            'pickup_point', 'departure_time', 'available_seats',
+            'pickup_point', 'departure_datetime', 'available_seats',
             'price_per_seat', 'vehicle_info', 'notes', 'status',
             'created_at', 'updated_at'
         )

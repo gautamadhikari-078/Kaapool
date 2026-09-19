@@ -1,0 +1,57 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Email Templates | Super Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Email Templates</h1>
+        <p class="page-subtitle">Configurable reusable HTML email templates for transactional & automated communications.</p>
+    </div>
+</div>
+
+<!-- SUB NAVIGATION TABS -->
+<div style="display: flex; gap: 0.5rem; border-bottom: 2px solid #e2e8f0; margin-bottom: 1.75rem;">
+    <a href="{% url 'admin_panel:notification_overview' %}" style="padding: 0.65rem 1.25rem; font-size: 0.92rem; font-weight: 600; color: #64748b; text-decoration: none;">Overview</a>
+    <a href="{% url 'admin_panel:notification_automations' %}" style="padding: 0.65rem 1.25rem; font-size: 0.92rem; font-weight: 600; color: #64748b; text-decoration: none;">Automated Emails</a>
+    <a href="{% url 'admin_panel:notification_send' %}" style="padding: 0.65rem 1.25rem; font-size: 0.92rem; font-weight: 600; color: #64748b; text-decoration: none;">Send Notification</a>
+    <a href="{% url 'admin_panel:notification_templates' %}" style="padding: 0.65rem 1.25rem; font-size: 0.92rem; font-weight: 700; color: var(--brand-orange); border-bottom: 3px solid var(--brand-orange); text-decoration: none; margin-bottom: -2px;">Templates</a>
+    <a href="{% url 'admin_panel:notification_logs' %}" style="padding: 0.65rem 1.25rem; font-size: 0.92rem; font-weight: 600; color: #64748b; text-decoration: none;">Email Logs</a>
+    <a href="{% url 'admin_panel:notification_settings' %}" style="padding: 0.65rem 1.25rem; font-size: 0.92rem; font-weight: 600; color: #64748b; text-decoration: none;">Preferences / Settings</a>
+</div>
+
+<div class="card">
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
+        <thead>
+            <tr style="border-bottom: 2px solid #e2e8f0; color: #64748b;">
+                <th style="padding: 0.75rem;">Template Name</th>
+                <th style="padding: 0.75rem;">Code Slug</th>
+                <th style="padding: 0.75rem;">Category</th>
+                <th style="padding: 0.75rem;">Subject Template</th>
+                <th style="padding: 0.75rem;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in templates_list %}
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 0.75rem; font-weight: 700; color: #0f172a;">{{ t.name }}</td>
+                <td style="padding: 0.75rem; font-family: monospace; color: #64748b;">{{ t.code }}</td>
+                <td style="padding: 0.75rem;">
+                    <span style="font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #e0f2fe; color: #0369a1;">{{ t.category }}</span>
+                </td>
+                <td style="padding: 0.75rem; color: #334155;">{{ t.subject_template }}</td>
+                <td style="padding: 0.75rem;">
+                    <span style="font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #dcfce7; color: #15803d;">ACTIVE</span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="padding: 2rem; text-align: center; color: #94a3b8;">
+                    No custom templates configured. Default system templates active.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

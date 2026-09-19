@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ratings - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+.ratings-page-wrapper {
+    background-color: #ffffff;
+    min-height: 90vh;
+    padding: 2.5rem 1.5rem 5rem 1.5rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+    position: relative;
+}
+
+.ratings-container {
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    padding-top: 0.5rem;
+}
+
+/* TOP HEADING */
+.ratings-header-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #051528;
+    text-align: center;
+    margin-bottom: 2rem;
+    line-height: 1.2;
+}
+
+/* SCORE BLOCK */
+.rating-score-block {
+    margin-bottom: 2.5rem;
+}
+
+.rating-big-number {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 4.5rem;
+    font-weight: 800;
+    color: #051528;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+    letter-spacing: -1px;
+}
+
+.rating-count-sub {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 2rem;
+}
+
+/* BREAKDOWN TABLE */
+.rating-breakdown-list {
+    border-top: 1px solid #f1f5f9;
+    margin-bottom: 2rem;
+}
+
+.rating-breakdown-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #051528;
+    border-bottom: 1px solid #f8fafc;
+}
+
+.rating-breakdown-count {
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: #051528;
+}
+
+/* DIVIDER */
+.ratings-section-divider {
+    height: 4px;
+    background: #051528;
+    border-radius: 2px;
+    margin: 2.5rem 0;
+}
+
+/* REVIEWS CARD LIST */
+.reviews-list-block {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.review-item-card {
+    padding: 0.5rem 0;
+}
+
+.reviewer-user-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.reviewer-badge-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #00aff5;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.reviewer-name {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #051528;
+}
+
+.review-category-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #051528;
+    margin-bottom: 0.25rem;
+}
+
+.review-comment-text {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #475569;
+    margin-bottom: 0.4rem;
+    line-height: 1.5;
+}
+
+.review-date-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="ratings-page-wrapper">
+    <a href="{% url 'accounts:personal_details' %}" class="btn-page-back" title="Go back">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
+    <div class="ratings-container">
+        <!-- PAGE TITLE -->
+        <h1 class="ratings-header-title">Ratings</h1>
+
+        <!-- SCORE BLOCK -->
+        <div class="rating-score-block">
+            <div class="rating-big-number">{{ average_rating }}</div>
+            <div class="rating-count-sub">{{ total_ratings }} rating</div>
+        </div>
+
+        <!-- RATING BREAKDOWN LIST -->
+        <div class="rating-breakdown-list">
+            {% for item in breakdown %}
+            <div class="rating-breakdown-row">
+                <span>{{ item.label }}</span>
+                <span class="rating-breakdown-count">{{ item.count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- DIVIDER -->
+        <div class="ratings-section-divider"></div>
+
+        <!-- REVIEWS LIST -->
+        <div class="reviews-list-block">
+            {% for review in reviews %}
+            <div class="review-item-card">
+                <div class="reviewer-user-header">
+                    <div class="reviewer-badge-avatar">
+                        <i class="fa-solid fa-comment-dots"></i>
+                    </div>
+                    <div class="reviewer-name">{{ review.reviewer_name }}</div>
+                </div>
+
+                <div class="review-category-title">{{ review.rating_label }}</div>
+                <div class="review-comment-text">{{ review.comment }}</div>
+                <div class="review-date-text">{{ review.date }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block footer %}{% endblock footer %}

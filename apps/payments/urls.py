@@ -5,4 +5,6 @@ app_name = 'payments'
 
 urlpatterns = [
     path('', PaymentsHistoryView.as_view(), name='history'),
+    path('history/', PaymentsHistoryView.as_view(), name='history_alias'),
 ]
+

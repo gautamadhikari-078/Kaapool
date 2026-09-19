@@ -1,0 +1,697 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add a Vehicle - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+.wizard-page-wrapper {
+    background-color: #ffffff;
+    min-height: 90vh;
+    padding: 2.5rem 1.5rem 5rem 1.5rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+    position: relative;
+}
+
+.wizard-container {
+    max-width: 560px;
+    margin: 0 auto;
+    position: relative;
+    padding-top: 1rem;
+}
+
+/* STEP WRAPPER & ANIMATION */
+.wizard-step {
+    display: none;
+    animation: fadeInStep 0.25s ease-out;
+}
+
+.wizard-step.active {
+    display: block;
+}
+
+@keyframes fadeInStep {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* HEADINGS */
+.wizard-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 2.35rem;
+    font-weight: 800;
+    color: #051528;
+    text-align: center;
+    margin-bottom: 2rem;
+    line-height: 1.15;
+}
+
+.wizard-subtitle {
+    font-size: 0.95rem;
+    color: #64748b;
+    text-align: center;
+    margin-top: -1.25rem;
+    margin-bottom: 2rem;
+    font-weight: 500;
+}
+
+/* PILL SEARCH INPUT */
+.pill-search-box {
+    width: 100%;
+    padding: 1.1rem 1.4rem;
+    background: #e2e8f0;
+    border: none;
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    outline: none;
+    margin-bottom: 1.75rem;
+    transition: background 0.2s ease;
+}
+
+.pill-search-box::placeholder {
+    color: #94a3b8;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.pill-search-box:focus {
+    background: #cbd5e1;
+}
+
+/* STEP 1: LICENSE PLATE INPUT */
+.license-plate-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.country-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    background: #f1f5f9;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #0f172a;
+}
+
+.license-input-box {
+    width: 100%;
+    max-width: 380px;
+    padding: 1.25rem 1.5rem;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-align: center;
+    text-transform: uppercase;
+    border: 2px solid #cbd5e1;
+    border-radius: 20px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.license-input-box:focus {
+    border-color: #f89516;
+    box-shadow: 0 0 0 4px rgba(248, 149, 22, 0.15);
+}
+
+/* STEP 2: MAKE LIST ITEMS */
+.make-list-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.make-item-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 1.15rem 1.25rem;
+    background: #ffffff;
+    border: none;
+    border-bottom: 1px solid #f1f5f9;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #051528;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.make-item-btn:first-child {
+    background: #f1f5f9;
+    border-radius: 16px;
+    margin-bottom: 0.5rem;
+}
+
+.make-item-btn:hover {
+    background: #f8fafc;
+    color: #f89516;
+    padding-left: 1.5rem;
+}
+
+.make-item-btn i {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+/* STEP 4: COLOR LIST */
+.color-list-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.color-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.95rem 1.25rem;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    user-select: none;
+}
+
+.color-item-row:hover {
+    background: #f8fafc;
+}
+
+.color-item-row.selected {
+    background: #f1f5f9;
+}
+
+.color-radio-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #051528;
+}
+
+.color-radio-circle {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.color-item-row.selected .color-radio-circle {
+    border-color: #f89516;
+    background: #f89516;
+}
+
+.color-radio-circle::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ffffff;
+    opacity: 0;
+}
+
+.color-item-row.selected .color-radio-circle::after {
+    opacity: 1;
+}
+
+.color-badge-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+}
+
+/* STEP 5: FEATURES LIST */
+.feature-checkbox-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.feature-checkbox-card.selected {
+    background: #fff8ed;
+    border-color: #f89516;
+}
+
+.feature-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #051528;
+}
+
+.feature-checkbox-sq {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.feature-checkbox-card.selected .feature-checkbox-sq {
+    background: #f89516;
+    border-color: #f89516;
+}
+
+.feature-icon-right {
+    font-size: 1.25rem;
+    color: #475569;
+}
+
+.electric-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 0;
+    margin-top: 1rem;
+}
+
+.electric-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #051528;
+}
+
+.toggle-switch-btn {
+    position: relative;
+    width: 52px;
+    height: 30px;
+    background: #cbd5e1;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.toggle-switch-btn.active {
+    background: #f89516;
+}
+
+.toggle-switch-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.toggle-switch-btn.active .toggle-switch-knob {
+    transform: translateX(22px);
+}
+
+/* WIZARD ACTION BUTTONS */
+.wizard-btn-next, .wizard-btn-confirm {
+    width: 100%;
+    max-width: 260px;
+    padding: 1rem 2rem;
+    background: #f89516;
+    color: #ffffff;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.1rem;
+    font-weight: 800;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(248, 149, 22, 0.35);
+    transition: all 0.2s ease;
+    display: block;
+    margin: 2rem auto 0 auto;
+    text-align: center;
+}
+
+.wizard-btn-next:hover, .wizard-btn-confirm:hover {
+    background: #d97d0d;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(248, 149, 22, 0.45);
+}
+
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="wizard-page-wrapper">
+    <button type="button" class="btn-page-back" onclick="navigateWizardBack()" title="Go back">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <div class="wizard-container">
+        <form id="addVehicleForm" method="post" action="{% url 'accounts:add_vehicle' %}">
+            {% csrf_token %}
+
+            <!-- HIDDEN FIELDS FOR SUBMISSION -->
+            <input type="hidden" name="license_plate" id="input_license_plate" value="">
+            <input type="hidden" name="make" id="input_make" value="">
+            <input type="hidden" name="model" id="input_model" value="">
+            <input type="hidden" name="color" id="input_color" value="">
+            <input type="hidden" name="is_electric" id="input_is_electric" value="">
+
+            <!-- STEP 1: LICENSE PLATE NUMBER -->
+            <div class="wizard-step active" id="step1">
+                <h1 class="wizard-title">What’s your licence plate number?</h1>
+                
+                <div class="license-plate-wrapper">
+                    <div class="country-badge-pill">
+                        <span>India 🇮🇳</span>
+                    </div>
+
+                    <input type="text" id="licensePlateInput" class="license-input-box" placeholder="e.g. DL 01 AB 1234" autofocus>
+                </div>
+
+                <button type="button" class="wizard-btn-next" onclick="nextStep(2)">Next</button>
+            </div>
+
+            <!-- STEP 2: MAKE (MATCHING SCREENSHOT 1) -->
+            <div class="wizard-step" id="step2">
+                <h1 class="wizard-title">What’s your vehicle’s make?</h1>
+                
+                <input type="text" id="makeSearchInput" class="pill-search-box" placeholder="ABARTH, AC, ACURA..." onkeyup="filterMakes()">
+
+                <div class="make-list-group" id="makeListGroup">
+                    <button type="button" class="make-item-btn" onclick="selectMake('HONDA')">
+                        <span>HONDA</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button type="button" class="make-item-btn" onclick="selectMake('HYUNDAI')">
+                        <span>HYUNDAI</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button type="button" class="make-item-btn" onclick="selectMake('MARUTI')">
+                        <span>MARUTI</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button type="button" class="make-item-btn" onclick="selectMake('TATA')">
+                        <span>TATA</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button type="button" class="make-item-btn" onclick="selectMake('TOYOTA')">
+                        <span>TOYOTA</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button type="button" class="make-item-btn" onclick="selectMake('MAHINDRA')">
+                        <span>MAHINDRA</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button type="button" class="make-item-btn" onclick="selectMake('BMW')">
+                        <span>BMW</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button type="button" class="make-item-btn" onclick="selectMake('AUDI')">
+                        <span>AUDI</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button type="button" class="make-item-btn" onclick="selectMake('MERCEDES-BENZ')">
+                        <span>MERCEDES-BENZ</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button type="button" class="make-item-btn" onclick="selectMake('KIA')">
+                        <span>KIA</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button type="button" class="make-item-btn" onclick="selectMake('VOLKSWAGEN')">
+                        <span>VOLKSWAGEN</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button type="button" class="make-item-btn" onclick="selectMake('SKODA')">
+                        <span>SKODA</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3: MODEL -->
+            <div class="wizard-step" id="step3">
+                <h1 class="wizard-title" id="modelStepTitle">What’s your vehicle’s model?</h1>
+                
+                <input type="text" id="modelInput" class="pill-search-box" placeholder="e.g. City, Swift, i20, Nexon, Creta..." autofocus>
+
+                <button type="button" class="wizard-btn-next" onclick="selectModel()">Next</button>
+            </div>
+
+            <!-- STEP 4: COLOUR (MATCHING SCREENSHOT 2) -->
+            <div class="wizard-step" id="step4">
+                <h1 class="wizard-title">What colour is your vehicle?</h1>
+
+                <div class="color-list-group">
+                    <div class="color-item-row" onclick="selectColor(this, 'black')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>black</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #000000;"></div>
+                    </div>
+
+                    <div class="color-item-row" onclick="selectColor(this, 'white')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>white</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #ffffff;"></div>
+                    </div>
+
+                    <div class="color-item-row" onclick="selectColor(this, 'Dark grey')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>Dark grey</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #4b5563;"></div>
+                    </div>
+
+                    <div class="color-item-row" onclick="selectColor(this, 'Grey')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>Grey</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #d1d5db;"></div>
+                    </div>
+
+                    <div class="color-item-row" onclick="selectColor(this, 'claret')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>claret</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #800020;"></div>
+                    </div>
+
+                    <div class="color-item-row" onclick="selectColor(this, 'Red')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>Red</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #dc2626;"></div>
+                    </div>
+
+                    <div class="color-item-row" onclick="selectColor(this, 'Dark blue')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>Dark blue</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #1e3a8a;"></div>
+                    </div>
+
+                    <div class="color-item-row" onclick="selectColor(this, 'Blue')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>Blue</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #2563eb;"></div>
+                    </div>
+
+                    <div class="color-item-row" onclick="selectColor(this, 'Dark green')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>Dark green</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #14532d;"></div>
+                    </div>
+
+                    <div class="color-item-row" onclick="selectColor(this, 'Green')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>Green</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #16a34a;"></div>
+                    </div>
+
+                    <div class="color-item-row" onclick="selectColor(this, 'Brown')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>Brown</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #78350f;"></div>
+                    </div>
+
+                    <div class="color-item-row" onclick="selectColor(this, 'Beige')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>Beige</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #d7ccc8;"></div>
+                    </div>
+
+                    <div class="color-item-row" onclick="selectColor(this, 'Orange')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>Orange</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #f97316;"></div>
+                    </div>
+
+                    <div class="color-item-row" onclick="selectColor(this, 'Yellow')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>Yellow</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #eab308;"></div>
+                    </div>
+
+                    <div class="color-item-row" onclick="selectColor(this, 'Purple')">
+                        <div class="color-radio-left">
+                            <div class="color-radio-circle"></div>
+                            <span>Purple</span>
+                        </div>
+                        <div class="color-badge-swatch" style="background: #9333ea;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 5: FEATURES (MATCHING SCREENSHOT 3) -->
+            <div class="wizard-step" id="step5">
+                <h1 class="wizard-title">What features does your vehicle have?</h1>
+                <p class="wizard-subtitle">Get more bookings by letting passengers know how comfortable your vehicle is.</p>
+
+                <div class="feature-checkbox-card" onclick="toggleFeature(this, 'Air conditioning')">
+                    <div class="feature-left">
+                        <div class="feature-checkbox-sq"><i class="fa-solid fa-check"></i></div>
+                        <span>Air conditioning</span>
+                    </div>
+                    <i class="fa-regular fa-snowflake feature-icon-right"></i>
+                    <input type="checkbox" name="features" value="Air conditioning" class="hidden-feature-check" style="display: none;">
+                </div>
+
+                <div class="feature-checkbox-card" onclick="toggleFeature(this, 'USB ports')">
+                    <div class="feature-left">
+                        <div class="feature-checkbox-sq"><i class="fa-solid fa-check"></i></div>
+                        <span>USB ports</span>
+                    </div>
+                    <i class="fa-solid fa-plug feature-icon-right"></i>
+                    <input type="checkbox" name="features" value="USB ports" class="hidden-feature-check" style="display: none;">
+                </div>
+
+                <div class="electric-toggle-row">
+                    <div class="electric-left">
+                        <i class="fa-solid fa-car-side" style="color: #475569; font-size: 1.25rem;"></i>
+                        <span>My vehicle is fully electric</span>
+                    </div>
+                    <div class="toggle-switch-btn" id="electricToggle" onclick="toggleElectric()">
+                        <div class="toggle-switch-knob"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="wizard-btn-confirm">Confirm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let currentStep = 1;
+
+function nextStep(targetStep) {
+    if (currentStep === 1) {
+        const val = document.getElementById('licensePlateInput').value.trim();
+        document.getElementById('input_license_plate').value = val;
+    }
+    
+    document.querySelectorAll('.wizard-step').forEach(el => el.classList.remove('active'));
+    document.getElementById('step' + targetStep).classList.add('active');
+    currentStep = targetStep;
+}
+
+function navigateWizardBack() {
+    if (currentStep > 1) {
+        nextStep(currentStep - 1);
+    } else {
+        window.location.href = "{% url 'accounts:profile' %}";
+    }
+}
+
+function selectMake(makeName) {
+    document.getElementById('input_make').value = makeName;
+    document.getElementById('modelStepTitle').innerText = `What’s your ${makeName} model?`;
+    nextStep(3);
+}
+
+function selectModel() {
+    const modelName = document.getElementById('modelInput').value.trim();
+    document.getElementById('input_model').value = modelName;
+    nextStep(4);
+}
+
+function selectColor(rowEl, colorName) {
+    document.querySelectorAll('.color-item-row').forEach(el => el.classList.remove('selected'));
+    rowEl.classList.add('selected');
+    document.getElementById('input_color').value = colorName;
+    setTimeout(() => {
+        nextStep(5);
+    }, 200);
+}
+
+function toggleFeature(cardEl, featureVal) {
+    cardEl.classList.toggle('selected');
+    const checkbox = cardEl.querySelector('.hidden-feature-check');
+    checkbox.checked = !checkbox.checked;
+}
+
+function toggleElectric() {
+    const btn = document.getElementById('electricToggle');
+    btn.classList.toggle('active');
+    document.getElementById('input_is_electric').value = btn.classList.contains('active') ? 'true' : '';
+}
+
+function filterMakes() {
+    const query = document.getElementById('makeSearchInput').value.toUpperCase();
+    const buttons = document.querySelectorAll('#makeListGroup .make-item-btn');
+    buttons.forEach(btn => {
+        const text = btn.innerText.toUpperCase();
+        btn.style.display = text.includes(query) ? 'flex' : 'none';
+    });
+}
+</script>
+{% endblock content %}
+
+{% block footer %}{% endblock footer %}

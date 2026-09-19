@@ -1,0 +1,13 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<div class="brand-wrapper">
+    <div class="brand-avatar">K</div>
+    <div class="brand-text-block">
+        <span class="brand-name">Kaapoo</span>
+        <span class="brand-sub">ops console</span>
+    </div>
+</div>
+{% endblock %}

@@ -1,9 +1,53 @@
 {% if messages %}
-<div id="flash-messages">
+<div id="toast-container" class="toast-container">
     {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">
-        {{ message }}
+    <div class="toast-popup toast-{{ message.tags|default:'info' }}" role="alert">
+        <div class="toast-icon">
+            {% if message.tags == 'success' %}
+                <i class="fa-solid fa-circle-check"></i>
+            {% elif message.tags == 'error' or message.tags == 'danger' %}
+                <i class="fa-solid fa-circle-exclamation"></i>
+            {% elif message.tags == 'warning' %}
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            {% else %}
+                <i class="fa-solid fa-circle-info"></i>
+            {% endif %}
+        </div>
+        <div class="toast-content">
+            <span class="toast-message">{{ message }}</span>
+        </div>
+        <button type="button" class="toast-close" onclick="closeToast(this.parentElement)" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="toast-progress"></div>
     </div>
     {% endfor %}
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toasts = document.querySelectorAll('.toast-popup');
+        toasts.forEach(function(toast, index) {
+            setTimeout(function() {
+                toast.classList.add('show');
+            }, 100 * index);
+
+            setTimeout(function() {
+                closeToast(toast);
+            }, 4500 + (100 * index));
+        });
+    });
+
+    function closeToast(toastElement) {
+        if (!toastElement) return;
+        toastElement.classList.remove('show');
+        toastElement.classList.add('hide');
+        setTimeout(function() {
+            if (toastElement && toastElement.parentNode) {
+                toastElement.remove();
+            }
+        }, 400);
+    }
+</script>
 {% endif %}
+

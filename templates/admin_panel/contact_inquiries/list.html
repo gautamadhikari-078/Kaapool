@@ -1,0 +1,229 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Contact Inquiries - Kaapool Admin{% endblock %}
+{% block page_heading %}Contact Inquiries & Submissions{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Contact Inquiries</h2>
+        <p class="page-subtitle">View contacted email IDs, track email validity status, reply directly to inquiries, and remove invalid or spam contacts from database.</p>
+    </div>
+</div>
+
+<div class="card">
+    <form method="GET" action="." class="filter-bar">
+        <input type="text" name="search" class="search-input" placeholder="Search by name, email, subject..." value="{{ search }}" style="min-width: 260px;">
+        
+        <select name="valid" class="select-input">
+            <option value="">All Email Statuses</option>
+            <option value="true" {% if valid_filter == 'true' %}selected{% endif %}>Valid Email Only</option>
+            <option value="false" {% if valid_filter == 'false' %}selected{% endif %}>Invalid Email Only (False)</option>
+        </select>
+
+        <select name="status" class="select-input">
+            <option value="">All Processing Statuses</option>
+            <option value="NEW" {% if status_filter == 'NEW' %}selected{% endif %}>New Inquiry</option>
+            <option value="RESPONDED" {% if status_filter == 'RESPONDED' %}selected{% endif %}>Responded</option>
+            <option value="INVALID_EMAIL" {% if status_filter == 'INVALID_EMAIL' %}selected{% endif %}>Invalid Email (No Trigger)</option>
+            <option value="CLOSED" {% if status_filter == 'CLOSED' %}selected{% endif %}>Closed</option>
+        </select>
+
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filter</button>
+        {% if search or valid_filter or status_filter %}
+            <a href="{% url 'admin_panel:contact_inquiry_list' %}" class="btn btn-secondary">Reset</a>
+        {% endif %}
+    </form>
+
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Contact Person</th>
+                    <th>Email Address</th>
+                    <th>Email Valid Status</th>
+                    <th>Topic / Subject</th>
+                    <th>Status</th>
+                    <th>Submitted At</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inquiry in inquiries %}
+                <tr>
+                    <td><strong>#{{ inquiry.id }}</strong></td>
+                    <td>
+                        <div style="font-weight: 600;">{{ inquiry.name }}</div>
+                        <div style="font-size: 0.775rem; color: var(--text-muted);"><i class="fa-solid fa-phone" style="font-size: 0.7rem;"></i> {{ inquiry.phone|default:"N/A" }}</div>
+                    </td>
+                    <td>
+                        <a href="mailto:{{ inquiry.email }}" style="color: var(--brand-orange); text-decoration: none; font-weight: 500;">
+                            {{ inquiry.email }}
+                        </a>
+                    </td>
+                    <td>
+                        {% if inquiry.is_email_valid %}
+                            <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> True (Valid)</span>
+                        {% else %}
+                            <span class="badge badge-danger"><i class="fa-solid fa-triangle-exclamation"></i> False (Invalid Syntax)</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="font-weight: 500;">{{ inquiry.subject|truncatechars:35 }}</div>
+                        {% if inquiry.category %}
+                            <span class="badge badge-secondary" style="font-size: 0.65rem;">{{ inquiry.category }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if inquiry.status == 'RESPONDED' %}
+                            <span class="badge badge-success">Responded</span>
+                        {% elif inquiry.status == 'INVALID_EMAIL' %}
+                            <span class="badge badge-danger">Invalid Mail (Untriggered)</span>
+                        {% elif inquiry.status == 'CLOSED' %}
+                            <span class="badge badge-secondary">Closed</span>
+                        {% else %}
+                            <span class="badge badge-warning">New</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size: 0.8rem; color: var(--text-muted);">
+                        {{ inquiry.created_at|date:"M d, Y H:i" }}
+                    </td>
+                    <td style="text-align: right;">
+                        <div style="display: flex; gap: 0.35rem; justify-content: flex-end; align-items: center;">
+                            <!-- View / Reply Modal trigger -->
+                            <button onclick="openInquiryModal({{ inquiry.id }}, '{{ inquiry.name|escapejs }}', '{{ inquiry.email|escapejs }}', '{{ inquiry.is_email_valid|yesno:'true,false' }}', '{{ inquiry.subject|escapejs }}', '{{ inquiry.message|escapejs }}', '{{ inquiry.admin_notes|escapejs }}')" class="btn btn-secondary btn-sm" title="View & Reply">
+                                <i class="fa-solid fa-reply"></i> Reply / View
+                            </button>
+
+                            <!-- Delete Form -->
+                            <form method="POST" action="{% url 'admin_panel:contact_inquiry_delete' pk=inquiry.pk %}" style="display: inline;" onsubmit="return confirm('⚠️ Are you sure you want to permanently delete contact record for {{ inquiry.email }} from database?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm" title="Delete record from database">
+                                    <i class="fa-solid fa-trash"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">
+                        <i class="fa-solid fa-inbox" style="font-size: 2.5rem; margin-bottom: 0.75rem; color: #cbd5e1; display: block;"></i>
+                        No contact inquiries found matching your filters.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&search={{ search }}&valid={{ valid_filter }}&status={{ status_filter }}" class="page-btn"><i class="fa-solid fa-chevron-left"></i></a>
+        {% endif %}
+
+        <span class="page-btn active">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&search={{ search }}&valid={{ valid_filter }}&status={{ status_filter }}" class="page-btn"><i class="fa-solid fa-chevron-right"></i></a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal: Reply / Details -->
+<div id="inquiryModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 600px; padding: 1.75rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid var(--border-color);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: 0.85rem; border-bottom: 1px solid var(--border-color);">
+            <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-envelope-open-text" style="color: var(--brand-orange);"></i> Inquiry Details & Reply
+            </h3>
+            <button onclick="closeInquiryModal()" style="background: none; border: none; font-size: 1.35rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.85rem; margin-bottom: 0.75rem;">
+                <div><strong>Sender:</strong> <span id="modalSender"></span></div>
+                <div><strong>Email:</strong> <span id="modalEmail"></span></div>
+            </div>
+            <div style="margin-bottom: 0.75rem; font-size: 0.85rem;">
+                <strong>Email Validity Status:</strong> <span id="modalValidityBadge"></span>
+            </div>
+            <div style="margin-bottom: 0.5rem; font-size: 0.85rem;">
+                <strong>Subject:</strong> <span id="modalSubject" style="font-weight: 600;"></span>
+            </div>
+            <div style="font-size: 0.85rem; margin-top: 0.5rem;">
+                <strong>Message Content:</strong>
+                <div id="modalMessage" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; margin-top: 0.35rem; font-size: 0.85rem; line-height: 1.5; max-height: 140px; overflow-y: auto; color: #334155;"></div>
+            </div>
+            <div id="modalNotesContainer" style="display: none; margin-top: 0.75rem; font-size: 0.8rem; color: #475569; background: #e0f2fe; padding: 0.65rem; border-radius: 6px;">
+                <strong>Admin Notes / Previous Reply:</strong> <span id="modalNotes"></span>
+            </div>
+        </div>
+
+        <!-- Form for Admin Reply -->
+        <form id="replyForm" method="POST" action="">
+            {% csrf_token %}
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--text-main);">
+                    <i class="fa-solid fa-paper-plane" style="color: var(--brand-orange);"></i> Send Direct Email Reply
+                </label>
+                <textarea id="replyMessage" name="reply_message" class="search-input" style="width: 100%; height: 100px; resize: vertical;" placeholder="Type your response to the user here. It will be emailed directly to their address..." required></textarea>
+                <div id="invalidEmailWarning" style="display: none; color: #dc2626; font-size: 0.8rem; margin-top: 0.35rem; font-weight: 500;">
+                    ⚠️ This user's email was marked as INVALID syntax. System prevents sending email triggers to invalid addresses.
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" onclick="closeInquiryModal()" class="btn btn-secondary">Close</button>
+                <button type="submit" id="sendReplyBtn" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Send Reply Email</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openInquiryModal(id, name, email, isValid, subject, message, notes) {
+    document.getElementById('modalSender').textContent = name;
+    document.getElementById('modalEmail').textContent = email;
+    document.getElementById('modalSubject').textContent = subject;
+    document.getElementById('modalMessage').textContent = message;
+
+    const badgeContainer = document.getElementById('modalValidityBadge');
+    const warning = document.getElementById('invalidEmailWarning');
+    const replyBtn = document.getElementById('sendReplyBtn');
+    const replyArea = document.getElementById('replyMessage');
+
+    if (isValid === 'true' || isValid === true) {
+        badgeContainer.innerHTML = '<span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> True (Valid Syntax)</span>';
+        warning.style.display = 'none';
+        replyBtn.disabled = false;
+        replyArea.disabled = false;
+        replyBtn.style.opacity = '1';
+    } else {
+        badgeContainer.innerHTML = '<span class="badge badge-danger"><i class="fa-solid fa-triangle-exclamation"></i> False (Invalid Mail Syntax)</span>';
+        warning.style.display = 'block';
+        replyBtn.disabled = true;
+        replyArea.disabled = true;
+        replyBtn.style.opacity = '0.5';
+    }
+
+    if (notes && notes.trim() !== '') {
+        document.getElementById('modalNotes').textContent = notes;
+        document.getElementById('modalNotesContainer').style.display = 'block';
+    } else {
+        document.getElementById('modalNotesContainer').style.display = 'none';
+    }
+
+    document.getElementById('replyForm').action = "/admin/contact-inquiries/" + id + "/reply/";
+    document.getElementById('inquiryModal').style.display = 'flex';
+}
+
+function closeInquiryModal() {
+    document.getElementById('inquiryModal').style.display = 'none';
+}
+</script>
+{% endblock %}

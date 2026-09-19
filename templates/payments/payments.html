@@ -1,20 +1,351 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Payments & Refunds - Kaapool{% endblock title %}
 
+{% block extra_css %}
+<style>
+/* ==========================================================
+   BLABLACAR REPLICA & PREMIUM PAYMENTS UI
+   ========================================================== */
+.payments-page-wrapper {
+    background-color: #ffffff;
+    min-height: 88vh;
+    padding: 3rem 1rem 6rem 1rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+    position: relative;
+}
+
+
+.payments-container {
+    max-width: 780px;
+    margin: 0 auto;
+}
+
+/* 1. NO PAYMENTS EMPTY STATE (EXACT IMAGE 2 REPLICA) */
+.empty-payments-view {
+    text-align: center;
+    padding: 4rem 1rem;
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+.empty-magnifier-graphic {
+    width: 240px;
+    height: 160px;
+    margin: 0 auto 2.5rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-magnifier-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.empty-payments-heading {
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: #051528;
+    line-height: 1.3;
+    letter-spacing: -0.6px;
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+/* 2. SUCCESSFUL PAYMENTS LIST VIEW */
+.payments-header {
+    margin-bottom: 2rem;
+}
+
+.payments-header h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #051528;
+    margin: 0 0 0.35rem 0;
+    letter-spacing: -0.5px;
+}
+
+.payments-header p {
+    color: #64748b;
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* SUMMARY STAT CARDS */
+.payments-summary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2.25rem;
+}
+
+.summary-stat-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-label {
+    font-size: 0.775rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.35rem;
+}
+
+.stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #051528;
+}
+
+/* TRANSACTION CARDS LIST */
+.transactions-list-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.transaction-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+    transition: all 0.2s ease;
+}
+
+.transaction-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+}
+
+.txn-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.txn-left-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.txn-method-badge {
+    background: #ffedd5;
+    color: #f89516;
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 0.35rem 0.8rem;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.txn-id-text {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.txn-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.txn-status-badge.status-completed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.txn-status-badge.status-pending {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.txn-status-badge.status-refunded {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.txn-status-badge.status-failed {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+/* TXN BODY */
+.txn-card-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.txn-route-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #051528;
+    margin-bottom: 0.2rem;
+}
+
+.txn-date-time {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.txn-amount-display {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #051528;
+    letter-spacing: -0.5px;
+}
+
+/* SUCCESS VERIFIED STRIP */
+.txn-success-strip {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: #166534;
+    font-weight: 700;
+}
+
+.btn-download-receipt {
+    color: #f89516;
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-decoration: none !important;
+}
+
+.btn-download-receipt:hover {
+    text-decoration: underline !important;
+}
+</style>
+{% endblock extra_css %}
+
 {% block content %}
-<section id="payments-history-section">
-    <h1>Payments & Transaction History</h1>
-    
-    <div class="payments-list">
-        {% for payment in payments %}
-            <div class="payment-item">
-                <p>Transaction ID: {{ payment.transaction_id|default:"N/A" }}</p>
-                <p>Amount: ${{ payment.amount }} | Status: {{ payment.status }} | Date: {{ payment.created_at }}</p>
+<div class="payments-page-wrapper">
+    <a href="javascript:history.back()" class="btn-page-back" title="Go back">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
+    <div class="payments-container">
+
+        
+        <!-- CENTERED TITLE -->
+        <h1 class="payments-page-title">Payments & refunds</h1>
+
+        {% if user_payments %}
+        <!-- TRANSACTIONS LIST -->
+        <div class="transactions-stack">
+            {% for payment in user_payments %}
+            <article class="txn-card-item">
+                <div class="txn-card-header">
+                    <div class="txn-meta-left">
+                        <span class="txn-method-badge">
+                            <i class="fa-solid fa-credit-card"></i> {{ payment.payment_method|default:"Online UPI" }}
+                        </span>
+                        <span class="txn-id-text">TXN-{{ payment.id }}</span>
+                    </div>
+
+                    <div class="txn-status-badge status-{{ payment.status }}">
+                        {% if payment.status == 'completed' %}
+                            <i class="fa-solid fa-circle-check"></i> Success
+                        {% elif payment.status == 'pending' %}
+                            <i class="fa-solid fa-clock"></i> Pending
+                        {% elif payment.status == 'refunded' %}
+                            <i class="fa-solid fa-rotate-left"></i> Refunded
+                        {% else %}
+                            <i class="fa-solid fa-circle-xmark"></i> Failed
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="txn-card-body">
+                    <div>
+                        <div class="txn-route-title">
+                            {% if payment.booking %}
+                                {{ payment.booking.ride.origin }} → {{ payment.booking.ride.destination }}
+                            {% else %}
+                                Carpool Ride Reservation
+                            {% endif %}
+                        </div>
+                        <div class="txn-date-time">
+                            <i class="fa-regular fa-calendar"></i> {{ payment.created_at|date:"d M Y, H:i" }}
+                        </div>
+                    </div>
+
+                    <div class="txn-amount-display">
+                        ₹{{ payment.amount }}
+                    </div>
+                </div>
+
+                {% if payment.status == 'completed' %}
+                <div class="txn-success-strip">
+                    <span><i class="fa-solid fa-shield-halved"></i> Payment Verified & Processed Successfully</span>
+                    <a href="javascript:void(0)" onclick="alert('Receipt TXN-{{ payment.id }} downloaded!')" class="btn-download-receipt">
+                        Receipt <i class="fa-solid fa-download"></i>
+                    </a>
+                </div>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <!-- NO PAYMENTS EMPTY STATE (EXACT IMAGE 2 REPLICA) -->
+        <div class="empty-payments-view">
+            <!-- MAGNIFIER SVG GRAPHIC -->
+            <div class="empty-magnifier-graphic">
+                <svg class="empty-magnifier-svg" viewBox="0 0 240 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Soft orange oval cloud background -->
+                    <ellipse cx="120" cy="80" rx="90" ry="48" fill="#ffedd5" opacity="0.8"/>
+                    <!-- Sparkle rays -->
+                    <path d="M48 68L56 68" stroke="#f89516" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M52 56L58 62" stroke="#f89516" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M56 82L64 82" stroke="#f89516" stroke-width="3" stroke-linecap="round"/>
+                    <!-- Magnifying Glass Icon -->
+                    <g transform="translate(95, 35)">
+                        <circle cx="32" cy="32" r="24" stroke="#f89516" stroke-width="7" fill="none"/>
+                        <circle cx="32" cy="32" r="18" fill="#ffffff" opacity="0.8"/>
+                        <path d="M48 48L72 72" stroke="#f89516" stroke-width="9" stroke-linecap="round"/>
+                    </g>
+                </svg>
             </div>
-        {% empty %}
-            <p>No payment records found.</p>
-        {% endfor %}
+
+            <h2 class="empty-payments-heading">
+                Looks like you haven't made any online payments in the last 2 years.
+            </h2>
+        </div>
+        {% endif %}
+
     </div>
-</section>
+</div>
 {% endblock content %}
+
+{% block footer %}{% endblock footer %}

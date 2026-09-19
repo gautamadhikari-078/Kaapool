@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add a photo to your profile - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+/* ==========================================================
+   IMAGE 2 REPLICA - ADD A PHOTO TO YOUR PROFILE
+   ========================================================== */
+.info-page-wrapper {
+    background-color: #ffffff;
+    min-height: 88vh;
+    padding: 2.5rem 1rem 6rem 1rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+}
+
+.info-page-container {
+    max-width: 620px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* TOP BACK BAR */
+.info-top-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+.btn-nav-back {
+    color: #f89516;
+    font-size: 1.25rem;
+    text-decoration: none !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: background 0.15s ease;
+}
+
+.btn-nav-back:hover {
+    background: #fff7ed;
+}
+
+.info-header-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #051528;
+}
+
+.brand-icon-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #f89516;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+/* HEADING */
+.info-main-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #051528;
+    margin: 0 0 2rem 0;
+    letter-spacing: -0.5px;
+}
+
+/* VECTOR GRAPHIC */
+.info-vector-container {
+    margin: 0 auto 2.5rem auto;
+    width: 280px;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info-vector-svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* DESCRIPTION TEXT */
+.info-body-text {
+    color: #475569;
+    font-size: 0.975rem;
+    line-height: 1.6;
+    max-width: 540px;
+    margin: 0 auto 2.25rem auto;
+}
+
+.info-body-text p {
+    margin-bottom: 1rem;
+}
+
+/* CTA BUTTON */
+.btn-cta-orange {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #f89516;
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 0.85rem 2rem;
+    border-radius: 9999px;
+    text-decoration: none !important;
+    box-shadow: 0 4px 14px rgba(248, 149, 22, 0.25);
+    transition: all 0.2s ease;
+}
+
+.btn-cta-orange:hover {
+    background: #e07f07;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(248, 149, 22, 0.35);
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="info-page-wrapper">
+    <div class="info-page-container">
+        <!-- TOP NAV -->
+        <div class="info-top-nav">
+            <a href="{% url 'messaging:inbox' %}" class="btn-nav-back" aria-label="Back to inbox">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div class="info-header-brand">
+                <div class="brand-icon-circle">
+                    <i class="fa-solid fa-quote-left"></i>
+                </div>
+                <span>Kaapool</span>
+            </div>
+        </div>
+
+        <!-- MAIN HEADING -->
+        <h1 class="info-main-title">Add a photo to your profile 📸</h1>
+
+        <!-- VECTOR ILLUSTRATION -->
+        <div class="info-vector-container">
+            <svg class="info-vector-svg" viewBox="0 0 280 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Soft background glow -->
+                <circle cx="140" cy="90" r="70" fill="#ffedd5" opacity="0.8"/>
+                <!-- ID Card graphic -->
+                <rect x="50" y="30" width="180" height="115" rx="14" fill="#f89516"/>
+                <rect x="52" y="32" width="176" height="111" rx="12" stroke="#ffffff" stroke-width="2" stroke-opacity="0.3"/>
+                <!-- Person Avatar inside card -->
+                <circle cx="95" cy="72" r="24" fill="#ffffff"/>
+                <path d="M95 56C89.4772 56 85 60.4772 85 66C85 71.5228 89.4772 76 95 76C100.523 76 105 71.5228 105 66C105 60.4772 100.523 56 95 56Z" fill="#f89516"/>
+                <path d="M75 96C75 87 83 85 95 85C107 85 115 87 115 96V98H75V96Z" fill="#e07f07"/>
+                <!-- Card lines -->
+                <rect x="135" y="55" width="70" height="8" rx="4" fill="#ffffff"/>
+                <rect x="135" y="72" width="50" height="6" rx="3" fill="#fed7aa"/>
+                <rect x="135" y="86" width="60" height="6" rx="3" fill="#fed7aa"/>
+                <!-- Signature line -->
+                <path d="M140 110C148 105 155 115 165 108" stroke="#ffedd5" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <!-- DESCRIPTION TEXT -->
+        <div class="info-body-text">
+            <p>
+                <strong>{{ user.get_full_name|default:user.username }}</strong>, help us enhance trust in our community by adding your profile picture.
+            </p>
+            <p>
+                It shows that you're reliable and authentic. Help members get to know one another before a ride begins and drivers will recognize you easily at the pickup point!
+            </p>
+        </div>
+
+        <!-- CTA BUTTON -->
+        <a href="{% url 'accounts:profile' %}" class="btn-cta-orange">
+            Add a profile picture
+        </a>
+    </div>
+</div>
+{% endblock content %}
+
+{% block footer %}{% endblock footer %}

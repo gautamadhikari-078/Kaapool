@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Personal details | KaaPool{% endblock title %}
+
+{% block extra_css %}
+<style>
+.edit-page-wrapper {
+    background-color: #fafbfc;
+    min-height: 90vh;
+    padding: 2rem 1.5rem 5rem 1.5rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+}
+
+.edit-container {
+    max-width: 580px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 2.25rem;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    border: 1px solid #e2e8f0;
+    position: relative;
+}
+
+/* TOP BACK BUTTON BAR */
+.top-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+}
+
+.btn-back-arrow {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    color: #0f172a;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    cursor: pointer;
+}
+
+.btn-back-arrow:hover {
+    background: #f89516;
+    color: #ffffff;
+    border-color: #f89516;
+    transform: translateX(-3px);
+    box-shadow: 0 4px 14px rgba(248, 149, 22, 0.35);
+}
+
+.page-title-heading {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: #0f172a;
+    text-align: center;
+    margin-bottom: 2rem;
+    letter-spacing: -0.5px;
+}
+
+/* STACKED FORM FIELDS */
+.edit-fields-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+}
+
+.field-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.field-label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.field-input, .field-textarea {
+    width: 100%;
+    padding: 0.9rem 1.1rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #0f172a;
+    background: #f8fafc;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.field-input:focus, .field-textarea:focus {
+    border-color: #f89516;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(248, 149, 22, 0.15);
+}
+
+.field-textarea {
+    resize: vertical;
+    min-height: 95px;
+}
+
+.submit-btn-wrapper {
+    margin-top: 2.25rem;
+}
+
+.btn-save-details {
+    width: 100%;
+    padding: 1.05rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #f89516 0%, #e07e06 100%);
+    color: #ffffff;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(248, 149, 22, 0.35);
+    transition: all 0.25s ease;
+}
+
+.btn-save-details:hover {
+    background: linear-gradient(135deg, #e0830d 0%, #c96f00 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(248, 149, 22, 0.45);
+}
+
+/* UNSAVED CHANGES MODAL */
+.unsaved-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(5px);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.unsaved-modal-card {
+    background: #ffffff;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 440px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid #e2e8f0;
+}
+
+.unsaved-icon-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #fff7ed;
+    color: #f89516;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    margin-bottom: 1.25rem;
+    border: 2px solid #ffedd5;
+}
+
+.unsaved-modal-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+}
+
+.unsaved-modal-desc {
+    font-size: 0.95rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin-bottom: 1.75rem;
+}
+
+.unsaved-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn-modal-keep {
+    flex: 1;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    background: #f1f5f9;
+    color: #0f172a;
+    border: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-modal-keep:hover {
+    background: #e2e8f0;
+}
+
+.btn-modal-discard {
+    flex: 1;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    background: #ef4444;
+    color: #ffffff;
+    border: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-modal-discard:hover {
+    background: #dc2626;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="edit-page-wrapper">
+    <div class="edit-container">
+        <!-- TOP NAV BAR WITH BACK ARROW -->
+        <div class="top-nav-bar">
+            <a href="{% url 'accounts:profile' %}" id="backArrowBtn" class="btn-back-arrow" title="Back to Profile">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div></div> <!-- Spacer -->
+        </div>
+
+        <h1 class="page-title-heading">Personal details</h1>
+
+        <form id="editDetailsForm" method="post" action="{% url 'accounts:edit_personal_details' %}">
+            {% csrf_token %}
+
+            <div class="edit-fields-list">
+                <!-- FIRST NAME -->
+                <div class="field-item">
+                    <label class="field-label" for="id_first_name">First name</label>
+                    <input type="text" id="id_first_name" name="first_name" class="field-input" value="{{ user.first_name }}" placeholder="First name" required>
+                </div>
+
+                <!-- LAST NAME -->
+                <div class="field-item">
+                    <label class="field-label" for="id_last_name">Last name</label>
+                    <input type="text" id="id_last_name" name="last_name" class="field-input" value="{{ user.last_name }}" placeholder="Last name" required>
+                </div>
+
+                <!-- DATE OF BIRTH (18+ VALIDATION) -->
+                <div class="field-item">
+                    <label class="field-label" for="id_date_of_birth">Date of birth (Must be 18+)</label>
+                    <input type="date" id="id_date_of_birth" name="date_of_birth" class="field-input" value="{{ user.date_of_birth|date:'Y-m-d'|default:'' }}" max="{{ max_dob }}" required>
+                </div>
+
+                <!-- EMAIL ADDRESS -->
+                <div class="field-item">
+                    <label class="field-label" for="id_email">Email address</label>
+                    <input type="email" id="id_email" name="email" class="field-input" value="{{ user.email }}" placeholder="gautamadhikari078@gmail.com" required>
+                </div>
+
+                <!-- MOBILE PHONE (COMPULSORY) -->
+                <div class="field-item">
+                    <label class="field-label" for="id_phone_number">Mobile phone (Required)</label>
+                    <input type="tel" id="id_phone_number" name="phone_number" class="field-input" value="{{ user.phone_number|default:'' }}" placeholder="+917726990825" required>
+                </div>
+
+                <!-- BIO -->
+                <div class="field-item">
+                    <label class="field-label" for="id_bio">Bio</label>
+                    <textarea id="id_bio" name="bio" class="field-textarea" placeholder="Add a mini bio...">{{ user.bio }}</textarea>
+                </div>
+            </div>
+
+            <div class="submit-btn-wrapper">
+                <button type="submit" id="saveDetailsBtn" class="btn-save-details">
+                    Save details
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- UNSAVED CHANGES CONFIRMATION POPUP MODAL -->
+<div id="unsavedModal" class="unsaved-modal-overlay">
+    <div class="unsaved-modal-card">
+        <div class="unsaved-icon-circle">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 class="unsaved-modal-title">Unsaved Changes</h3>
+        <p class="unsaved-modal-desc">
+            You have unsaved changes on your profile. Are you sure you want to leave without saving?
+        </p>
+        <div class="unsaved-modal-actions">
+            <button type="button" id="btnKeepEditing" class="btn-modal-keep">Keep Editing</button>
+            <button type="button" id="btnDiscardChanges" class="btn-modal-discard">Discard & Leave</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editDetailsForm');
+    const backBtn = document.getElementById('backArrowBtn');
+    const unsavedModal = document.getElementById('unsavedModal');
+    const btnKeepEditing = document.getElementById('btnKeepEditing');
+    const btnDiscardChanges = document.getElementById('btnDiscardChanges');
+
+    let formSubmitted = false;
+
+    // Capture initial values of form inputs
+    const initialValues = {};
+    const inputs = form.querySelectorAll('input, textarea');
+    inputs.forEach(input => {
+        initialValues[input.name] = input.value.trim();
+    });
+
+    // Function to check if any field has been modified
+    function isFormDirty() {
+        if (formSubmitted) return false;
+        for (let input of inputs) {
+            if (initialValues[input.name] !== undefined) {
+                if (input.value.trim() !== initialValues[input.name]) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    form.addEventListener('submit', function() {
+        formSubmitted = true;
+    });
+
+    // Handle Back Arrow Click
+    backBtn.addEventListener('click', function(e) {
+        if (isFormDirty()) {
+            e.preventDefault();
+            unsavedModal.style.display = 'flex';
+        }
+    });
+
+    // Keep Editing button inside modal
+    btnKeepEditing.addEventListener('click', function() {
+        unsavedModal.style.display = 'none';
+    });
+
+    // Discard & Leave button inside modal
+    btnDiscardChanges.addEventListener('click', function() {
+        formSubmitted = true; // suppress warnings
+        window.location.href = "{% url 'accounts:profile' %}";
+    });
+
+    // Close modal if user clicks outside modal card
+    unsavedModal.addEventListener('click', function(e) {
+        if (e.target === unsavedModal) {
+            unsavedModal.style.display = 'none';
+        }
+    });
+
+    // Browser navigation / reload warning
+    window.addEventListener('beforeunload', function(e) {
+        if (isFormDirty()) {
+            e.preventDefault();
+            e.returnValue = 'You have unsaved changes on your profile.';
+            return e.returnValue;
+        }
+    });
+});
+</script>
+{% endblock content %}
+
+{% block footer %}{% endblock footer %}

@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notification Preferences - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+.pref-page-wrapper {
+    background-color: #f8fafc;
+    min-height: 85vh;
+    padding: 3rem 1.5rem 5rem 1.5rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+}
+
+.pref-container {
+    max-width: 620px;
+    margin: 0 auto;
+}
+
+.pref-header {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.btn-back-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-back-circle:hover {
+    background: #f89516;
+    color: #ffffff;
+    border-color: #f89516;
+}
+
+.pref-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+}
+
+.pref-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 0;
+    border-bottom: 1.5px solid #f1f5f9;
+}
+
+.pref-item-row:last-child {
+    border-bottom: none;
+}
+
+.pref-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.2rem;
+}
+
+.pref-desc {
+    font-size: 0.88rem;
+    color: #64748b;
+}
+
+/* Custom Switch Toggle */
+.form-switch .form-check-input {
+    width: 2.8em;
+    height: 1.5em;
+    cursor: pointer;
+}
+
+.btn-save-pref {
+    padding: 0.85rem 2.25rem;
+    border-radius: 999px;
+    background: #f89516;
+    color: #ffffff;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1rem;
+    font-weight: 800;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(248, 149, 22, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-save-pref:hover {
+    background: #d97d0d;
+    transform: translateY(-2px);
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="pref-page-wrapper">
+    <div class="pref-container">
+        <div class="pref-header">
+            <a href="{% url 'accounts:personal_details' %}" class="btn-back-circle">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
+            <h1 style="font-family: var(--font-heading, 'Outfit', sans-serif); font-size: 2rem; font-weight: 800; margin: 0; color: #0f172a;">
+                Notification Preferences
+            </h1>
+        </div>
+
+        <div class="pref-card">
+            <form method="post" action="{% url 'accounts:notification_preferences' %}">
+                {% csrf_token %}
+
+                <!-- Mandatory Account Security -->
+                <div class="pref-item-row">
+                    <div>
+                        <div class="pref-title">Account & Security Alerts</div>
+                        <div class="pref-desc">Critical security alerts, OTP codes, and login notifications (Mandatory).</div>
+                    </div>
+                    <div>
+                        <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-bold">Mandatory</span>
+                    </div>
+                </div>
+
+                <!-- Ride Updates -->
+                <div class="pref-item-row">
+                    <div>
+                        <div class="pref-title">Ride & Booking Updates</div>
+                        <div class="pref-desc">Confirmations, cancellations, schedule updates for your trips.</div>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="email_ride_updates" id="rideUpdates" {% if pref.email_ride_updates %}checked{% endif %}>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="pref-item-row">
+                    <div>
+                        <div class="pref-title">Inbox Messages & Chat</div>
+                        <div class="pref-desc">Notifications when co-travelers send you private messages on Kaapool.</div>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="email_messages" id="messagesToggle" {% if pref.email_messages %}checked{% endif %}>
+                    </div>
+                </div>
+
+                <!-- Platform Updates -->
+                <div class="pref-item-row">
+                    <div>
+                        <div class="pref-title">Important Platform Updates</div>
+                        <div class="pref-desc">Safety features, terms updates, and service announcements.</div>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="email_platform_updates" id="platformToggle" {% if pref.email_platform_updates %}checked{% endif %}>
+                    </div>
+                </div>
+
+                <!-- Marketing & Offers -->
+                <div class="pref-item-row">
+                    <div>
+                        <div class="pref-title">Marketing & Special Offers</div>
+                        <div class="pref-desc">Inactivity reminders, promotional codes, and new route recommendations.</div>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="email_marketing" id="marketingToggle" {% if pref.email_marketing %}checked{% endif %}>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center pt-4 border-top mt-3">
+                    <a href="{% url 'accounts:unsubscribe' %}?email={{ user.email }}" class="text-muted small">
+                        Unsubscribe from marketing emails
+                    </a>
+                    <button type="submit" class="btn-save-pref">
+                        Save Preferences
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block footer %}{% endblock footer %}

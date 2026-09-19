@@ -1,21 +1,293 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Inbox - Kaapool{% endblock title %}
 
+{% block extra_css %}
+<style>
+/* ==========================================================
+   BLABLACAR 1:1 REPLICA - INBOX DESIGN
+   ========================================================== */
+.inbox-page-wrapper {
+    background-color: #ffffff;
+    min-height: 88vh;
+    padding: 2.5rem 1rem 6rem 1rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+    position: relative;
+}
+
+.inbox-container {
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+/* CENTERED TITLE */
+.inbox-page-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #051528;
+    text-align: center;
+    margin: 0 0 2.5rem 0;
+    letter-spacing: -0.5px;
+}
+
+/* MESSAGE ROWS LIST */
+.inbox-rows-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.inbox-row-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    text-decoration: none !important;
+    color: inherit;
+    transition: background 0.15s ease;
+    cursor: pointer;
+    border-radius: 12px;
+}
+
+.inbox-row-item:hover {
+    background: #f8fafc;
+}
+
+.inbox-row-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
+    min-width: 0;
+    padding-right: 1rem;
+}
+
+.inbox-item-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #051528;
+    line-height: 1.25;
+}
+
+.inbox-item-subtitle {
+    font-size: 0.925rem;
+    font-weight: 700;
+    color: #334155;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.inbox-item-subtext {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #94a3b8;
+    line-height: 1.35;
+}
+
+.inbox-row-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+/* AVATAR CIRCLES */
+.inbox-avatar-wrap {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+}
+
+.inbox-system-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #f89516;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 12px rgba(248, 149, 22, 0.2);
+}
+
+.inbox-user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #051528;
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.verified-check-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    background: #10b981;
+    color: #ffffff;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    font-size: 0.65rem;
+    border: 2px solid #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chevron-arrow-icon {
+    color: #64748b;
+    font-size: 0.95rem;
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.inbox-row-item:hover .chevron-arrow-icon {
+    color: #f89516;
+    transform: translateX(3px);
+}
+</style>
+{% endblock extra_css %}
+
 {% block content %}
-<section id="inbox-section">
-    <h1>Messages & Inbox</h1>
-    
-    <div class="inbox-messages-list">
-        {% for message in messages %}
-            <div class="message-card">
-                <p><strong>From:</strong> {{ message.sender.username }} | <strong>To:</strong> {{ message.recipient.username }}</p>
-                <p>{{ message.content }}</p>
-                <small>{{ message.timestamp }}</small>
-            </div>
-        {% empty %}
-            <p>Your inbox is empty.</p>
-        {% endfor %}
+<div class="inbox-page-wrapper">
+    <a href="javascript:history.back()" class="btn-page-back" title="Go back">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
+    <div class="inbox-container">
+
+        
+        <!-- CENTERED TITLE -->
+        <h1 class="inbox-page-title">Inbox</h1>
+
+        <!-- MESSAGES ROWS LIST -->
+        <div class="inbox-rows-list">
+
+            <!-- 1. KAAPOOL SYSTEM MESSAGE 1 -> OPENS IMAGE 2 REPLICA -->
+            <a href="{% url 'messaging:add_photo_info' %}" class="inbox-row-item">
+                <div class="inbox-row-left">
+                    <span class="inbox-item-title">Kaapool</span>
+                    <span class="inbox-item-subtitle">Add a photo to your profile 📸</span>
+                </div>
+                <div class="inbox-row-right">
+                    <div class="inbox-avatar-wrap">
+                        <div class="inbox-system-avatar">
+                            <i class="fa-solid fa-quote-left"></i>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right chevron-arrow-icon"></i>
+                </div>
+            </a>
+
+            <!-- 2. KAAPOOL SYSTEM MESSAGE 2 -> OPENS IMAGE 4 REPLICA -->
+            <a href="{% url 'messaging:stay_updated_info' %}" class="inbox-row-item">
+                <div class="inbox-row-left">
+                    <span class="inbox-item-title">Kaapool</span>
+                    <span class="inbox-item-subtitle">How to stay updated</span>
+                </div>
+                <div class="inbox-row-right">
+                    <div class="inbox-avatar-wrap">
+                        <div class="inbox-system-avatar">
+                            <i class="fa-solid fa-quote-left"></i>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right chevron-arrow-icon"></i>
+                </div>
+            </a>
+
+            <!-- DYNAMIC USER CONVERSATIONS FROM DATABASE -> OPENS IMAGE 3 REPLICA -->
+            {% for message in inbox_messages %}
+            {% with other_user=message.sender %}
+
+                {% if message.sender == user %}
+                    {% with other_user=message.recipient %}
+                        <a href="{% url 'messaging:chat_detail' message.recipient.id %}" class="inbox-row-item">
+                            <div class="inbox-row-left">
+                                <span class="inbox-item-title">{{ message.recipient.get_full_name|default:message.recipient.username }}</span>
+                                <span class="inbox-item-subtitle">
+                                    {% if message.ride %}
+                                        {{ message.ride.origin }} &rarr; {{ message.ride.destination }}
+                                    {% else %}
+                                        {{ message.content }}
+                                    {% endif %}
+                                </span>
+                                <span class="inbox-item-subtext">{{ message.timestamp|date:"d M, Y" }}</span>
+                            </div>
+                            <div class="inbox-row-right">
+                                <div class="inbox-avatar-wrap">
+                                    <div class="inbox-user-avatar">
+                                        {{ message.recipient.username|slice:":2"|upper }}
+                                    </div>
+                                    <div class="verified-check-badge">
+                                        <i class="fa-solid fa-check"></i>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-chevron-right chevron-arrow-icon"></i>
+                            </div>
+                        </a>
+                    {% endwith %}
+                {% else %}
+                    <a href="{% url 'messaging:chat_detail' message.sender.id %}" class="inbox-row-item">
+                        <div class="inbox-row-left">
+                            <span class="inbox-item-title">{{ message.sender.get_full_name|default:message.sender.username }}</span>
+                            <span class="inbox-item-subtitle">
+                                {% if message.ride %}
+                                    {{ message.ride.origin }} &rarr; {{ message.ride.destination }}
+                                {% else %}
+                                    {{ message.content }}
+                                {% endif %}
+                            </span>
+                            <span class="inbox-item-subtext">{{ message.timestamp|date:"d M, Y" }}</span>
+                        </div>
+                        <div class="inbox-row-right">
+                            <div class="inbox-avatar-wrap">
+                                <div class="inbox-user-avatar">
+                                    {{ message.sender.username|slice:":2"|upper }}
+                                </div>
+                                <div class="verified-check-badge">
+                                    <i class="fa-solid fa-check"></i>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right chevron-arrow-icon"></i>
+                        </div>
+                    </a>
+                {% endif %}
+            {% endwith %}
+            {% empty %}
+            <!-- DEMO USER CONVERSATION (MATCHING SCREENSHOT) -> OPENS CHAT FOR DEMO / OTHER USER -->
+            <a href="{% url 'messaging:chat_detail' user.id %}" class="inbox-row-item">
+                <div class="inbox-row-left">
+                    <span class="inbox-item-title">Rahul</span>
+                    <span class="inbox-item-subtitle">Gurugram &rarr; Rohtak</span>
+                    <span class="inbox-item-subtext">4 days ago</span>
+                </div>
+                <div class="inbox-row-right">
+                    <div class="inbox-avatar-wrap">
+                        <div class="inbox-user-avatar" style="background: #1e293b;">
+                            RA
+                        </div>
+                        <div class="verified-check-badge">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right chevron-arrow-icon"></i>
+                </div>
+            </a>
+            {% endfor %}
+
+        </div>
     </div>
-</section>
+</div>
 {% endblock content %}
+
+{% block footer %}{% endblock footer %}

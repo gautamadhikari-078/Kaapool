@@ -15,7 +15,14 @@ class NotificationListView(LoginRequiredMixin, ListView):
     context_object_name = 'notifications'
 
     def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user)
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user_notifs = Notification.objects.filter(user=self.request.user)
+        context['unread_count'] = user_notifs.filter(is_read=False).count()
+        context['total_count'] = user_notifs.count()
+        return context
 
 
 # --- REST API ViewSets ---

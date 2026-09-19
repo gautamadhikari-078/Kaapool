@@ -1,0 +1,54 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Driver Management - Kaapool Admin{% endblock %}
+{% block page_heading %}Driver Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Registered Drivers</h2>
+        <p class="page-subtitle">Manage drivers, offered ride history, and verification standings.</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Driver Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Verification</th>
+                    <th>Rides Offered</th>
+                    <th>Joined Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in drivers %}
+                <tr>
+                    <td><strong>{{ d.get_full_name|default:d.username }}</strong></td>
+                    <td>{{ d.email|default:"N/A" }}</td>
+                    <td>{{ d.phone_number|default:"N/A" }}</td>
+                    <td>
+                        {% if d.is_verified_driver %}
+                            <span class="badge badge-success"><i class="fa-solid fa-certificate"></i> Verified</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Pending Verification</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ d.total_rides_count }} ride(s)</td>
+                    <td>{{ d.date_joined|date:"Y-m-d" }}</td>
+                    <td>
+                        <a href="{% url 'admin_panel:user_detail' pk=d.pk %}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-eye"></i> Driver Profile</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">No drivers registered yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

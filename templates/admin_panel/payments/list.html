@@ -1,0 +1,163 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Payment Management - Kaapool Admin{% endblock %}
+{% block page_heading %}Payment & Transaction History{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Payment Transactions</h2>
+        <p class="page-subtitle">Inspect completed payments, log transactions, and update refund status.</p>
+    </div>
+    <div>
+        <button onclick="document.getElementById('createPaymentModal').style.display='flex'" class="btn btn-primary"><i class="fa-solid fa-credit-card"></i> Log New Payment</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Payment ID</th>
+                    <th>Transaction ID</th>
+                    <th>User</th>
+                    <th>Booking Ref</th>
+                    <th>Amount</th>
+                    <th>Payment Method</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in payments %}
+                <tr>
+                    <td>#{{ p.id }}</td>
+                    <td><code>{{ p.transaction_id|default:"N/A" }}</code></td>
+                    <td><strong>{{ p.user.get_full_name|default:p.user.username }}</strong></td>
+                    <td>{% if p.booking %}#{{ p.booking.id }}{% else %}N/A{% endif %}</td>
+                    <td>&#8377;{{ p.amount }}</td>
+                    <td>{{ p.payment_method|upper }}</td>
+                    <td>
+                        {% if p.status == 'completed' %}
+                            <span class="badge badge-success">Completed</span>
+                        {% elif p.status == 'refunded' %}
+                            <span class="badge badge-info">Refunded</span>
+                        {% elif p.status == 'failed' %}
+                            <span class="badge badge-danger">Failed</span>
+                        {% else %}
+                            <span class="badge badge-warning">{{ p.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ p.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.35rem; align-items: center;">
+                            <button onclick="editPayment('{{ p.id }}', '{{ p.status }}', '{{ p.amount }}', '{{ p.payment_method }}')" class="btn btn-secondary btn-sm" title="Edit Payment"><i class="fa-solid fa-pen-to-square"></i></button>
+
+                            <form method="POST" action="{% url 'admin_panel:payment_delete' pk=p.pk %}" style="display: inline;" onsubmit="return confirm('Delete payment #{{ p.id }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm" title="Delete Payment"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">No payment records logged.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: Log Payment -->
+<div id="createPaymentModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 14px; width: 100%; max-width: 480px; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+            <h3 style="font-size: 1.15rem; font-weight: 700;"><i class="fa-solid fa-credit-card" style="color: var(--brand-orange);"></i> Log Payment Record</h3>
+            <button onclick="document.getElementById('createPaymentModal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form method="POST" action="{% url 'admin_panel:payment_create' %}">
+            {% csrf_token %}
+            <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">User ID</label>
+                <input type="number" name="user_id" class="search-input" style="width: 100%;" placeholder="e.g. 1" required>
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Booking ID (Optional)</label>
+                <input type="number" name="booking_id" class="search-input" style="width: 100%;" placeholder="e.g. 1">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Amount (&#8377;)</label>
+                    <input type="number" step="0.01" name="amount" class="search-input" style="width: 100%;" required>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Status</label>
+                    <select name="status" class="select-input" style="width: 100%;">
+                        <option value="completed">Completed</option>
+                        <option value="pending">Pending</option>
+                        <option value="refunded">Refunded</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Transaction ID</label>
+                <input type="text" name="transaction_id" class="search-input" style="width: 100%;" placeholder="TXN_12345678">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <button type="button" onclick="document.getElementById('createPaymentModal').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Log Payment</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Payment -->
+<div id="editPaymentModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 14px; width: 100%; max-width: 480px; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+            <h3 style="font-size: 1.15rem; font-weight: 700;"><i class="fa-solid fa-pen-to-square" style="color: var(--brand-orange);"></i> Update Payment Status</h3>
+            <button onclick="document.getElementById('editPaymentModal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form id="editPaymentForm" method="POST" action="">
+            {% csrf_token %}
+            <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Status</label>
+                <select name="status" id="edit_payment_status" class="select-input" style="width: 100%;">
+                    <option value="completed">Completed</option>
+                    <option value="pending">Pending</option>
+                    <option value="refunded">Refunded</option>
+                    <option value="failed">Failed</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Amount (&#8377;)</label>
+                <input type="number" step="0.01" name="amount" id="edit_payment_amount" class="search-input" style="width: 100%;" required>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <button type="button" onclick="document.getElementById('editPaymentModal').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function editPayment(id, status, amount, method) {
+    document.getElementById('editPaymentForm').action = "/admin/payments/" + id + "/edit/";
+    document.getElementById('edit_payment_status').value = status;
+    document.getElementById('edit_payment_amount').value = amount;
+    document.getElementById('editPaymentModal').style.display = 'flex';
+}
+</script>
+{% endblock %}

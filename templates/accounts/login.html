@@ -39,7 +39,7 @@
     width: 60px;
     height: 60px;
     background: #fffbeb;
-    color: #f59e0b;
+    color: #f89516;
     border-radius: 50%;
     font-size: 1.8rem;
     margin-bottom: 1rem;
@@ -116,8 +116,8 @@
 }
 
 .form-field-group input:focus {
-    border-color: #0073e6;
-    box-shadow: 0 0 0 4px rgba(0, 115, 230, 0.1);
+    border-color: #f89516;
+    box-shadow: 0 0 0 4px rgba(248, 149, 22, 0.1);
 }
 
 .auth-error-box {
@@ -134,7 +134,7 @@
 .btn-auth-submit {
     width: 100%;
     padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background: linear-gradient(135deg, #f89516 0%, #e07f07 100%);
     color: #ffffff;
     border: none;
     border-radius: 14px;
@@ -146,14 +146,14 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 8px 20px rgba(248, 149, 22, 0.3);
     transition: all 0.2s ease;
     margin-top: 0.5rem;
 }
 
 .btn-auth-submit:hover {
     transform: translateY(-1px);
-    box-shadow: 0 12px 25px rgba(245, 158, 11, 0.4);
+    box-shadow: 0 12px 25px rgba(248, 149, 22, 0.4);
 }
 
 .auth-footer-prompt {
@@ -166,7 +166,7 @@
 }
 
 .auth-footer-prompt a {
-    color: #0073e6;
+    color: #f89516;
     font-weight: 800;
     text-decoration: none;
 }
@@ -214,7 +214,10 @@
             </div>
 
             <div class="form-field-group">
-                <label for="id_password"><i class="fa-solid fa-lock"></i> Password</label>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label for="id_password"><i class="fa-solid fa-lock"></i> Password</label>
+                    <a href="{% url 'accounts:password_reset' %}" style="color: #f89516; font-size: 0.85rem; font-weight: 700; text-decoration: none;">Forgot Password?</a>
+                </div>
                 <input type="password" name="password" id="id_password" placeholder="Enter your password" required>
             </div>
 
@@ -229,3 +232,6 @@
     </div>
 </div>
 {% endblock content %}
+
+{% block footer %}{% endblock footer %}
+

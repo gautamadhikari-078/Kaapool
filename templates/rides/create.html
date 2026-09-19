@@ -4,262 +4,2130 @@
 {% block title %}Offer a Ride - Kaapool{% endblock title %}
 
 {% block extra_css %}
+<!-- Mapbox GL CSS & Leaflet Map CSS -->
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
 <style>
 /* ==========================================================
-   OFFER A RIDE PAGE STYLING
+   OFFER A RIDE MULTI-STEP WIZARD (BLABLACAR UX)
    ========================================================== */
-.create-page-wrapper {
-    background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
-    min-height: 85vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem 1.5rem;
-}
-
-.create-card-container {
+.offer-ride-page-wrapper {
     background: #ffffff;
-    width: 100%;
-    max-width: 650px;
-    border-radius: 24px;
-    border: 2px solid #e2e8f0;
-    padding: 2.5rem 2.25rem;
-    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    min-height: 90vh;
+    padding: 2rem 1rem 4rem 1rem;
+    font-family: var(--font-body, system-ui, -apple-system, sans-serif);
 }
 
-.create-header {
+.offer-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* WIZARD STEP PANES - CRITICAL: ONLY SHOW ACTIVE PANE */
+.wizard-step-pane {
+    display: none !important;
+    animation: fadeIn 0.25s ease-in-out;
+}
+
+.wizard-step-pane.active {
+    display: block !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* PROGRESS BAR */
+.wizard-progress-container {
+    max-width: 650px;
+    margin: 0 auto 2.5rem auto;
+    position: relative;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.wizard-progress-fill {
+    height: 100%;
+    background: #f89516;
+    width: 12.5%;
+    transition: width 0.35s ease;
+}
+
+/* STEP TITLE & LAYOUT */
+.location-search-center-box {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 1rem 0 3rem 0;
+}
+
+.step-center-box {
+    max-width: 620px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1rem 0 3rem 0;
+}
+
+.sub-step-title, .step-title {
+    font-family: var(--font-heading, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #051329;
     text-align: center;
     margin-bottom: 2rem;
+    letter-spacing: -0.6px;
 }
 
-.create-logo-badge {
+.back-btn-link {
+    background: none;
+    border: none;
+    font-weight: 700;
+    color: #f89516;
+    cursor: pointer;
+    font-size: 1rem;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 60px;
-    height: 60px;
-    background: #eff6ff;
-    color: #3b82f6;
-    border-radius: 50%;
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
-    border: 2px solid #bfdbfe;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0;
+    transition: opacity 0.2s ease;
 }
 
-.create-header h1 {
-    font-family: var(--font-heading);
-    font-size: 1.85rem;
-    font-weight: 800;
-    color: #0f172a;
-    margin: 0 0 0.5rem 0;
+.back-btn-link:hover {
+    opacity: 0.8;
 }
 
-.create-header p {
-    color: #64748b;
-    font-size: 0.95rem;
-    margin: 0;
-}
-
-/* FORM FIELDS */
-.create-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-}
-
-.form-row {
-    display: flex;
-    gap: 1.25rem;
-}
-
-@media (max-width: 640px) {
-    .form-row {
-        flex-direction: column;
-        gap: 1.25rem;
-    }
-}
-
-.form-row .form-field-group {
-    flex: 1;
-}
-
-.form-field-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-}
-
-.form-field-group label {
-    font-size: 0.85rem;
-    font-weight: 800;
-    color: #0f172a;
-}
-
-.form-field-group input, .form-field-group textarea {
+/* STATE SELECTOR DROPDOWN */
+.blabla-state-select {
     width: 100%;
-    padding: 0.85rem 1rem;
-    border-radius: 12px;
-    border: 2px solid #cbd5e1;
-    font-family: inherit;
+    padding: 0.85rem 1.2rem;
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     color: #0f172a;
     outline: none;
-    transition: all 0.2s ease;
-    box-sizing: border-box;
-}
-
-.form-field-group textarea {
-    resize: vertical;
-    min-height: 100px;
-}
-
-.form-field-group input:focus, .form-field-group textarea:focus {
-    border-color: #0073e6;
-    box-shadow: 0 0 0 4px rgba(0, 115, 230, 0.1);
-}
-
-.btn-create-submit {
-    width: 100%;
-    padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, #0073e6 0%, #005bb5 100%);
-    color: #ffffff;
-    border: none;
-    border-radius: 14px;
-    font-family: var(--font-heading);
-    font-weight: 800;
-    font-size: 1.05rem;
     cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+}
+
+.blabla-state-select:focus {
+    border-color: #f89516;
+    box-shadow: 0 0 0 4px rgba(248, 149, 22, 0.12);
+}
+
+/* BLABLACAR SEARCH PILL */
+.blabla-search-pill-wrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 1.75rem;
+}
+
+.blabla-search-pill {
+    width: 100%;
+    padding: 1.1rem 3.2rem 1.1rem 3.2rem;
+    background: #f1f4f8;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 28px;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #051329;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.blabla-search-pill:focus {
+    background: #ffffff;
+    border-color: #f89516;
+    box-shadow: 0 0 0 4px rgba(248, 149, 22, 0.15);
+}
+
+.blabla-search-icon {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #708099;
+    font-size: 1.15rem;
+}
+
+.blabla-clear-icon {
+    position: absolute;
+    right: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 1.15rem;
+    cursor: pointer;
+    display: none;
+}
+
+.blabla-clear-icon:hover {
+    color: #0f172a;
+}
+
+.blabla-suggestions-list {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.blabla-suggestion-card {
+    background: #ffffff;
+    border: none;
+    border-bottom: 1px solid #f1f5f9;
+    border-radius: 0;
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: none;
+}
+
+.blabla-suggestion-card:last-child {
+    border-bottom: none;
+}
+
+.blabla-suggestion-card:hover {
+    border-color: transparent;
+    background: #fffaf5;
+}
+
+.blabla-sug-left {
+    display: flex;
+    align-items: center;
+    gap: 1.15rem;
+    overflow: hidden;
+}
+
+.blabla-sug-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #fff7ed;
+    color: #f89516;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    box-shadow: 0 8px 20px rgba(0, 115, 230, 0.3);
-    transition: all 0.2s ease;
-    margin-top: 1rem;
+    font-size: 1.05rem;
+    flex-shrink: 0;
 }
 
-.btn-create-submit:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 12px 25px rgba(0, 115, 230, 0.4);
+.blabla-sug-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #0f172a;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 420px;
 }
 
-/* ERROR MESSAGES */
-.form-error {
-    color: #991b1b;
-    font-size: 0.85rem;
-    margin-top: 0.25rem;
+.blabla-sug-address {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin-top: 0.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 420px;
 }
-.auth-error-box {
+
+.blabla-sug-chevron {
+    color: #94a3b8;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* ERROR BANNER */
+.location-validation-error {
     background: #fef2f2;
     border: 1px solid #fecaca;
     color: #991b1b;
-    padding: 0.75rem 1rem;
-    border-radius: 12px;
+    padding: 0.85rem 1.2rem;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    display: none;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+/* STEP 3: ROUTE SELECTION & MAP GRID */
+.step3-grid {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .step3-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.route-options-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 1.75rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+#route-map-container {
+    height: 520px;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.route-variant-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+
+.route-variant-option {
+    display: flex;
+    align-items: center;
+    gap: 1.15rem;
+    padding: 1.1rem 1.25rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #ffffff;
+}
+
+.route-variant-option:hover {
+    border-color: #fed7aa;
+    background: #fffaf5;
+}
+
+.route-variant-option.selected {
+    border-color: #f89516;
+    background: #fff8f0;
+    box-shadow: 0 4px 15px rgba(248, 149, 22, 0.08);
+}
+
+.route-radio-circle {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.route-variant-option.selected .route-radio-circle {
+    border-color: #f89516;
+    background: #f89516;
+}
+
+.route-variant-option.selected .route-radio-circle::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ffffff;
+}
+
+.route-variant-title-line {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    margin-bottom: 0.25rem;
+}
+
+.route-duration-text {
+    font-size: 1.12rem;
+    font-weight: 800;
+    color: #051329;
+}
+
+.route-toll-badge {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #475569;
+}
+
+.route-subtitle-text {
     font-size: 0.88rem;
+    color: #708099;
+    font-weight: 500;
+}
+
+.btn-continue-pill {
+    padding: 0.88rem 2.6rem;
+    background: #f89516;
+    color: #ffffff;
+    border: none;
+    border-radius: 40px;
+    font-family: var(--font-heading, sans-serif);
+    font-weight: 800;
+    font-size: 1.05rem;
+    cursor: pointer;
+    box-shadow: 0 8px 22px rgba(248, 149, 22, 0.28);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.btn-continue-pill:hover {
+    background: #ea580c;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px rgba(248, 149, 22, 0.38);
+}
+
+/* STEP 4: STOPOVERS */
+.stopovers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.stopover-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 1.4rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.stopover-item:hover {
+    border-color: #f89516;
+    background: #fff7ed;
+}
+
+.stopover-checkbox {
+    width: 22px;
+    height: 22px;
+    accent-color: #f89516;
+    cursor: pointer;
+}
+
+.add-city-pill {
+    padding: 0.95rem 1.4rem;
+    background: #fff7ed;
+    border: 2px dashed #fed7aa;
+    border-radius: 16px;
+    color: #f89516;
     font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.add-city-pill:hover {
+    border-color: #f89516;
+    background: #ffedd5;
+}
+
+/* CALENDAR & TIME STYLES */
+.info-sub-banner {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #9a3412;
+    padding: 0.85rem 1.25rem;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    max-width: 600px;
+    width: 100%;
+}
+
+.dual-calendar-wrapper {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+.calendar-grid-months {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+@media (max-width: 640px) {
+    .calendar-grid-months {
+        grid-template-columns: 1fr;
+    }
+}
+
+.calendar-month-title {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #0f172a;
     margin-bottom: 1rem;
+    text-align: center;
+}
+
+.calendar-days-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.calendar-days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.cal-day-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #0f172a;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.cal-day-cell:hover:not(.disabled) {
+    background: #f1f5f9;
+}
+
+.cal-day-cell.selected {
+    background: #f89516;
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.cal-day-cell.disabled {
+    color: #cbd5e1;
+    cursor: not-allowed;
+}
+
+.time-display-pill {
+    font-family: var(--font-heading);
+    font-size: 4rem;
+    font-weight: 800;
+    color: #0f172a;
+    border: 3px solid #f89516;
+    border-radius: 60px;
+    padding: 0.8rem 3.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    margin-bottom: 2.5rem;
+    box-shadow: 0 10px 30px rgba(248, 149, 22, 0.12);
+}
+
+.time-presets-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.time-preset-btn {
+    padding: 0.85rem;
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #0f172a;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.time-preset-btn:hover, .time-preset-btn.active {
+    border-color: #f89516;
+    background: #fff7ed;
+    color: #f89516;
+}
+
+/* COUNTERS & BUTTONS */
+.counter-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.counter-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid #f89516;
+    background: #ffffff;
+    color: #f89516;
+    font-size: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.counter-btn:hover {
+    background: #f89516;
+    color: #ffffff;
+}
+
+.counter-value-large {
+    font-family: var(--font-heading);
+    font-size: 5rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1;
+    min-width: 120px;
+    text-align: center;
+}
+
+.price-value-large {
+    font-family: var(--font-heading);
+    font-size: 4.2rem;
+    font-weight: 800;
+    color: #059669;
+    line-height: 1;
+    min-width: 180px;
+    text-align: center;
+}
+
+.comfort-option-box {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    border: 1px solid #e2e8f0;
+    padding: 1.1rem 1.5rem;
+    border-radius: 14px;
+    width: 100%;
+    margin-bottom: 2rem;
+    cursor: pointer;
+    background: #ffffff;
+}
+
+.comfort-option-box input {
+    width: 20px;
+    height: 20px;
+    accent-color: #f89516;
+}
+
+.recommended-price-badge {
+    background: #d1fae5;
+    color: #047857;
+    padding: 0.5rem 1.25rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.price-warning-box {
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    color: #92400e;
+    padding: 1rem 1.25rem;
+    border-radius: 14px;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+.wizard-actions-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2rem;
+    width: 100%;
+}
+
+.btn-wizard-next {
+    padding: 0.9rem 2.5rem;
+    background: #f89516;
+    color: #ffffff;
+    border: none;
+    border-radius: 40px;
+    font-family: var(--font-heading, sans-serif);
+    font-weight: 800;
+    font-size: 1.05rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 8px 22px rgba(248, 149, 22, 0.28);
+    transition: all 0.2s ease;
+}
+
+.btn-wizard-next:hover {
+    background: #ea580c;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px rgba(248, 149, 22, 0.38);
+}
+
+.btn-wizard-prev {
+    padding: 0.85rem 1.8rem;
+    background: transparent;
+    border: 2px solid #cbd5e1;
+    border-radius: 40px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-wizard-prev:hover {
+    border-color: #0f172a;
+    color: #0f172a;
 }
 </style>
 {% endblock extra_css %}
 
 {% block content %}
-<div class="create-page-wrapper">
-    <div class="create-card-container">
-        <!-- LOGO BADGE & HEADER -->
-        <div class="create-header">
-            <div class="create-logo-badge">
-                <i class="fa-solid fa-car"></i>
-            </div>
-            <h1>Offer a Ride</h1>
-            <p>Share your journey and save money on travel costs.</p>
+<div class="offer-ride-page-wrapper">
+    <div class="offer-container">
+
+        <!-- SLEEK WIZARD PROGRESS FILL BAR -->
+        <div class="wizard-progress-container">
+            <div class="wizard-progress-fill" id="progress-fill"></div>
         </div>
 
-        <!-- ERROR MESSAGES -->
-        {% if form.errors %}
-            <div class="auth-error-box">
-                <i class="fa-solid fa-triangle-exclamation"></i> Please correct the errors below.
-            </div>
-        {% endif %}
-
-        <!-- FORM -->
-        <form method="post" class="create-form">
+        <!-- FORM WRAPPER -->
+        <form method="post" id="offer-ride-form" onsubmit="return validateFinalSubmission();">
             {% csrf_token %}
+            <input type="hidden" name="origin" id="id_origin" value="{{ form.origin.value|default:'' }}">
+            <input type="hidden" name="destination" id="id_destination" value="{{ form.destination.value|default:'' }}">
+            <input type="hidden" name="pickup_address" id="id_pickup_address">
+            <input type="hidden" name="pickup_latitude" id="id_pickup_latitude">
+            <input type="hidden" name="pickup_longitude" id="id_pickup_longitude">
+            <input type="hidden" name="pickup_place_id" id="id_pickup_place_id">
 
-            <div class="form-row">
-                <div class="form-field-group">
-                    <label for="id_origin"><i class="fa-solid fa-location-dot"></i> Origin</label>
-                    <input type="text" name="origin" id="id_origin" placeholder="Where from? (e.g., Delhi)" required value="{{ form.origin.value|default_if_none:'' }}">
-                    {% if form.origin.errors %}
-                        <div class="form-error">{{ form.origin.errors.0 }}</div>
-                    {% endif %}
-                </div>
+            <input type="hidden" name="drop_address" id="id_drop_address">
+            <input type="hidden" name="drop_latitude" id="id_drop_latitude">
+            <input type="hidden" name="drop_longitude" id="id_drop_longitude">
+            <input type="hidden" name="drop_place_id" id="id_drop_place_id">
 
-                <div class="form-field-group">
-                    <label for="id_destination"><i class="fa-solid fa-flag-checkered"></i> Destination</label>
-                    <input type="text" name="destination" id="id_destination" placeholder="Where to? (e.g., Jaipur)" required value="{{ form.destination.value|default_if_none:'' }}">
-                    {% if form.destination.errors %}
-                        <div class="form-error">{{ form.destination.errors.0 }}</div>
-                    {% endif %}
+            <input type="hidden" name="route_geometry" id="id_route_geometry">
+            <input type="hidden" name="estimated_distance_km" id="id_estimated_distance_km">
+            <input type="hidden" name="estimated_duration_mins" id="id_estimated_duration_mins">
+
+            <!-- ==========================================
+                 SCREEN 1: PICK-UP LOCATION (GOOGLE PLACES AUTOCOMPLETE)
+                 ========================================== -->
+            <div class="wizard-step-pane active" id="step-pane-1">
+                <div class="location-search-center-box">
+                    <h2 class="sub-step-title">Pick-up</h2>
+
+                    <div class="location-validation-error" id="pickup-error-msg">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span>Please select a location from the suggestions.</span>
+                    </div>
+
+                    <div class="blabla-search-pill-wrapper">
+                        <i class="fa-solid fa-magnifying-glass blabla-search-icon"></i>
+                        <input type="text" id="pickup_search_input" class="blabla-search-pill" placeholder="Street, gali, sector, landmark, or city..." autocomplete="off">
+                        <i class="fa-solid fa-xmark blabla-clear-icon" id="clear-pickup-icon"></i>
+                    </div>
+
+                    <!-- Suggestions List -->
+                    <div class="blabla-suggestions-list" id="pickup-sug-list">
+                        <div class="blabla-suggestion-card">
+                            <div class="blabla-sug-left">
+                                <div class="blabla-sug-icon" style="background: #ecfdf5; color: #059669;">
+                                    <i class="fa-solid fa-location-crosshairs"></i>
+                                </div>
+                                <div>
+                                    <div class="blabla-sug-title">Use my current location</div>
+                                    <div class="blabla-sug-address">Enable GPS to select exact location</div>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right blabla-sug-chevron"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-field-group">
-                <label for="id_pickup_point"><i class="fa-solid fa-map-pin"></i> Pickup Point</label>
-                <input type="text" name="pickup_point" id="id_pickup_point" placeholder="Specific meeting spot" required value="{{ form.pickup_point.value|default_if_none:'' }}">
-                {% if form.pickup_point.errors %}
-                    <div class="form-error">{{ form.pickup_point.errors.0 }}</div>
-                {% endif %}
+            <!-- ==========================================
+                 SCREEN 2: DROP-OFF LOCATION
+                 ========================================== -->
+            <div class="wizard-step-pane" id="step-pane-2">
+                <div class="location-search-center-box">
+                    <button type="button" class="back-btn-link" onclick="goToStep(1)">
+                        <i class="fa-solid fa-arrow-left"></i> Change pick-up
+                    </button>
+                    
+                    <h2 class="sub-step-title">Drop-off</h2>
+
+                    <div class="blabla-search-pill-wrapper">
+                        <i class="fa-solid fa-magnifying-glass blabla-search-icon"></i>
+                        <input type="text" id="drop_search_input" class="blabla-search-pill" placeholder="Enter the full address" autocomplete="off">
+                        <i class="fa-solid fa-xmark blabla-clear-icon" id="clear-drop-icon"></i>
+                    </div>
+
+                    <div class="location-validation-error" id="drop-error-msg" style="display: none; margin-top: 0.75rem; margin-bottom: 1.25rem;">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span id="drop-error-text">Please select a location from the suggestions.</span>
+                    </div>
+
+                    <!-- Suggestions List -->
+                    <div class="blabla-suggestions-list" id="drop-sug-list"></div>
+                </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-field-group">
-                    <label for="id_departure_time"><i class="fa-solid fa-calendar-days"></i> Departure Time</label>
-                    <input type="datetime-local" name="departure_time" id="id_departure_time" required value="{{ form.departure_time.value|date:'Y-m-d\TH:i' }}">
-                    {% if form.departure_time.errors %}
-                        <div class="form-error">{{ form.departure_time.errors.0 }}</div>
-                    {% endif %}
-                </div>
+            <!-- ==========================================
+                 SCREEN 3: WHAT IS YOUR ROUTE? (MAP + ORS ROUTING)
+                 ========================================== -->
+            <div class="wizard-step-pane" id="step-pane-3">
+                <button type="button" class="back-btn-link" onclick="goToStep(2)">
+                    <i class="fa-solid fa-arrow-left"></i> Change locations
+                </button>
 
-                <div class="form-field-group">
-                    <label for="id_available_seats"><i class="fa-solid fa-users"></i> Available Seats</label>
-                    <input type="number" name="available_seats" id="id_available_seats" min="1" max="8" required value="{{ form.available_seats.value|default_if_none:'1' }}">
-                    {% if form.available_seats.errors %}
-                        <div class="form-error">{{ form.available_seats.errors.0 }}</div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-field-group">
-                    <label for="id_price_per_seat"><i class="fa-solid fa-indian-rupee-sign"></i> Price per Seat (₹)</label>
-                    <input type="number" step="0.01" name="price_per_seat" id="id_price_per_seat" placeholder="e.g., 500" required value="{{ form.price_per_seat.value|default_if_none:'' }}">
-                    {% if form.price_per_seat.errors %}
-                        <div class="form-error">{{ form.price_per_seat.errors.0 }}</div>
-                    {% endif %}
-                </div>
+                <h2 class="step-title" style="text-align: left; margin-bottom: 1.5rem;">What is your route?</h2>
                 
-                <div class="form-field-group">
-                    <label for="id_vehicle_info"><i class="fa-solid fa-car-side"></i> Vehicle Info</label>
-                    <input type="text" name="vehicle_info" id="id_vehicle_info" placeholder="Car make, model, color" required value="{{ form.vehicle_info.value|default_if_none:'' }}">
-                    {% if form.vehicle_info.errors %}
-                        <div class="form-error">{{ form.vehicle_info.errors.0 }}</div>
-                    {% endif %}
+                <div class="step3-grid">
+                    <div class="route-options-card">
+                        <div style="font-weight: 800; font-size: 0.85rem; color: #475569; margin-bottom: 0.75rem; letter-spacing: 0.5px;">ROUTES</div>
+                        
+                        <div class="route-variant-list" id="route-variant-container">
+                            <div class="route-variant-option selected">
+                                <div class="route-radio-circle"></div>
+                                <div class="route-variant-info" style="width: 100%;">
+                                    <h4 style="font-size: 1rem; font-weight: 700; color: #64748b; margin: 0;">Calculating driving routes...</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-continue-pill" onclick="handleRouteContinue()">
+                            Continue
+                        </button>
+                    </div>
+
+                    <!-- MAP RIGHT SIDE -->
+                    <div>
+                        <div id="route-map-container"></div>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-field-group">
-                <label for="id_notes"><i class="fa-solid fa-message"></i> Notes (Optional)</label>
-                <textarea name="notes" id="id_notes" placeholder="Any specific rules or details (e.g., No smoking, flexible on time)">{{ form.notes.value|default_if_none:'' }}</textarea>
-                {% if form.notes.errors %}
-                    <div class="form-error">{{ form.notes.errors.0 }}</div>
-                {% endif %}
+            <!-- ==========================================
+                 SCREEN 4: ADD STOPOVERS
+                 ========================================== -->
+            <div class="wizard-step-pane" id="step-pane-4">
+                <div class="step-center-box">
+                    <button type="button" class="back-btn-link" onclick="goToStep(3)">
+                        <i class="fa-solid fa-arrow-left"></i> Change route
+                    </button>
+
+                    <h2 class="step-title">Add stopovers to get more passengers</h2>
+
+                    <div class="stopovers-list" id="stopovers-container">
+                        <label class="stopover-item">
+                            <span style="font-weight: 700; font-size: 1.05rem; color: #0f172a;" id="stopover-city-1">Gurgaon</span>
+                            <input type="checkbox" class="stopover-checkbox" checked>
+                        </label>
+                        <label class="stopover-item">
+                            <span style="font-weight: 700; font-size: 1.05rem; color: #0f172a;" id="stopover-city-2">Dausa</span>
+                            <input type="checkbox" class="stopover-checkbox" checked>
+                        </label>
+                    </div>
+
+                    <button type="button" class="add-city-pill" onclick="promptAddCity()">
+                        <i class="fa-solid fa-plus"></i> Add city
+                    </button>
+
+                    <div class="wizard-actions-bar" style="margin-top: 2.5rem;">
+                        <button type="button" class="btn-wizard-prev" onclick="goToStep(3)">Back</button>
+                        <button type="button" class="btn-wizard-next" onclick="goToStep(5)">Continue <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
             </div>
 
-            <button type="submit" class="btn-create-submit">
-                Publish Ride <i class="fa-solid fa-check"></i>
-            </button>
+            <!-- ==========================================
+                 SCREEN 5: WHEN ARE YOU GOING? (DATE CALENDAR)
+                 ========================================== -->
+            <div class="wizard-step-pane" id="step-pane-5">
+                <div class="step-center-box">
+                    <button type="button" class="back-btn-link" onclick="goToStep(4)">
+                        <i class="fa-solid fa-arrow-left"></i> Change stopovers
+                    </button>
+
+                    <h2 class="step-title">When are you going?</h2>
+
+                    <div class="info-sub-banner">
+                        <i class="fa-solid fa-calendar-check" style="font-size: 1.2rem;"></i>
+                        <span>Doing this ride often? You can now select departure date!</span>
+                    </div>
+
+                    <div class="dual-calendar-wrapper">
+                        <div class="calendar-grid-months">
+                            <div>
+                                <div class="calendar-month-title" id="cal-month-title-1">September 2026</div>
+                                <div class="calendar-days-header">
+                                    <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                                </div>
+                                <div class="calendar-days-grid" id="cal-days-grid-1"></div>
+                            </div>
+                            <div>
+                                <div class="calendar-month-title" id="cal-month-title-2">October 2026</div>
+                                <div class="calendar-days-header">
+                                    <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                                </div>
+                                <div class="calendar-days-grid" id="cal-days-grid-2"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="selected_date" id="selected_date_val">
+
+                    <div class="wizard-actions-bar">
+                        <button type="button" class="btn-wizard-prev" onclick="goToStep(4)">Back</button>
+                        <button type="button" class="btn-wizard-next" onclick="goToStep(6)">Continue <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 SCREEN 6: TIME SELECTION
+                 ========================================== -->
+            <div class="wizard-step-pane" id="step-pane-6">
+                <div class="step-center-box">
+                    <button type="button" class="back-btn-link" onclick="goToStep(5)">
+                        <i class="fa-solid fa-arrow-left"></i> Change date
+                    </button>
+
+                    <h2 class="step-title">What time will you pick up your passengers?</h2>
+
+                    <div class="time-display-pill" id="time-display-btn">
+                        <span id="selected-time-text">08:00</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 1.2rem;"></i>
+                    </div>
+
+                    <div style="font-size: 0.9rem; font-weight: 700; color: #64748b; margin-bottom: 1rem;">QUICK DEPARTURE PRESETS:</div>
+
+                    <div class="time-presets-grid">
+                        <button type="button" class="time-preset-btn" onclick="setTime('06:00', this)">06:00 AM</button>
+                        <button type="button" class="time-preset-btn active" onclick="setTime('08:00', this)">08:00 AM</button>
+                        <button type="button" class="time-preset-btn" onclick="setTime('10:00', this)">10:00 AM</button>
+                        <button type="button" class="time-preset-btn" onclick="setTime('14:00', this)">02:00 PM</button>
+                        <button type="button" class="time-preset-btn" onclick="setTime('17:30', this)">05:30 PM</button>
+                        <button type="button" class="time-preset-btn" onclick="setTime('19:00', this)">07:00 PM</button>
+                        <button type="button" class="time-preset-btn" onclick="setTime('21:00', this)">09:00 PM</button>
+                        <button type="button" class="time-preset-btn" onclick="setTime('23:00', this)">11:00 PM</button>
+                    </div>
+
+                    <input type="hidden" name="selected_time" id="selected_time_val" value="08:00">
+                    <input type="datetime-local" name="departure_time" id="id_departure_time" style="display: none;">
+
+                    <div class="wizard-actions-bar">
+                        <button type="button" class="btn-wizard-prev" onclick="goToStep(5)">Back</button>
+                        <button type="button" class="btn-wizard-next" onclick="goToStep(7)">Continue <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 SCREEN 7: SEATS SELECTION
+                 ========================================== -->
+            <div class="wizard-step-pane" id="step-pane-7">
+                <div class="step-center-box">
+                    <button type="button" class="back-btn-link" onclick="goToStep(6)">
+                        <i class="fa-solid fa-arrow-left"></i> Change time
+                    </button>
+
+                    <h2 class="step-title">So how many Kaapool passengers can you take?</h2>
+
+                    <div class="counter-box">
+                        <button type="button" class="counter-btn" onclick="updateSeats(-1)"><i class="fa-solid fa-minus"></i></button>
+                        <div class="counter-value-large" id="seats-display-count">2</div>
+                        <button type="button" class="counter-btn" onclick="updateSeats(1)"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+
+                    <input type="hidden" name="available_seats" id="id_available_seats" value="2">
+
+                    <label class="comfort-option-box">
+                        <input type="checkbox" id="max_back_seat_chk" checked>
+                        <div>
+                            <div style="font-weight: 700; color: #0f172a;">Max. 2 in the back</div>
+                            <div style="font-size: 0.82rem; color: #64748b;">Think comfort, keep the middle seat empty.</div>
+                        </div>
+                        <i class="fa-solid fa-user-group" style="margin-left: auto; color: #64748b;"></i>
+                    </label>
+
+                    <div style="width: 100%; margin-bottom: 2rem; position: relative;">
+                        <i class="fa-solid fa-car-side" style="position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%); color: #f89516;"></i>
+                        <input type="text" name="vehicle_info" id="id_vehicle_info" placeholder="Vehicle Info (e.g. Honda City White - HR26 AB 1234)" required value="Honda City (White) - HR26 AB 1234" style="width: 100%; padding: 0.9rem 1rem 0.9rem 3rem; border: 2px solid #e2e8f0; border-radius: 14px; font-weight: 600;">
+                    </div>
+
+                    <div class="wizard-actions-bar">
+                        <button type="button" class="btn-wizard-prev" onclick="goToStep(6)">Back</button>
+                        <button type="button" class="btn-wizard-next" onclick="goToStep(8)">Continue <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 SCREEN 8: PRICE PER SEAT & PUBLISH
+                 ========================================== -->
+            <div class="wizard-step-pane" id="step-pane-8">
+                <div class="step-center-box">
+                    <button type="button" class="back-btn-link" onclick="goToStep(7)">
+                        <i class="fa-solid fa-arrow-left"></i> Change seats
+                    </button>
+
+                    <h2 class="step-title">Set your price per seat</h2>
+
+                    <div class="counter-box">
+                        <button type="button" class="counter-btn" onclick="updatePrice(-20)"><i class="fa-solid fa-minus"></i></button>
+                        <div class="price-value-large" id="price-display-val">₹450</div>
+                        <button type="button" class="counter-btn" onclick="updatePrice(20)"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+
+                    <input type="hidden" name="price_per_seat" id="id_price_per_seat" value="450">
+
+                    <div class="recommended-price-badge" id="recommended-price-badge-text">
+                        Recommended price: ₹400 - ₹500 &nbsp;·&nbsp; You'll get passengers in no time.
+                    </div>
+
+                    <div class="price-warning-box">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.1rem; margin-top: 0.1rem;"></i>
+                        <div>
+                            <strong>The price you set is final.</strong> Asking for extra money during the ride isn't allowed and will lead to account sanctions.
+                        </div>
+                    </div>
+
+                    <div style="width: 100%; margin-bottom: 2rem; position: relative;">
+                        <i class="fa-solid fa-note-sticky" style="position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%); color: #f89516;"></i>
+                        <input type="text" name="notes" id="id_notes" placeholder="Notes for passengers (e.g. Non-smoking, flexible pickup)" style="width: 100%; padding: 0.9rem 1rem 0.9rem 3rem; border: 2px solid #e2e8f0; border-radius: 14px; font-weight: 600;">
+                    </div>
+
+                    <div class="wizard-actions-bar">
+                        <button type="button" class="btn-wizard-prev" onclick="goToStep(7)">Back</button>
+                        <button type="submit" class="btn-wizard-next" style="background: #f89516; box-shadow: 0 8px 24px rgba(248, 149, 22, 0.3);">
+                            Confirm & Publish Ride <i class="fa-solid fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </form>
     </div>
 </div>
+
+<!-- MAPBOX GL & LEAFLET MAP SCRIPTS -->
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    const MAPBOX_ACCESS_TOKEN = '{{ mapbox_access_token|default:"" }}';
+
+    // RIDE DRAFT STATE
+    const rideDraft = {
+        origin: null,      // { id, name, address, lat, lng }
+        destination: null, // { id, name, address, lat, lng }
+        route: null        // { distanceKm, durationMin, geometry }
+    };
+
+    let mapboxPickupSessionToken = generateUUID();
+    let mapboxDropSessionToken = generateUUID();
+
+    let isPickupConfirmed = false;
+    let isDropConfirmed = false;
+
+    let pickupDebounceTimer = null;
+    let dropDebounceTimer = null;
+
+    // SCREEN 3 ROUTE SELECTION STATE
+    let currentRoutes = [];
+    let selectedRouteIndex = 0;
+    let mapboxGlMap = null;
+    let originMarker = null;
+    let destMarker = null;
+
+    let currentStep = 1;
+    const totalSteps = 8;
+    let selectedDate = new Date();
+    let map;
+
+    // HELPER: Format duration (e.g., 937 -> "15 hr 37 min", 41 -> "41 min")
+    function formatDuration(minutes) {
+        if (minutes == null || isNaN(minutes)) return '0 min';
+        const m = Math.round(minutes);
+        const hrs = Math.floor(m / 60);
+        const mins = m % 60;
+        if (hrs > 0) {
+            return `${hrs} hr ${mins} min`;
+        }
+        return `${mins} min`;
+    }
+
+    // HELPER: Reusable Same Place Validation
+    function isSamePlace(a, b) {
+        if (!a || !b) return false;
+        
+        // 1. Compare IDs if both exist and non-empty
+        if (a.id && b.id && String(a.id).trim() === String(b.id).trim()) {
+            return true;
+        }
+
+        // 2. Compare coordinates (lat and lng each differ by less than 0.0005)
+        const latA = parseFloat(a.lat);
+        const lngA = parseFloat(a.lng);
+        const latB = parseFloat(b.lat);
+        const lngB = parseFloat(b.lng);
+
+        if (!isNaN(latA) && !isNaN(lngA) && !isNaN(latB) && !isNaN(lngB)) {
+            if (Math.abs(latA - latB) < 0.0005 && Math.abs(lngA - lngB) < 0.0005) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initMap();
+        renderDualCalendar();
+        initPickupMapboxSearch();
+        initDropoffMapboxSearch();
+        goToStep(1);
+    });
+
+    // ==========================================
+    // PICKUP LOCATION SEARCH
+    // ==========================================
+    function initPickupMapboxSearch() {
+        const pickupInput = document.getElementById('pickup_search_input');
+        const clearBtn = document.getElementById('clear-pickup-icon');
+        const sugList = document.getElementById('pickup-sug-list');
+
+        if (!pickupInput || !sugList) return;
+
+        pickupInput.addEventListener('input', function() {
+            const query = pickupInput.value.trim();
+            
+            isPickupConfirmed = false;
+            clearPickupHiddenFields();
+
+            if (query.length > 0) {
+                if (clearBtn) clearBtn.style.display = 'block';
+            } else {
+                if (clearBtn) clearBtn.style.display = 'none';
+            }
+
+            if (pickupDebounceTimer) clearTimeout(pickupDebounceTimer);
+
+            if (query.length < 2) {
+                renderDefaultPickupSuggestions();
+                return;
+            }
+
+            pickupDebounceTimer = setTimeout(() => {
+                fetchPickupSuggestions(query);
+            }, 250);
+        });
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                pickupInput.value = '';
+                clearBtn.style.display = 'none';
+                isPickupConfirmed = false;
+                clearPickupHiddenFields();
+                renderDefaultPickupSuggestions();
+                pickupInput.focus();
+            });
+        }
+
+        renderDefaultPickupSuggestions();
+    }
+
+    function clearPickupHiddenFields() {
+        document.getElementById('id_origin').value = '';
+        document.getElementById('id_pickup_address').value = '';
+        document.getElementById('id_pickup_latitude').value = '';
+        document.getElementById('id_pickup_longitude').value = '';
+        document.getElementById('id_pickup_place_id').value = '';
+        rideDraft.origin = null;
+    }
+
+    function renderDefaultPickupSuggestions() {
+        const sugList = document.getElementById('pickup-sug-list');
+        if (!sugList) return;
+
+        sugList.innerHTML = `
+            <div class="blabla-suggestion-card" id="pickup-use-current-location">
+                <div class="blabla-sug-left">
+                    <div class="blabla-sug-icon" style="background: #ecfdf5; color: #059669;">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                    </div>
+                    <div>
+                        <div class="blabla-sug-title">Use my current location</div>
+                        <div class="blabla-sug-address">Enable GPS to select exact location</div>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right blabla-sug-chevron"></i>
+            </div>
+        `;
+
+        const gpsCard = document.getElementById('pickup-use-current-location');
+        if (gpsCard) {
+            gpsCard.addEventListener('click', handleUseCurrentLocationPickup);
+        }
+    }
+
+    function handleUseCurrentLocationPickup() {
+        const pickupInput = document.getElementById('pickup_search_input');
+        const errorMsg = document.getElementById('pickup-error-msg');
+        const clearBtn = document.getElementById('clear-pickup-icon');
+
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser.');
+            return;
+        }
+
+        pickupInput.value = 'Locating...';
+        if (errorMsg) errorMsg.style.display = 'none';
+
+        navigator.geolocation.getCurrentPosition(
+            async function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                try {
+                    const res = await fetch(`https://api.mapbox.com/search/searchbox/v1/reverse?latitude=${lat}&longitude=${lng}&access_token=${MAPBOX_ACCESS_TOKEN}`);
+                    const data = await res.json();
+                    
+                    let name = 'Current Location';
+                    let address = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                    let placeId = 'gps_' + Date.now();
+
+                    if (data && data.features && data.features.length > 0) {
+                        const feat = data.features[0];
+                        name = feat.properties.name || feat.properties.full_address || name;
+                        address = feat.properties.full_address || feat.properties.place_formatted || address;
+                        placeId = feat.properties.mapbox_id || placeId;
+                    }
+
+                    savePickupLocation(placeId, name, address, lat, lng);
+
+                    pickupInput.value = name;
+                    if (clearBtn) clearBtn.style.display = 'block';
+                    if (errorMsg) errorMsg.style.display = 'none';
+                } catch (err) {
+                    console.error('Error in reverse geocoding:', err);
+                    pickupInput.value = `GPS (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+                    savePickupLocation('gps_' + Date.now(), 'Current Location', `GPS (${lat}, ${lng})`, lat, lng);
+                }
+            },
+            function(err) {
+                alert('Unable to retrieve your location. Please check your browser permissions.');
+                pickupInput.value = '';
+            },
+            { timeout: 10000, enableHighAccuracy: true }
+        );
+    }
+
+    async function fetchPickupSuggestions(query) {
+        const sugList = document.getElementById('pickup-sug-list');
+        if (!sugList) return;
+
+        try {
+            const url = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${encodeURIComponent(query)}&access_token=${MAPBOX_ACCESS_TOKEN}&session_token=${mapboxPickupSessionToken}&language=en`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            const suggestions = data.suggestions || [];
+            
+            let html = `
+                <div class="blabla-suggestion-card" id="pickup-use-current-location">
+                    <div class="blabla-sug-left">
+                        <div class="blabla-sug-icon" style="background: #ecfdf5; color: #059669;">
+                            <i class="fa-solid fa-location-crosshairs"></i>
+                        </div>
+                        <div>
+                            <div class="blabla-sug-title">Use my current location</div>
+                            <div class="blabla-sug-address">Enable GPS to select exact location</div>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right blabla-sug-chevron"></i>
+                </div>
+            `;
+
+            suggestions.forEach(item => {
+                const mapboxId = item.mapbox_id;
+                const name = item.name || '';
+                const address = item.full_address || item.place_formatted || item.address || '';
+                
+                html += `
+                    <div class="blabla-suggestion-card mapbox-pickup-card" 
+                         data-mapbox-id="${escapeHtml(mapboxId)}" 
+                         data-name="${escapeHtml(name)}" 
+                         data-address="${escapeHtml(address)}">
+                        <div class="blabla-sug-left">
+                            <div class="blabla-sug-icon">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div>
+                                <div class="blabla-sug-title">${escapeHtml(name)}</div>
+                                <div class="blabla-sug-address">${escapeHtml(address)}</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right blabla-sug-chevron"></i>
+                    </div>
+                `;
+            });
+
+            sugList.innerHTML = html;
+
+            const gpsCard = document.getElementById('pickup-use-current-location');
+            if (gpsCard) gpsCard.addEventListener('click', handleUseCurrentLocationPickup);
+
+            document.querySelectorAll('.mapbox-pickup-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const mapboxId = card.getAttribute('data-mapbox-id');
+                    const fallbackName = card.getAttribute('data-name');
+                    const fallbackAddress = card.getAttribute('data-address');
+                    selectPickupSuggestion(mapboxId, fallbackName, fallbackAddress);
+                });
+            });
+
+        } catch (err) {
+            console.error('Mapbox Search Box Suggest API Error:', err);
+        }
+    }
+
+    async function selectPickupSuggestion(mapboxId, fallbackName, fallbackAddress) {
+        const pickupInput = document.getElementById('pickup_search_input');
+        const errorMsg = document.getElementById('pickup-error-msg');
+        const clearBtn = document.getElementById('clear-pickup-icon');
+
+        try {
+            const url = `https://api.mapbox.com/search/searchbox/v1/retrieve/${mapboxId}?access_token=${MAPBOX_ACCESS_TOKEN}&session_token=${mapboxPickupSessionToken}`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            const feat = (data && data.features && data.features.length > 0) ? data.features[0] : null;
+            const props = feat ? feat.properties : {};
+            const coords = feat && feat.geometry ? feat.geometry.coordinates : [0, 0];
+
+            const placeId = props.mapbox_id || mapboxId;
+            const locName = props.name || fallbackName;
+            const address = props.full_address || props.place_formatted || props.address || fallbackAddress || locName;
+            const lng = coords[0];
+            const lat = coords[1];
+
+            savePickupLocation(placeId, locName, address, lat, lng);
+
+            const displayVal = locName + (props.place_formatted ? `, ${props.place_formatted}` : (address && address !== locName ? `, ${address}` : ''));
+            pickupInput.value = displayVal;
+
+            if (clearBtn) clearBtn.style.display = 'block';
+            if (errorMsg) errorMsg.style.display = 'none';
+
+            mapboxPickupSessionToken = generateUUID();
+
+        } catch (err) {
+            console.error('Mapbox Retrieve Error:', err);
+            savePickupLocation(mapboxId, fallbackName, fallbackAddress || fallbackName, 0, 0);
+
+            pickupInput.value = fallbackName + (fallbackAddress ? `, ${fallbackAddress}` : '');
+            if (errorMsg) errorMsg.style.display = 'none';
+        }
+    }
+
+    function savePickupLocation(id, name, address, lat, lng) {
+        rideDraft.origin = { id, name, address, lat, lng };
+
+        document.getElementById('id_origin').value = name;
+        document.getElementById('id_pickup_address').value = address;
+        document.getElementById('id_pickup_latitude').value = lat;
+        document.getElementById('id_pickup_longitude').value = lng;
+        document.getElementById('id_pickup_place_id').value = id;
+
+        isPickupConfirmed = true;
+
+        console.log('Saved rideDraft.origin:', rideDraft.origin);
+
+        // Requirement 1: Automatically navigate to Drop-off screen upon pickup selection
+        setTimeout(() => {
+            goToStep(2);
+        }, 200);
+    }
+
+    // ==========================================
+    // DROP-OFF LOCATION SEARCH
+    // ==========================================
+    function initDropoffMapboxSearch() {
+        const dropInput = document.getElementById('drop_search_input');
+        const clearBtn = document.getElementById('clear-drop-icon');
+        const sugList = document.getElementById('drop-sug-list');
+
+        if (!dropInput || !sugList) return;
+
+        dropInput.addEventListener('input', function() {
+            const query = dropInput.value.trim();
+
+            // Requirement 3: Clear error as soon as user types again
+            hideDropError();
+
+            isDropConfirmed = false;
+            clearDropHiddenFields();
+
+            if (query.length > 0) {
+                if (clearBtn) clearBtn.style.display = 'block';
+            } else {
+                if (clearBtn) clearBtn.style.display = 'none';
+            }
+
+            if (dropDebounceTimer) clearTimeout(dropDebounceTimer);
+
+            if (query.length < 2) {
+                renderDefaultDropSuggestions();
+                return;
+            }
+
+            dropDebounceTimer = setTimeout(() => {
+                fetchDropSuggestions(query);
+            }, 250);
+        });
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                dropInput.value = '';
+                clearBtn.style.display = 'none';
+                isDropConfirmed = false;
+                clearDropHiddenFields();
+                hideDropError();
+                renderDefaultDropSuggestions();
+                dropInput.focus();
+            });
+        }
+
+        renderDefaultDropSuggestions();
+    }
+
+    function clearDropHiddenFields() {
+        document.getElementById('id_destination').value = '';
+        document.getElementById('id_drop_address').value = '';
+        document.getElementById('id_drop_latitude').value = '';
+        document.getElementById('id_drop_longitude').value = '';
+        document.getElementById('id_drop_place_id').value = '';
+        rideDraft.destination = null;
+    }
+
+    function showDropError(msg) {
+        const errorMsg = document.getElementById('drop-error-msg');
+        if (errorMsg) {
+            const textSpan = document.getElementById('drop-error-text') || errorMsg.querySelector('span');
+            if (textSpan) textSpan.innerText = msg;
+            errorMsg.style.display = 'flex';
+        }
+    }
+
+    function hideDropError() {
+        const errorMsg = document.getElementById('drop-error-msg');
+        if (errorMsg) {
+            errorMsg.style.display = 'none';
+        }
+    }
+
+    function renderDefaultDropSuggestions() {
+        const sugList = document.getElementById('drop-sug-list');
+        if (!sugList) return;
+
+        sugList.innerHTML = `
+            <div class="blabla-suggestion-card" id="drop-use-current-location">
+                <div class="blabla-sug-left">
+                    <div class="blabla-sug-icon" style="background: #ecfdf5; color: #059669;">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                    </div>
+                    <div>
+                        <div class="blabla-sug-title">Use my current location</div>
+                        <div class="blabla-sug-address">Enable GPS to select exact location</div>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right blabla-sug-chevron"></i>
+            </div>
+        `;
+
+        const gpsCard = document.getElementById('drop-use-current-location');
+        if (gpsCard) {
+            gpsCard.addEventListener('click', handleUseCurrentLocationDrop);
+        }
+    }
+
+    function handleUseCurrentLocationDrop() {
+        const dropInput = document.getElementById('drop_search_input');
+        const clearBtn = document.getElementById('clear-drop-icon');
+
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser.');
+            return;
+        }
+
+        dropInput.value = 'Locating...';
+        hideDropError();
+
+        navigator.geolocation.getCurrentPosition(
+            async function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                try {
+                    const res = await fetch(`https://api.mapbox.com/search/searchbox/v1/reverse?latitude=${lat}&longitude=${lng}&access_token=${MAPBOX_ACCESS_TOKEN}`);
+                    const data = await res.json();
+                    
+                    let name = 'Current Location';
+                    let address = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                    let placeId = 'gps_' + Date.now();
+
+                    if (data && data.features && data.features.length > 0) {
+                        const feat = data.features[0];
+                        name = feat.properties.name || feat.properties.full_address || name;
+                        address = feat.properties.full_address || feat.properties.place_formatted || address;
+                        placeId = feat.properties.mapbox_id || placeId;
+                    }
+
+                    const candidate = { id: placeId, name, address, lat, lng };
+
+                    // Requirement 3: Same place validation
+                    if (isSamePlace(rideDraft.origin, candidate)) {
+                        dropInput.value = '';
+                        showDropError("Drop-off can't be the same as pick-up");
+                        isDropConfirmed = false;
+                        clearDropHiddenFields();
+                        return;
+                    }
+
+                    saveDropLocation(placeId, name, address, lat, lng);
+
+                    dropInput.value = name;
+                    if (clearBtn) clearBtn.style.display = 'block';
+                    hideDropError();
+                } catch (err) {
+                    console.error('Error in drop reverse geocoding:', err);
+                    const candidate = { id: 'gps_' + Date.now(), name: 'Current Location', address: `GPS (${lat}, ${lng})`, lat, lng };
+                    if (isSamePlace(rideDraft.origin, candidate)) {
+                        dropInput.value = '';
+                        showDropError("Drop-off can't be the same as pick-up");
+                        return;
+                    }
+                    saveDropLocation(candidate.id, candidate.name, candidate.address, lat, lng);
+                    dropInput.value = `GPS (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+                }
+            },
+            function(err) {
+                alert('Unable to retrieve your location.');
+                dropInput.value = '';
+            },
+            { timeout: 10000, enableHighAccuracy: true }
+        );
+    }
+
+    async function fetchDropSuggestions(query) {
+        const sugList = document.getElementById('drop-sug-list');
+        if (!sugList) return;
+
+        try {
+            const url = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${encodeURIComponent(query)}&access_token=${MAPBOX_ACCESS_TOKEN}&session_token=${mapboxDropSessionToken}&language=en`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            const suggestions = data.suggestions || [];
+            
+            let html = `
+                <div class="blabla-suggestion-card" id="drop-use-current-location">
+                    <div class="blabla-sug-left">
+                        <div class="blabla-sug-icon" style="background: #ecfdf5; color: #059669;">
+                            <i class="fa-solid fa-location-crosshairs"></i>
+                        </div>
+                        <div>
+                            <div class="blabla-sug-title">Use my current location</div>
+                            <div class="blabla-sug-address">Enable GPS to select exact location</div>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right blabla-sug-chevron"></i>
+                </div>
+            `;
+
+            suggestions.forEach(item => {
+                const mapboxId = item.mapbox_id;
+                const name = item.name || '';
+                const address = item.full_address || item.place_formatted || item.address || '';
+                
+                html += `
+                    <div class="blabla-suggestion-card mapbox-drop-card" 
+                         data-mapbox-id="${escapeHtml(mapboxId)}" 
+                         data-name="${escapeHtml(name)}" 
+                         data-address="${escapeHtml(address)}">
+                        <div class="blabla-sug-left">
+                            <div class="blabla-sug-icon">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div>
+                                <div class="blabla-sug-title">${escapeHtml(name)}</div>
+                                <div class="blabla-sug-address">${escapeHtml(address)}</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right blabla-sug-chevron"></i>
+                    </div>
+                `;
+            });
+
+            sugList.innerHTML = html;
+
+            const gpsCard = document.getElementById('drop-use-current-location');
+            if (gpsCard) gpsCard.addEventListener('click', handleUseCurrentLocationDrop);
+
+            document.querySelectorAll('.mapbox-drop-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    // Requirement 3: Clear error as soon as user selects a different place
+                    hideDropError();
+                    const mapboxId = card.getAttribute('data-mapbox-id');
+                    const fallbackName = card.getAttribute('data-name');
+                    const fallbackAddress = card.getAttribute('data-address');
+                    selectDropSuggestion(mapboxId, fallbackName, fallbackAddress);
+                });
+            });
+
+        } catch (err) {
+            console.error('Mapbox Search Box Suggest API Error for Drop:', err);
+        }
+    }
+
+    async function selectDropSuggestion(mapboxId, fallbackName, fallbackAddress) {
+        const dropInput = document.getElementById('drop_search_input');
+        const clearBtn = document.getElementById('clear-drop-icon');
+
+        try {
+            const url = `https://api.mapbox.com/search/searchbox/v1/retrieve/${mapboxId}?access_token=${MAPBOX_ACCESS_TOKEN}&session_token=${mapboxDropSessionToken}`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            const feat = (data && data.features && data.features.length > 0) ? data.features[0] : null;
+            const props = feat ? feat.properties : {};
+            const coords = feat && feat.geometry ? feat.geometry.coordinates : [0, 0];
+
+            const placeId = props.mapbox_id || mapboxId;
+            const locName = props.name || fallbackName;
+            const address = props.full_address || props.place_formatted || props.address || fallbackAddress || locName;
+            const lng = coords[0];
+            const lat = coords[1];
+
+            const candidate = { id: placeId, name: locName, address: address, lat: lat, lng: lng };
+
+            // Requirement 3: Same place validation
+            if (isSamePlace(rideDraft.origin, candidate)) {
+                showDropError("Drop-off can't be the same as pick-up");
+                isDropConfirmed = false;
+                clearDropHiddenFields();
+                return;
+            }
+
+            saveDropLocation(placeId, locName, address, lat, lng);
+
+            const displayVal = locName + (props.place_formatted ? `, ${props.place_formatted}` : (address && address !== locName ? `, ${address}` : ''));
+            dropInput.value = displayVal;
+
+            if (clearBtn) clearBtn.style.display = 'block';
+            hideDropError();
+
+            mapboxDropSessionToken = generateUUID();
+
+        } catch (err) {
+            console.error('Mapbox Drop Retrieve Error:', err);
+            const candidate = { id: mapboxId, name: fallbackName, address: fallbackAddress || fallbackName, lat: 0, lng: 0 };
+            
+            if (isSamePlace(rideDraft.origin, candidate)) {
+                showDropError("Drop-off can't be the same as pick-up");
+                isDropConfirmed = false;
+                clearDropHiddenFields();
+                return;
+            }
+
+            saveDropLocation(mapboxId, fallbackName, fallbackAddress || fallbackName, 0, 0);
+
+            dropInput.value = fallbackName + (fallbackAddress ? `, ${fallbackAddress}` : '');
+            hideDropError();
+        }
+    }
+
+    function saveDropLocation(id, name, address, lat, lng) {
+        rideDraft.destination = { id, name, address, lat, lng };
+
+        document.getElementById('id_destination').value = name;
+        document.getElementById('id_drop_address').value = address;
+        document.getElementById('id_drop_latitude').value = lat;
+        document.getElementById('id_drop_longitude').value = lng;
+        document.getElementById('id_drop_place_id').value = id;
+
+        isDropConfirmed = true;
+
+        console.log('Saved rideDraft.destination:', rideDraft.destination);
+        console.log('Current Ride Draft State:', rideDraft);
+
+        // Automatically navigate to "What is your route?" (Step 3) upon drop-off selection
+        setTimeout(() => {
+            goToStep(3);
+        }, 200);
+    }
+
+    // ==========================================
+    // SCREEN 3: ROUTE SELECTION & MAPBOX GL MAP
+    // ==========================================
+    async function loadRouteOptionsAndMap() {
+        const routeContainer = document.getElementById('route-variant-container');
+        if (!routeContainer) return;
+
+        routeContainer.innerHTML = `
+            <div style="padding: 1.5rem; text-align: center; color: #64748b; font-weight: 600;">
+                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 1.5rem; color: #f89516; margin-bottom: 0.5rem; display: block;"></i>
+                Calculating driving routes...
+            </div>
+        `;
+
+        const origLat = rideDraft.origin.lat;
+        const origLng = rideDraft.origin.lng;
+        const destLat = rideDraft.destination.lat;
+        const destLng = rideDraft.destination.lng;
+
+        try {
+            const url = `/api/routes?originLat=${origLat}&originLng=${origLng}&destLat=${destLat}&destLng=${destLng}`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!res.ok || !Array.isArray(data) || data.length === 0 || data.error) {
+                const errorText = (data && data.error) ? data.error : 'No route found. Please try changing your locations.';
+                routeContainer.innerHTML = `
+                    <div class="location-validation-error" style="display: flex; margin-bottom: 1rem;">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>${escapeHtml(errorText)}</span>
+                    </div>
+                `;
+                return;
+            }
+
+            currentRoutes = data;
+            selectedRouteIndex = 0;
+
+            renderRouteOptionCards();
+            initOrUpdateMapboxGlMap();
+
+        } catch (err) {
+            console.error('Error fetching routes:', err);
+            routeContainer.innerHTML = `
+                <div class="location-validation-error" style="display: flex; margin-bottom: 1rem;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Failed to load routes. Please check your network connection.</span>
+                </div>
+            `;
+        }
+    }
+
+    function renderRouteOptionCards() {
+        const routeContainer = document.getElementById('route-variant-container');
+        if (!routeContainer) return;
+
+        let html = '';
+        currentRoutes.forEach((r, idx) => {
+            const isSelected = (idx === selectedRouteIndex);
+            const tollText = (r.hasTolls === false) ? 'No tolls' : 'Tolls';
+            const durationFormatted = formatDuration(r.durationMin);
+            const summaryText = r.summary ? ` - ${escapeHtml(r.summary)}` : '';
+
+            html += `
+                <div class="route-variant-option ${isSelected ? 'selected' : ''}" onclick="selectRouteOption(${idx})">
+                    <div class="route-radio-circle"></div>
+                    <div class="route-variant-info" style="flex: 1;">
+                        <div class="route-variant-title-line">
+                            <span class="route-duration-text">${durationFormatted}</span>
+                            <span class="route-toll-badge">- ${tollText}</span>
+                        </div>
+                        <div class="route-subtitle-text">${r.distanceKm} km${summaryText}</div>
+                    </div>
+                </div>
+            `;
+        });
+
+        routeContainer.innerHTML = html;
+    }
+
+    function selectRouteOption(idx) {
+        selectedRouteIndex = idx;
+        renderRouteOptionCards();
+        if (mapboxGlMap && currentRoutes.length > 0) {
+            renderRoutesAndMarkersOnMap();
+        }
+    }
+
+    function initOrUpdateMapboxGlMap() {
+        const mapContainer = document.getElementById('route-map-container');
+        if (!mapContainer) return;
+
+        if (!mapboxGlMap) {
+            mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
+            mapboxGlMap = new mapboxgl.Map({
+                container: 'route-map-container',
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: [rideDraft.origin.lng, rideDraft.origin.lat],
+                zoom: 9
+            });
+
+            mapboxGlMap.on('load', function() {
+                renderRoutesAndMarkersOnMap();
+            });
+        } else {
+            mapboxGlMap.resize();
+            renderRoutesAndMarkersOnMap();
+        }
+    }
+
+    function renderRoutesAndMarkersOnMap() {
+        if (!mapboxGlMap) return;
+
+        // 1. Origin & Destination Markers
+        if (originMarker) originMarker.remove();
+        if (destMarker) destMarker.remove();
+
+        const origEl = document.createElement('div');
+        origEl.className = 'mapbox-marker-origin';
+        origEl.innerHTML = '<div style="background: #059669; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.25); border: 2px solid #fff;"><i class="fa-solid fa-circle-dot"></i></div>';
+
+        const destEl = document.createElement('div');
+        destEl.className = 'mapbox-marker-dest';
+        destEl.innerHTML = '<div style="background: #f89516; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.25); border: 2px solid #fff;"><i class="fa-solid fa-location-dot"></i></div>';
+
+        originMarker = new mapboxgl.Marker(origEl)
+            .setLngLat([rideDraft.origin.lng, rideDraft.origin.lat])
+            .addTo(mapboxGlMap);
+
+        destMarker = new mapboxgl.Marker(destEl)
+            .setLngLat([rideDraft.destination.lng, rideDraft.destination.lat])
+            .addTo(mapboxGlMap);
+
+        // 2. Draw Route GeoJSON Layers
+        // Render unselected routes first, then selected route on top
+        currentRoutes.forEach((r, idx) => {
+            const sourceId = `source_${r.id}`;
+            const layerId = `layer_${r.id}`;
+            const isSelected = (idx === selectedRouteIndex);
+
+            if (mapboxGlMap.getSource(sourceId)) {
+                mapboxGlMap.getSource(sourceId).setData(r.geometry);
+            } else {
+                mapboxGlMap.addSource(sourceId, {
+                    type: 'geojson',
+                    data: r.geometry
+                });
+            }
+
+            if (!mapboxGlMap.getLayer(layerId)) {
+                mapboxGlMap.addLayer({
+                    id: layerId,
+                    type: 'line',
+                    source: sourceId,
+                    layout: {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    paint: {
+                        'line-color': isSelected ? '#f89516' : '#94a3b8',
+                        'line-width': isSelected ? 6 : 4,
+                        'line-opacity': isSelected ? 1.0 : 0.6
+                    }
+                });
+            } else {
+                mapboxGlMap.setPaintProperty(layerId, 'line-color', isSelected ? '#f89516' : '#94a3b8');
+                mapboxGlMap.setPaintProperty(layerId, 'line-width', isSelected ? 6 : 4);
+                mapboxGlMap.setPaintProperty(layerId, 'line-opacity', isSelected ? 1.0 : 0.6);
+            }
+        });
+
+        // Move selected route layer to top
+        if (currentRoutes[selectedRouteIndex]) {
+            const selectedLayerId = `layer_${currentRoutes[selectedRouteIndex].id}`;
+            if (mapboxGlMap.getLayer(selectedLayerId)) {
+                mapboxGlMap.moveLayer(selectedLayerId);
+            }
+        }
+
+        // 3. Fit Map Bounds to Selected Route
+        const selRoute = currentRoutes[selectedRouteIndex];
+        if (selRoute && selRoute.geometry && selRoute.geometry.coordinates) {
+            const bounds = new mapboxgl.LngLatBounds();
+            selRoute.geometry.coordinates.forEach(coord => {
+                bounds.extend(coord);
+            });
+            mapboxGlMap.fitBounds(bounds, { padding: 60 });
+        }
+    }
+
+    function handleRouteContinue() {
+        const selRoute = currentRoutes[selectedRouteIndex];
+        if (!selRoute) {
+            alert('Please select a route to continue.');
+            return;
+        }
+
+        rideDraft.route = {
+            distanceKm: selRoute.distanceKm,
+            durationMin: selRoute.durationMin,
+            geometry: selRoute.geometry
+        };
+
+        document.getElementById('id_estimated_distance_km').value = selRoute.distanceKm;
+        document.getElementById('id_estimated_duration_mins').value = selRoute.durationMin;
+        document.getElementById('id_route_geometry').value = JSON.stringify(selRoute.geometry);
+
+        console.log('Saved rideDraft.route:', rideDraft.route);
+        console.log('Full Ride Draft State:', rideDraft);
+
+        // Navigate to next step placeholder
+        goToStep(4);
+    }
+
+    // ==========================================
+    // WIZARD STEP NAVIGATION & REDIRECT GUARDS
+    // ==========================================
+    function goToStep(stepNum) {
+        // Requirement 1: If user opens Drop-off screen directly without origin, redirect to Pick-up screen
+        if (stepNum === 2) {
+            if (!rideDraft.origin || !rideDraft.origin.id) {
+                const pickupErrorMsg = document.getElementById('pickup-error-msg');
+                if (pickupErrorMsg) {
+                    pickupErrorMsg.style.display = 'flex';
+                    const textSpan = pickupErrorMsg.querySelector('span');
+                    if (textSpan) textSpan.innerText = 'Please select a pick-up location first.';
+                }
+                showStepPane(1);
+                return;
+            }
+        }
+
+        // Requirement 2: If user opens Route Selection screen without origin or destination, redirect to Pick-up screen
+        if (stepNum === 3) {
+            if (!rideDraft.origin || !rideDraft.destination) {
+                const pickupErrorMsg = document.getElementById('pickup-error-msg');
+                if (pickupErrorMsg) {
+                    pickupErrorMsg.style.display = 'flex';
+                    const textSpan = pickupErrorMsg.querySelector('span');
+                    if (textSpan) textSpan.innerText = 'Please select pick-up and drop-off locations first.';
+                }
+                showStepPane(1);
+                return;
+            }
+            loadRouteOptionsAndMap();
+        }
+
+        showStepPane(stepNum);
+    }
+
+    function showStepPane(stepNum) {
+        document.querySelectorAll('.wizard-step-pane').forEach(p => p.classList.remove('active'));
+        
+        const target = document.getElementById('step-pane-' + stepNum);
+        if (target) {
+            target.classList.add('active');
+        }
+
+        currentStep = stepNum;
+        updateProgress();
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateProgress() {
+        const fill = document.getElementById('progress-fill');
+        const pct = ((currentStep - 1) / (totalSteps - 1)) * 100;
+        fill.style.width = pct + '%';
+    }
+
+    // MAP INITIALIZATION (LEAFLET FALLBACK)
+    function initMap() {
+        const mapElem = document.getElementById('route-map-container');
+        if (!mapElem) return;
+    }
+
+    function promptAddCity() {
+        const city = prompt('Enter stopover city name:');
+        if (city && city.trim()) {
+            const container = document.getElementById('stopovers-container');
+            const label = document.createElement('label');
+            label.className = 'stopover-item';
+            label.innerHTML = `
+                <span style="font-weight: 700; font-size: 1.05rem; color: #0f172a;">${city.trim()}</span>
+                <input type="checkbox" class="stopover-checkbox" checked>
+            `;
+            container.appendChild(label);
+        }
+    }
+
+    function renderDualCalendar() {
+        const now = new Date();
+        const m1 = new Date(now.getFullYear(), now.getMonth(), 1);
+        const m2 = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        document.getElementById('cal-month-title-1').innerText = monthNames[m1.getMonth()] + ' ' + m1.getFullYear();
+        document.getElementById('cal-month-title-2').innerText = monthNames[m2.getMonth()] + ' ' + m2.getFullYear();
+
+        buildMonthGrid(m1, 'cal-days-grid-1');
+        buildMonthGrid(m2, 'cal-days-grid-2');
+    }
+
+    function buildMonthGrid(monthDate, containerId) {
+        const grid = document.getElementById(containerId);
+        grid.innerHTML = '';
+        const y = monthDate.getFullYear();
+        const m = monthDate.getMonth();
+        const firstDay = new Date(y, m, 1).getDay();
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        const today = new Date(); today.setHours(0,0,0,0);
+
+        for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const cell = document.createElement('div');
+            cell.className = 'cal-day-cell';
+            cell.innerText = d;
+            const thisDate = new Date(y, m, d);
+
+            if (thisDate < today) {
+                cell.classList.add('disabled');
+            } else {
+                if (thisDate.toDateString() === selectedDate.toDateString()) cell.classList.add('selected');
+
+                cell.addEventListener('click', function() {
+                    document.querySelectorAll('.cal-day-cell').forEach(c => c.classList.remove('selected'));
+                    cell.classList.add('selected');
+                    selectedDate = thisDate;
+                    syncDepartureTime();
+                });
+            }
+            grid.appendChild(cell);
+        }
+    }
+
+    function setTime(timeStr, btnElem) {
+        if (btnElem) {
+            document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active'));
+            btnElem.classList.add('active');
+        }
+        document.getElementById('selected-time-text').innerText = timeStr;
+        document.getElementById('selected_time_val').value = timeStr;
+        syncDepartureTime();
+    }
+
+    function syncDepartureTime() {
+        const timeVal = document.getElementById('selected_time_val').value || '08:00';
+        const yyyy = selectedDate.getFullYear();
+        const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(selectedDate.getDate()).padStart(2, '0');
+        document.getElementById('id_departure_time').value = `${yyyy}-${mm}-${dd}T${timeVal}`;
+    }
+
+    function updateSeats(delta) {
+        const input = document.getElementById('id_available_seats');
+        let val = parseInt(input.value) || 2;
+        val += delta;
+        if (val < 1) val = 1; if (val > 8) val = 8;
+        input.value = val;
+        document.getElementById('seats-display-count').innerText = val;
+    }
+
+    function updatePrice(delta) {
+        const input = document.getElementById('id_price_per_seat');
+        let val = parseInt(input.value) || 450;
+        val += delta;
+        if (val < 100) val = 100; if (val > 5000) val = 5000;
+        input.value = val;
+        document.getElementById('price-display-val').innerText = '₹' + val;
+    }
+
+    function validateFinalSubmission() {
+        if (!isPickupConfirmed) {
+            goToStep(1);
+            const errorMsg = document.getElementById('pickup-error-msg');
+            if (errorMsg) errorMsg.style.display = 'flex';
+            return false;
+        }
+        if (!isDropConfirmed) {
+            goToStep(2);
+            showDropError('Please select a drop-off location from the suggestions.');
+            return false;
+        }
+        return true;
+    }
+
+    syncDepartureTime();
+</script>
 {% endblock content %}

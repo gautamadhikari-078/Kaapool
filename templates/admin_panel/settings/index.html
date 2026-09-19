@@ -1,0 +1,59 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}System Settings - Kaapool Admin{% endblock %}
+{% block page_heading %}System Settings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Global Platform Configuration</h2>
+        <p class="page-subtitle">Configure commission rules, service maintenance flags, and platform defaults.</p>
+    </div>
+</div>
+
+<div class="card">
+    <h3 class="card-title" style="margin-bottom: 1rem;"><i class="fa-solid fa-sliders"></i> System Key-Value Settings</h3>
+
+    <div class="table-responsive" style="margin-bottom: 2rem;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Setting Key</th>
+                    <th>Value Payload</th>
+                    <th>Description</th>
+                    <th>Last Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in settings %}
+                <tr>
+                    <td><code>{{ s.key }}</code></td>
+                    <td><pre style="font-size: 0.75rem; background: #f8fafc; padding: 4px 8px; border-radius: 4px;">{{ s.value }}</pre></td>
+                    <td>{{ s.description|default:"No description" }}</td>
+                    <td>{{ s.updated_at|date:"Y-m-d H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No custom system settings stored yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Update / Create Setting Form -->
+    <h3 class="card-title" style="margin-bottom: 1rem;"><i class="fa-solid fa-plus-circle"></i> Add / Update Setting</h3>
+    <form method="POST" action="{% url 'admin_panel:settings' %}" style="max-width: 600px;">
+        {% csrf_token %}
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem;">Setting Key</label>
+            <input type="text" name="key" class="search-input" style="width: 100%;" placeholder="e.g. PLATFORM_COMMISSION_PERCENT" required>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem;">JSON Value</label>
+            <textarea name="value" class="search-input" style="width: 100%; height: 90px;" placeholder='{"enabled": true, "rate": 5.0}' required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save System Setting</button>
+    </form>
+</div>
+{% endblock %}

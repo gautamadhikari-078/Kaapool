@@ -1,0 +1,122 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Verification Record #{{ verification.id }} - Kaapool Admin{% endblock %}
+{% block page_heading %}Verification Review{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Verification Record #{{ verification.id }}</h2>
+        <p class="page-subtitle">User: {{ verification.user.get_full_name|default:verification.user.username }}</p>
+    </div>
+    <div>
+        <a href="{% url 'admin_panel:verification_list' %}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    </div>
+</div>
+
+<div class="card">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Verification Session Metadata</h3>
+            <p style="margin-bottom: 0.5rem;"><strong>User:</strong> {{ verification.user.get_full_name }} (@{{ verification.user.username }})</p>
+            <p style="margin-bottom: 0.5rem;"><strong>Email:</strong> {{ verification.user.email }}</p>
+            <p style="margin-bottom: 0.5rem;"><strong>Provider:</strong> {{ verification.verification_type|upper }}</p>
+            <p style="margin-bottom: 0.5rem;"><strong>Session ID:</strong> <code>{{ verification.session_id|default:"N/A" }}</code></p>
+            <p style="margin-bottom: 0.5rem;"><strong>Created:</strong> {{ verification.created_at|date:"Y-m-d H:i:s" }}</p>
+            <p style="margin-bottom: 0.5rem;"><strong>Last Updated:</strong> {{ verification.updated_at|date:"Y-m-d H:i:s" }}</p>
+        </div>
+
+        <div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Current Decision Status</h3>
+            <div style="margin-bottom: 1rem;">
+                {% if verification.status == 'APPROVED' %}
+                    <span class="badge badge-success" style="font-size: 1rem; padding: 6px 16px;">Approved</span>
+                {% elif verification.status == 'DECLINED' %}
+                    <span class="badge badge-danger" style="font-size: 1rem; padding: 6px 16px;">Declined</span>
+                {% else %}
+                    <span class="badge badge-warning" style="font-size: 1rem; padding: 6px 16px;">{{ verification.status }}</span>
+                {% endif %}
+            </div>
+            {% if verification.decision_reason %}
+                <p><strong>Decision Reason:</strong> {{ verification.decision_reason }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Uploaded Documents Preview Section for Super Admin -->
+    <div style="padding: 1.5rem 0; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-id-card" style="color: var(--brand-orange);"></i> Uploaded Identity Document Files
+        </h3>
+        
+        <p style="font-size: 0.9rem; margin-bottom: 1rem;">
+            <strong>Document Type:</strong> {{ verification.user.govt_id_type|default:"Government Identity Document" }} 
+            {% if verification.user.govt_id_number %}| <strong>Ref #:</strong> <code>{{ verification.user.govt_id_number }}</code>{% endif %}
+        </p>
+
+        {% if verification.user.govt_id_front or verification.user.govt_id_back %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem;">
+                {% if verification.user.govt_id_front %}
+                    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; text-align: center;">
+                        <strong style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; text-transform: uppercase;">Front Side Document</strong>
+                        <div style="height: 200px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem;">
+                            {% if ".pdf" in verification.user.govt_id_front.url|lower %}
+                                <iframe src="{{ verification.user.govt_id_front.url }}" style="width: 100%; height: 100%; border: none;"></iframe>
+                            {% else %}
+                                <img src="{{ verification.user.govt_id_front.url }}" alt="Document Front" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                            {% endif %}
+                        </div>
+                        <a href="{{ verification.user.govt_id_front.url }}" target="_blank" class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center;">
+                            <i class="fa-solid fa-up-right-from-square"></i> Open Full View
+                        </a>
+                    </div>
+                {% endif %}
+
+                {% if verification.user.govt_id_back %}
+                    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; text-align: center;">
+                        <strong style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; text-transform: uppercase;">Back Side Document</strong>
+                        <div style="height: 200px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem;">
+                            {% if ".pdf" in verification.user.govt_id_back.url|lower %}
+                                <iframe src="{{ verification.user.govt_id_back.url }}" style="width: 100%; height: 100%; border: none;"></iframe>
+                            {% else %}
+                                <img src="{{ verification.user.govt_id_back.url }}" alt="Document Back" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                            {% endif %}
+                        </div>
+                        <a href="{{ verification.user.govt_id_back.url }}" target="_blank" class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center;">
+                            <i class="fa-solid fa-up-right-from-square"></i> Open Full View
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; text-align: center; color: var(--text-muted);">
+                <i class="fa-solid fa-shield-check" style="font-size: 1.5rem; color: var(--brand-orange); margin-bottom: 0.5rem;"></i>
+                <p style="margin: 0; font-size: 0.9rem;">Authenticated via Sumsub Identity Verification Service (Digital Verification Record).</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Manual Decision Override -->
+    <div style="padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Admin Decision Action</h3>
+        <form method="POST" action="{% url 'admin_panel:verification_action' pk=verification.pk %}" style="display: flex; flex-direction: column; gap: 1rem; max-width: 500px;">
+            {% csrf_token %}
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Set Status</label>
+                <select name="status" class="select-input" style="width: 100%;" required>
+                    <option value="APPROVED" {% if verification.status == 'APPROVED' %}selected{% endif %}>APPROVED (Mark Driver Verified)</option>
+                    <option value="DECLINED" {% if verification.status == 'DECLINED' %}selected{% endif %}>DECLINED (Reject Driver Verification)</option>
+                    <option value="RESUBMISSION_REQUESTED" {% if verification.status == 'RESUBMISSION_REQUESTED' %}selected{% endif %}>RESUBMISSION REQUESTED</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Notes / Reason</label>
+                <textarea name="reason" class="search-input" style="width: 100%; height: 80px;" placeholder="Reason for status change...">{{ verification.decision_reason }}</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Update Verification Status</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

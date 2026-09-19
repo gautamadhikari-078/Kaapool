@@ -9,7 +9,7 @@ from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 
 from apps.accounts.views import APIUserProfileView, APIRegisterView
-from apps.rides.views import APIRideViewSet
+from apps.rides.views import APIRideViewSet, MapboxRoutesAPIView
 from apps.bookings.views import APIBookingViewSet
 from apps.payments.views import APIPaymentViewSet
 from apps.notifications.views import APINotificationViewSet
@@ -24,7 +24,12 @@ router_v1.register(r'notifications', APINotificationViewSet, basename='api-notif
 router_v1.register(r'messages', APIMessageViewSet, basename='api-message')
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('django-admin/', admin.site.urls),
+    path('admin/', include('apps.admin_panel.urls', namespace='admin_panel')),
+
+    # Mapbox Routes API Endpoint
+    path('api/routes', MapboxRoutesAPIView.as_view(), name='api_mapbox_routes'),
+    path('api/routes/', MapboxRoutesAPIView.as_view(), name='api_mapbox_routes_slash'),
 
     # Web Routes
     path('', include('apps.core.urls', namespace='core')),
@@ -37,7 +42,7 @@ urlpatterns = [
     path('notifications/', include('apps.notifications.urls', namespace='notifications')),
     path('inbox/', include('apps.messaging.urls', namespace='messaging')),
 
-    # API v1 Endpoints (For Future Web App & Mobile Application)
+    # API v1 Endpoints (For Web App & Mobile Application)
     path('api/v1/auth/register/', APIRegisterView.as_view(), name='api-register'),
     path('api/v1/users/me/', APIUserProfileView.as_view(), name='api-user-me'),
     path('api/v1/', include((router_v1.urls, 'api_v1'))),

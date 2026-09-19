@@ -1,0 +1,106 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Notifications & Communications Overview | Super Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Notifications & Communications</h1>
+        <p class="page-subtitle">Manage automated transactional emails, marketing rules, log history, and provider settings.</p>
+    </div>
+    <div>
+        <a href="{% url 'admin_panel:notification_send' %}" class="btn btn-primary" style="background: var(--brand-orange); border: none; border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 700; color: white; text-decoration: none;">
+            <i class="fa-solid fa-paper-plane me-1"></i> Send Notification
+        </a>
+    </div>
+</div>
+
+<!-- SUB NAVIGATION TABS -->
+<div style="display: flex; gap: 0.5rem; border-bottom: 2px solid #e2e8f0; margin-bottom: 1.75rem;">
+    <a href="{% url 'admin_panel:notification_overview' %}" style="padding: 0.65rem 1.25rem; font-size: 0.92rem; font-weight: 700; color: var(--brand-orange); border-bottom: 3px solid var(--brand-orange); text-decoration: none; margin-bottom: -2px;">Overview</a>
+    <a href="{% url 'admin_panel:notification_automations' %}" style="padding: 0.65rem 1.25rem; font-size: 0.92rem; font-weight: 600; color: #64748b; text-decoration: none;">Automated Emails</a>
+    <a href="{% url 'admin_panel:notification_send' %}" style="padding: 0.65rem 1.25rem; font-size: 0.92rem; font-weight: 600; color: #64748b; text-decoration: none;">Send Notification</a>
+    <a href="{% url 'admin_panel:notification_templates' %}" style="padding: 0.65rem 1.25rem; font-size: 0.92rem; font-weight: 600; color: #64748b; text-decoration: none;">Templates</a>
+    <a href="{% url 'admin_panel:notification_logs' %}" style="padding: 0.65rem 1.25rem; font-size: 0.92rem; font-weight: 600; color: #64748b; text-decoration: none;">Email Logs</a>
+    <a href="{% url 'admin_panel:notification_settings' %}" style="padding: 0.65rem 1.25rem; font-size: 0.92rem; font-weight: 600; color: #64748b; text-decoration: none;">Preferences / Settings</a>
+</div>
+
+<!-- KPI STATS CARDS -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fa-solid fa-paper-plane"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ total_sent }}</div>
+            <div class="stat-label">Total Emails Sent</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ total_delivered|default:total_sent }}</div>
+            <div class="stat-label">Delivered</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ total_failed }}</div>
+            <div class="stat-label">Failed</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fa-solid fa-user-slash"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ total_unsubscribed }}</div>
+            <div class="stat-label">Unsubscribed</div>
+        </div>
+    </div>
+</div>
+
+<!-- RECENT ACTIVITY LOGS -->
+<div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-size: 1.1rem; font-weight: 700;">Recent Email Logs</h2>
+        <a href="{% url 'admin_panel:notification_logs' %}" style="color: var(--brand-orange); font-size: 0.85rem; font-weight: 700; text-decoration: none;">View All Logs &rarr;</a>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
+        <thead>
+            <tr style="border-bottom: 2px solid #e2e8f0; color: #64748b;">
+                <th style="padding: 0.75rem;">Recipient Email</th>
+                <th style="padding: 0.75rem;">Subject</th>
+                <th style="padding: 0.75rem;">Category</th>
+                <th style="padding: 0.75rem;">Provider</th>
+                <th style="padding: 0.75rem;">Status</th>
+                <th style="padding: 0.75rem;">Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in recent_logs %}
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 0.75rem; font-weight: 600; color: #0f172a;">{{ log.email }}</td>
+                <td style="padding: 0.75rem; color: #334155;">{{ log.subject }}</td>
+                <td style="padding: 0.75rem;">
+                    <span style="font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #e0f2fe; color: #0369a1;">
+                        {{ log.category }}
+                    </span>
+                </td>
+                <td style="padding: 0.75rem; color: #64748b;">{{ log.provider_name }}</td>
+                <td style="padding: 0.75rem;">
+                    {% if log.status == 'SENT' or log.status == 'DELIVERED' %}
+                        <span style="font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #dcfce7; color: #15803d;">SENT</span>
+                    {% else %}
+                        <span style="font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #fee2e2; color: #b91c1c;">FAILED</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 0.75rem; color: #64748b;">{{ log.created_at|date:"M d, H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="padding: 2rem; text-align: center; color: #94a3b8;">No email logs recorded yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

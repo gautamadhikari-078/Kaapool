@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Verify Your Email - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+.verify-page-wrapper {
+    background-color: #f8fafc;
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+}
+
+.verify-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 24px;
+    padding: 2.5rem;
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.verify-icon-circle {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #fff3e6;
+    color: #f89516;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 1.5rem auto;
+    box-shadow: 0 4px 14px rgba(248, 149, 22, 0.2);
+}
+
+.verify-heading {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.75rem;
+}
+
+.verify-subtext {
+    font-size: 0.98rem;
+    color: #64748b;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+}
+
+.otp-input-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.otp-box {
+    width: 54px;
+    height: 60px;
+    border: 2px solid #cbd5e1;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 800;
+    font-family: monospace;
+    color: #0f172a;
+    outline: none;
+    transition: all 0.2s ease;
+    background: #f8fafc;
+}
+
+.otp-box:focus {
+    border-color: #f89516;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(248, 149, 22, 0.15);
+}
+
+.btn-verify-submit {
+    width: 100%;
+    padding: 0.95rem;
+    border-radius: 999px;
+    background: #f89516;
+    color: #ffffff;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(248, 149, 22, 0.3);
+    transition: all 0.2s ease;
+    margin-bottom: 1.5rem;
+}
+
+.btn-verify-submit:hover {
+    background: #d97d0d;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(248, 149, 22, 0.4);
+}
+
+.resend-section {
+    font-size: 0.92rem;
+    color: #64748b;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 1.25rem;
+}
+
+.btn-resend-link {
+    background: none;
+    border: none;
+    color: #f89516;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 0.95rem;
+    padding: 0;
+}
+
+.btn-resend-link:disabled {
+    color: #94a3b8;
+    text-decoration: none;
+    cursor: not-allowed;
+}
+
+.countdown-timer {
+    font-weight: 800;
+    color: #0f172a;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="verify-page-wrapper">
+    <div class="verify-card">
+        <div class="verify-icon-circle">
+            <i class="fa-solid fa-envelope-open-text"></i>
+        </div>
+
+        <h1 class="verify-heading">Verify your email</h1>
+        <p class="verify-subtext">
+            We've sent a 6-digit verification code to<br>
+            <strong style="color: #0f172a;">{{ user.email }}</strong>
+        </p>
+
+        <form method="post" action="{% url 'accounts:verify_email' %}" id="otpForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="verify">
+            <input type="hidden" name="otp_code" id="otpFullCode">
+
+            <div class="otp-input-group">
+                <input type="text" maxlength="1" class="otp-box" autofocus onkeyup="moveOtpFocus(this, 1)" onpaste="handleOtpPaste(event)">
+                <input type="text" maxlength="1" class="otp-box" onkeyup="moveOtpFocus(this, 2)" onpaste="handleOtpPaste(event)">
+                <input type="text" maxlength="1" class="otp-box" onkeyup="moveOtpFocus(this, 3)" onpaste="handleOtpPaste(event)">
+                <input type="text" maxlength="1" class="otp-box" onkeyup="moveOtpFocus(this, 4)" onpaste="handleOtpPaste(event)">
+                <input type="text" maxlength="1" class="otp-box" onkeyup="moveOtpFocus(this, 5)" onpaste="handleOtpPaste(event)">
+                <input type="text" maxlength="1" class="otp-box" onkeyup="moveOtpFocus(this, 6)" onpaste="handleOtpPaste(event)">
+            </div>
+
+            <button type="submit" class="btn-verify-submit" onclick="assembleOtpCode()">
+                Verify Email
+            </button>
+        </form>
+
+        <div class="resend-section">
+            Didn't receive the code?
+            <form method="post" action="{% url 'accounts:verify_email' %}" style="display: inline;" id="resendForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="resend">
+                <button type="submit" class="btn-resend-link" id="resendBtn" disabled>
+                    Resend OTP
+                </button>
+            </form>
+            <div style="margin-top: 6px;" id="timerContainer">
+                Resend OTP in <span class="countdown-timer" id="timerCount">00:60</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let timeLeft = 60;
+const timerCount = document.getElementById('timerCount');
+const resendBtn = document.getElementById('resendBtn');
+const timerContainer = document.getElementById('timerContainer');
+
+const interval = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+        clearInterval(interval);
+        resendBtn.disabled = false;
+        timerContainer.style.display = 'none';
+    } else {
+        const sec = timeLeft < 10 ? '0' + timeLeft : timeLeft;
+        timerCount.textContent = `00:${sec}`;
+    }
+}, 1000);
+
+function moveOtpFocus(current, index) {
+    if (current.value.length >= 1 && index < 6) {
+        document.querySelectorAll('.otp-box')[index].focus();
+    }
+}
+
+function handleOtpPaste(e) {
+    const paste = (e.clipboardData || window.clipboardData).getData('text').trim();
+    if (/^\d{6}$/.test(paste)) {
+        const boxes = document.querySelectorAll('.otp-box');
+        for (let i = 0; i < 6; i++) {
+            boxes[i].value = paste[i];
+        }
+        boxes[5].focus();
+    }
+}
+
+function assembleOtpCode() {
+    const boxes = document.querySelectorAll('.otp-box');
+    let code = '';
+    boxes.forEach(box => code += box.value);
+    document.getElementById('otpFullCode').value = code;
+}
+</script>
+{% endblock content %}
+
+{% block footer %}{% endblock footer %}

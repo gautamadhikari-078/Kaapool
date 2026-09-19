@@ -1,0 +1,84 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Complaint Ticket #{{ complaint.id }} - Kaapool Admin{% endblock %}
+{% block page_heading %}Complaint Ticket #{{ complaint.id }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">{{ complaint.subject }}</h2>
+        <p class="page-subtitle">Submitted by {{ complaint.user.get_full_name|default:complaint.user.username }} on {{ complaint.created_at|date:"F d, Y H:i" }}</p>
+    </div>
+    <div>
+        <a href="{% url 'admin_panel:complaint_list' %}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back to Complaints</a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+    <div>
+        <div class="card">
+            <h3 class="card-title" style="margin-bottom: 1rem;"><i class="fa-solid fa-message"></i> Complaint Description</h3>
+            <p style="white-space: pre-wrap; line-height: 1.6; color: var(--text-main);">{{ complaint.description }}</p>
+
+            {% if complaint.related_ride or complaint.related_booking %}
+                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.9rem;">
+                    {% if complaint.related_ride %}
+                        <div><strong>Related Ride:</strong> <a href="{% url 'admin_panel:ride_detail' pk=complaint.related_ride.pk %}">Ride #{{ complaint.related_ride.id }} ({{ complaint.related_ride.origin }} &rarr; {{ complaint.related_ride.destination }})</a></div>
+                    {% endif %}
+                    {% if complaint.related_booking %}
+                        <div><strong>Related Booking:</strong> Booking #{{ complaint.related_booking.id }}</div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h3 class="card-title" style="margin-bottom: 1rem;"><i class="fa-solid fa-clipboard-list"></i> Internal Admin Notes</h3>
+            {% if complaint.internal_notes %}
+                <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.9rem; margin-bottom: 1rem;">
+                    {{ complaint.internal_notes }}
+                </div>
+            {% else %}
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">No internal notes added yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div>
+        <div class="card">
+            <h3 class="card-title" style="margin-bottom: 1rem;">Ticket Controls</h3>
+            <form method="POST" action="{% url 'admin_panel:complaint_update' pk=complaint.pk %}" style="display: flex; flex-direction: column; gap: 1rem;">
+                {% csrf_token %}
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem;">Ticket Status</label>
+                    <select name="status" class="select-input" style="width: 100%;">
+                        <option value="OPEN" {% if complaint.status == 'OPEN' %}selected{% endif %}>OPEN</option>
+                        <option value="UNDER_REVIEW" {% if complaint.status == 'UNDER_REVIEW' %}selected{% endif %}>UNDER REVIEW</option>
+                        <option value="IN_PROGRESS" {% if complaint.status == 'IN_PROGRESS' %}selected{% endif %}>IN PROGRESS</option>
+                        <option value="RESOLVED" {% if complaint.status == 'RESOLVED' %}selected{% endif %}>RESOLVED</option>
+                        <option value="REJECTED" {% if complaint.status == 'REJECTED' %}selected{% endif %}>REJECTED</option>
+                        <option value="CLOSED" {% if complaint.status == 'CLOSED' %}selected{% endif %}>CLOSED</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem;">Assign Admin</label>
+                    <select name="assigned_admin" class="select-input" style="width: 100%;">
+                        <option value="">Unassigned</option>
+                        {% for adm in admin_users %}
+                            <option value="{{ adm.id }}" {% if complaint.assigned_admin and complaint.assigned_admin.id == adm.id %}selected{% endif %}>{{ adm.get_full_name|default:adm.username }} ({{ adm.role }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem;">Add Internal Note</label>
+                    <textarea name="internal_notes" class="search-input" style="width: 100%; height: 90px;" placeholder="Add private resolution steps or internal notes...">{{ complaint.internal_notes }}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Update Ticket</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Blog Management - Kaapool Admin{% endblock %}
+{% block page_heading %}Blog Posts Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Blog Articles & News</h2>
+        <p class="page-subtitle">Create, publish, edit, and manage blog posts for Kaapool users.</p>
+    </div>
+    <div>
+        <a href="{% url 'admin_panel:blog_create' %}" class="btn btn-primary"><i class="fa-solid fa-pen"></i> Create New Blog Post</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Author</th>
+                    <th>Status</th>
+                    <th>Published Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in blogs %}
+                <tr>
+                    <td>#{{ b.id }}</td>
+                    <td>
+                        <strong>{{ b.title }}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Slug: {{ b.slug }}</div>
+                    </td>
+                    <td><span class="badge badge-secondary">{{ b.category|title }}</span></td>
+                    <td>{{ b.author_name }}</td>
+                    <td>
+                        {% if b.is_published %}
+                            <span class="badge badge-success">Published</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Draft</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ b.published_at|date:"Y-m-d"|default:"Not Published" }}</td>
+                    <td>
+                        <a href="{% url 'admin_panel:blog_edit' pk=b.pk %}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
+                        <form method="POST" action="{% url 'admin_panel:blog_delete' pk=b.pk %}" style="display: inline;" onsubmit="return confirm('Delete this blog post?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">No blog posts created yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

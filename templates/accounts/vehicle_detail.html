@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ vehicle.make_model }} - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+.vehicle-detail-wrapper {
+    background-color: #ffffff;
+    min-height: 90vh;
+    padding: 2.5rem 1.5rem 5rem 1.5rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+    position: relative;
+}
+
+.vehicle-detail-container {
+    max-width: 560px;
+    margin: 0 auto;
+    position: relative;
+    padding-top: 1rem;
+}
+
+.vehicle-page-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 2.35rem;
+    font-weight: 800;
+    color: #051528;
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+/* VEHICLE SUMMARY ITEM */
+.vehicle-summary-card {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.25rem 0;
+    margin-bottom: 1rem;
+}
+
+.vehicle-summary-icon {
+    font-size: 1.5rem;
+    color: #475569;
+    width: 32px;
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.vehicle-summary-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #051528;
+    line-height: 1.2;
+}
+
+.vehicle-summary-sub {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #64748b;
+    margin-top: 0.15rem;
+}
+
+/* ACTION ROWS (MATCHING SCREENSHOT 2) */
+.vehicle-actions-list {
+    border-top: 1px solid #f1f5f9;
+}
+
+.vehicle-action-item {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    width: 100%;
+    padding: 1.25rem 0;
+    border: none;
+    background: none;
+    border-bottom: 1px solid #f1f5f9;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #00aff5;
+    text-decoration: none !important;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+}
+
+.vehicle-action-item:hover {
+    color: #008cc7;
+}
+
+.vehicle-action-item i {
+    font-size: 1.15rem;
+    width: 24px;
+    display: flex;
+    justify-content: center;
+}
+
+.vehicle-action-item.delete-btn {
+    color: #ef4444;
+}
+
+.vehicle-action-item.delete-btn:hover {
+    color: #dc2626;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="vehicle-detail-wrapper">
+    <a href="{% url 'accounts:profile' %}" class="btn-page-back" title="Go back">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
+    <div class="vehicle-detail-container">
+        <!-- TITLE -->
+        <h1 class="vehicle-page-title">Your vehicle</h1>
+
+        <!-- VEHICLE SUMMARY -->
+        <div class="vehicle-summary-card">
+            <div class="vehicle-summary-icon">
+                <i class="fa-solid fa-car-side"></i>
+            </div>
+            <div>
+                <div class="vehicle-summary-title">{{ vehicle.make_model|upper }}</div>
+                <div class="vehicle-summary-sub">{{ vehicle.color|default:"No color specified" }} {% if vehicle.license_plate %}• {{ vehicle.license_plate }}{% endif %}</div>
+            </div>
+        </div>
+
+        <!-- ACTION MENU ROWS (MATCHING SCREENSHOT 2) -->
+        <div class="vehicle-actions-list">
+            <a href="{% url 'accounts:vehicle_edit' vehicle.id %}" class="vehicle-action-item">
+                <i class="fa-solid fa-pen-to-square" style="color: #00aff5;"></i>
+                <span>Edit vehicle features</span>
+            </a>
+
+            <form method="post" action="{% url 'accounts:vehicle_delete' vehicle.id %}" style="margin: 0;">
+                {% csrf_token %}
+                <button type="submit" class="vehicle-action-item delete-btn" onclick="return confirm('Are you sure you want to delete this vehicle?');">
+                    <i class="fa-solid fa-trash-can" style="color: #ef4444;"></i>
+                    <span>Delete this vehicle</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block footer %}{% endblock footer %}

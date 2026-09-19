@@ -1,0 +1,205 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .change-list-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+
+    .change-list-title {
+        font-family: var(--font-heading);
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .addlink-btn {
+        background: #2b251d;
+        color: #ffffff;
+        padding: 0.6rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .addlink-btn:hover {
+        background: #3d352b;
+        color: #ffffff;
+    }
+
+    /* TOOLBAR & SEARCH */
+    #toolbar {
+        background: #ffffff;
+        border: 1px solid var(--border-card);
+        border-radius: 12px;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    #toolbar form {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+    }
+
+    #toolbar input[type="text"] {
+        border: 1px solid var(--border-card);
+        border-radius: 8px;
+        padding: 0.5rem 0.85rem;
+        outline: none;
+        font-family: inherit;
+        font-size: 0.9rem;
+        width: 320px;
+    }
+
+    #toolbar input[type="submit"] {
+        background: var(--active-pill-bg);
+        border: 1px solid var(--border-card);
+        color: var(--text-main);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    /* RESULTS TABLE CONTAINER */
+    .results-card {
+        background: #ffffff;
+        border: 1px solid var(--border-card);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        margin-bottom: 1.5rem;
+    }
+
+    .results-card table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .results-card th {
+        background: #fcfaf4;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        color: var(--text-sub);
+        padding: 0.85rem 1.25rem;
+        border-bottom: 1px solid var(--border-light);
+        text-transform: uppercase;
+    }
+
+    .results-card th a {
+        color: var(--text-sub);
+        text-decoration: none;
+    }
+
+    .results-card td {
+        padding: 0.9rem 1.25rem;
+        border-bottom: 1px solid var(--border-light);
+        font-size: 0.9rem;
+        color: var(--text-main);
+    }
+
+    .results-card tr:last-child td {
+        border-bottom: none;
+    }
+
+    .results-card td a {
+        color: #2b251d;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .results-card td a:hover {
+        text-decoration: underline;
+    }
+
+    /* ACTIONS BAR */
+    .actions {
+        background: #ffffff;
+        border: 1px solid var(--border-card);
+        border-radius: 12px;
+        padding: 0.75rem 1.25rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    .actions select {
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
+        border: 1px solid var(--border-card);
+    }
+
+    .actions button {
+        background: #2b251d;
+        color: #ffffff;
+        border: none;
+        padding: 0.4rem 0.85rem;
+        border-radius: 6px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    /* PAGINATION */
+    .paginator {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        padding: 0.75rem 1.25rem;
+        background: #ffffff;
+        border-top: 1px solid var(--border-light);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="change-list-header">
+    <h1 class="change-list-title">{{ cl.opts.verbose_name_plural|capfirst }}</h1>
+    {% if has_add_permission %}
+    <a href="{% url cl.opts|admin_urlname:'add' %}" class="addlink-btn">
+        <i class="fa-solid fa-plus"></i> Add {{ cl.opts.verbose_name|capfirst }}
+    </a>
+    {% endif %}
+</div>
+
+{% if cl.has_filters or cl.search_fields %}
+<div id="toolbar">
+    {% block search %}{% search_form cl %}{% endblock %}
+</div>
+{% endif %}
+
+<form id="changelist-form" method="post"{% if cl.has_file_field %} enctype="multipart/form-data"{% endif %} novalidate>
+{% csrf_token %}
+
+{% if action_form and actions_on_top and cl.show_admin_actions %}
+<div class="actions">
+    {% admin_actions %}
+</div>
+{% endif %}
+
+<div class="results-card">
+    {% block result_list %}
+        {% result_list cl %}
+    {% endblock %}
+    {% block pagination %}{% pagination cl %}{% endblock %}
+</div>
+
+</form>
+{% endblock %}

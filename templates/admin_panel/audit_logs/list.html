@@ -1,0 +1,66 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Audit Logs - Kaapool Admin{% endblock %}
+{% block page_heading %}Admin Audit Logs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Admin Audit Trail</h2>
+        <p class="page-subtitle">Security log of all administrative actions, target objects, timestamps, and IP addresses.</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Log ID</th>
+                    <th>Admin User</th>
+                    <th>Action</th>
+                    <th>Target Type</th>
+                    <th>Target ID</th>
+                    <th>Details</th>
+                    <th>IP Address</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>#{{ log.id }}</td>
+                    <td><strong>{{ log.admin.username|default:"System" }}</strong></td>
+                    <td><code>{{ log.action }}</code></td>
+                    <td>{{ log.target_type|default:"-" }}</td>
+                    <td>{{ log.target_id|default:"-" }}</td>
+                    <td>
+                        {% if log.details %}
+                            <pre style="font-size: 0.75rem; background: #f8fafc; padding: 4px 8px; border-radius: 4px; max-width: 300px; white-space: pre-wrap;">{{ log.details }}</pre>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td><code>{{ log.ip_address|default:"Local" }}</code></td>
+                    <td>{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">No audit logs recorded yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="page-btn">Previous</a>
+        {% endif %}
+        <span class="page-btn active">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="page-btn">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
