@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.db.models import Q
 from apps.admin_panel.models import WebsiteContent, FAQ, Blog
 
 User = get_user_model()
@@ -68,11 +69,15 @@ class Command(BaseCommand):
                     u.save()
                     self.stdout.write(self.style.SUCCESS(f"Promoted and synced password for '{u.email}' ({u.username}) to 'super_admin'."))
 
-        # 3. Ensure any other superusers have role='super_admin'
-        for su in User.objects.filter(is_superuser=True):
-            if su.role != 'super_admin':
-                su.role = 'super_admin'
-                su.save()
+        # 3. Ensure all superusers and admins have password synced to admin_password
+        for su in User.objects.filter(Q(is_superuser=True) | Q(role='super_admin') | Q(username='admin')):
+            su.is_superuser = True
+            su.is_staff = True
+            su.role = 'super_admin'
+            su.email_verified = True
+            su.set_password(admin_password)
+            su.save()
+            self.stdout.write(self.style.SUCCESS(f"Synced password '{admin_password}' for admin user '{su.username}' ({su.email})."))
 
         # 2. Populate Website Content defaults if missing
         default_stats = {

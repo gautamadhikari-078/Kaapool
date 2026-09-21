@@ -41,13 +41,16 @@ class AdminLoginView(View):
             messages.error(request, 'Please provide both username/email and password.')
             return render(request, self.template_name)
 
-        # Authenticate by username or email
-        user = authenticate(request, username=username_or_email, password=password)
+        # Authenticate by username or email (case-insensitive)
+        candidate = User.objects.filter(
+            Q(username__iexact=username_or_email) | Q(email__iexact=username_or_email)
+        ).first()
+
+        user = None
+        if candidate:
+            user = authenticate(request, username=candidate.username, password=password)
         if not user:
-            # Check if username_or_email is an email address
-            user_obj = User.objects.filter(email__iexact=username_or_email).first()
-            if user_obj:
-                user = authenticate(request, username=user_obj.username, password=password)
+            user = authenticate(request, username=username_or_email, password=password)
 
         if user:
             if getattr(user, 'is_blocked', False):
