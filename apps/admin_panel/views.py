@@ -591,7 +591,7 @@ class AdminContactInquiryReplyView(PermissionRequiredMixin, View):
             inquiry.admin_replied_at = timezone.now()
             inquiry.save()
 
-            messages.success(request, f"🎉 Email reply successfully sent to {inquiry.email}.")
+            messages.success(request, f"Email reply successfully sent to {inquiry.email}.")
         except Exception as e:
             messages.error(request, f"Error sending email reply: {e}")
 
@@ -607,7 +607,7 @@ class AdminContactInquiryDeleteView(PermissionRequiredMixin, View):
         email_str = inquiry.email
         inquiry.delete()
         log_audit_action(request.user, 'DELETE_CONTACT_INQUIRY', target_type='ContactInquiry', target_id=pk, details={'email': email_str}, request=request)
-        messages.success(request, f"🗑️ Contact inquiry from '{email_str}' deleted from database.")
+        messages.success(request, f"Contact inquiry from '{email_str}' deleted from database.")
         return redirect('admin_panel:contact_inquiry_list')
 
 
@@ -689,7 +689,7 @@ class AdminNotificationComposeView(PermissionRequiredMixin, View):
                 )
                 count += 1
 
-        messages.success(request, f"🎉 Email notification dispatched to {count} eligible user(s).")
+        messages.success(request, f"Email notification dispatched to {count} eligible user(s).")
         return redirect('admin_panel:notification_logs')
 
 

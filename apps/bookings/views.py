@@ -149,6 +149,28 @@ class BookingCancelConfirmView(LoginRequiredMixin, View):
             # Restore available seats back on the ride
             booking.ride.available_seats += booking.seats_booked
             booking.ride.save()
+
+            # Send cancellation notifications via centralized EmailService (Brevo)
+            try:
+                from apps.core.email_service import EmailService
+                # Confirmation to the passenger
+                EmailService.send_ride_cancelled_email(
+                    request.user,
+                    booking.ride,
+                    is_driver=False,
+                    reason=booking.cancellation_reason or "Cancelled by passenger"
+                )
+                # Notification to the driver
+                if booking.ride and booking.ride.driver:
+                    passenger_name = request.user.first_name or request.user.username
+                    EmailService.send_ride_cancelled_email(
+                        booking.ride.driver,
+                        booking.ride,
+                        is_driver=True,
+                        reason=f"Passenger {passenger_name} cancelled their seat."
+                    )
+            except Exception:
+                pass
             
             messages.success(request, "Your booking has been cancelled.")
             

@@ -255,9 +255,9 @@ class ContactView(View):
                 logging.getLogger(__name__).error(f"Contact form email trigger error: {e}")
 
         if is_valid_email:
-            messages.success(request, f"🎉 Thank you {name or ''}! Your message has been sent to our Kaapool support team. We will get back to you shortly.")
+            messages.success(request, f"Thank you {name or ''}! Your message has been sent to our Kaapool support team. We will get back to you shortly.")
         else:
-            messages.warning(request, f"⚠️ Your message was received, but the email address '{email}' appears invalid. No confirmation email was sent.")
+            messages.warning(request, f"Your message was received, but the email address '{email}' appears invalid. No confirmation email was sent.")
 
         return redirect('core:contact')
 
@@ -300,7 +300,7 @@ def custom_csrf_failure(request, reason=""):
     """Graceful custom CSRF failure handler to prevent raw yellow 403 error page."""
     from django.contrib import messages
     from django.shortcuts import redirect
-    messages.error(request, "⚠️ Your form session or security token expired. Please try submitting again.")
+    messages.error(request, "Your form session or security token expired. Please try submitting again.")
     referer = request.META.get('HTTP_REFERER')
     if referer:
         return redirect(referer)

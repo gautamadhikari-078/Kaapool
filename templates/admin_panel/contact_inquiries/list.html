@@ -97,7 +97,7 @@
                             </button>
 
                             <!-- Delete Form -->
-                            <form method="POST" action="{% url 'admin_panel:contact_inquiry_delete' pk=inquiry.pk %}" style="display: inline;" onsubmit="return confirm('⚠️ Are you sure you want to permanently delete contact record for {{ inquiry.email }} from database?');">
+                            <form method="POST" action="{% url 'admin_panel:contact_inquiry_delete' pk=inquiry.pk %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to permanently delete contact record for {{ inquiry.email }} from database?');">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-danger btn-sm" title="Delete record from database">
                                     <i class="fa-solid fa-trash"></i> Delete
@@ -173,7 +173,7 @@
                 </label>
                 <textarea id="replyMessage" name="reply_message" class="search-input" style="width: 100%; height: 100px; resize: vertical;" placeholder="Type your response to the user here. It will be emailed directly to their address..." required></textarea>
                 <div id="invalidEmailWarning" style="display: none; color: #dc2626; font-size: 0.8rem; margin-top: 0.35rem; font-weight: 500;">
-                    ⚠️ This user's email was marked as INVALID syntax. System prevents sending email triggers to invalid addresses.
+                    This user's email was marked as INVALID syntax. System prevents sending email triggers to invalid addresses.
                 </div>
             </div>
 

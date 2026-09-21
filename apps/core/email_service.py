@@ -15,65 +15,37 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================================
-# PROVIDER ADAPTERS (Amazon SES, SendGrid, Mailgun, Django SMTP)
+# PROVIDER ADAPTERS (Brevo REST API, Amazon SES, SendGrid, Mailgun, Django SMTP)
+# Legacy SMTP implementation preserved in .services.email.smtp_legacy
+# Active production provider: Brevo REST API (.services.email.brevo_email)
 # ============================================================================
 
-class BaseEmailProviderAdapter:
-    """Abstract interface for pluggable email delivery providers."""
-    def send(self, subject: str, recipients: List[str], html_content: str, text_content: str, from_email: str, reply_to: Optional[List[str]] = None) -> dict:
-        raise NotImplementedError
+from .services.email.smtp_legacy import BaseEmailProviderAdapter, DjangoSMTPAdapter
+from .services.email.brevo_email import BrevoEmailAdapter, send_brevo_email, send_transactional_email
 
-class DjangoSMTPAdapter(BaseEmailProviderAdapter):
-    def send(self, subject: str, recipients: List[str], html_content: str, text_content: str, from_email: str, reply_to: Optional[List[str]] = None) -> dict:
-        try:
-            msg = EmailMultiAlternatives(
-                subject=subject,
-                body=text_content,
-                from_email=from_email,
-                to=recipients,
-                reply_to=reply_to
-            )
-            msg.attach_alternative(html_content, "text/html")
-
-            # Attach official Kaapool logo as inline CID image
-            logo_path = settings.BASE_DIR / 'static' / 'images' / 'kaapool_logo.png'
-            if logo_path.exists():
-                try:
-                    with open(logo_path, 'rb') as f:
-                        logo_data = f.read()
-                    logo_mime = MIMEImage(logo_data)
-                    logo_mime.add_header('Content-ID', '<kaapool_logo>')
-                    logo_mime.add_header('Content-Disposition', 'inline', filename='kaapool_logo.png')
-                    msg.attach(logo_mime)
-                except Exception as logo_err:
-                    logger.warning(f"Could not attach logo CID image: {logo_err}")
-
-            sent_count = msg.send(fail_silently=False)
-            return {"success": True, "message_id": f"smtp_{random.randint(100000, 999999)}", "provider": "DjangoSMTP"}
-        except Exception as e:
-            return {"success": False, "error": str(e), "provider": "DjangoSMTP"}
 
 class AmazonSESAdapter(BaseEmailProviderAdapter):
     """Adapter for Amazon SES API Integration."""
     def send(self, subject: str, recipients: List[str], html_content: str, text_content: str, from_email: str, reply_to: Optional[List[str]] = None) -> dict:
-        # Falls back to SMTP if SES keys not configured
+        # Falls back to Brevo if SES keys not configured
         if not getattr(settings, 'AWS_SES_ACCESS_KEY_ID', None):
-            return DjangoSMTPAdapter().send(subject, recipients, html_content, text_content, from_email, reply_to)
-        # Placeholder for AWS Boto3 SES API send_email call
+            return BrevoEmailAdapter().send(subject, recipients, html_content, text_content, from_email, reply_to)
         return {"success": True, "message_id": f"ses_{random.randint(100000, 999999)}", "provider": "AmazonSES"}
+
 
 class SendGridAdapter(BaseEmailProviderAdapter):
     """Adapter for SendGrid Email API Integration."""
     def send(self, subject: str, recipients: List[str], html_content: str, text_content: str, from_email: str, reply_to: Optional[List[str]] = None) -> dict:
         if not getattr(settings, 'SENDGRID_API_KEY', None):
-            return DjangoSMTPAdapter().send(subject, recipients, html_content, text_content, from_email, reply_to)
+            return BrevoEmailAdapter().send(subject, recipients, html_content, text_content, from_email, reply_to)
         return {"success": True, "message_id": f"sg_{random.randint(100000, 999999)}", "provider": "SendGrid"}
+
 
 class MailgunAdapter(BaseEmailProviderAdapter):
     """Adapter for Mailgun API Integration."""
     def send(self, subject: str, recipients: List[str], html_content: str, text_content: str, from_email: str, reply_to: Optional[List[str]] = None) -> dict:
         if not getattr(settings, 'MAILGUN_API_KEY', None):
-            return DjangoSMTPAdapter().send(subject, recipients, html_content, text_content, from_email, reply_to)
+            return BrevoEmailAdapter().send(subject, recipients, html_content, text_content, from_email, reply_to)
         return {"success": True, "message_id": f"mg_{random.randint(100000, 999999)}", "provider": "Mailgun"}
 
 
@@ -84,19 +56,24 @@ class MailgunAdapter(BaseEmailProviderAdapter):
 class EmailService:
     """
     Production-Ready Dedicated Email Service for Kaapool.
+    Active provider: Brevo REST API v3 over HTTPS.
+    Fallback provider: Django SMTP (legacy preserved).
     Supports OTP generation, provider adapters, logging, rate limiting, and preferences.
     """
 
     @classmethod
     def get_provider_adapter(cls) -> BaseEmailProviderAdapter:
-        provider_name = getattr(settings, 'EMAIL_PROVIDER', 'SMTP').upper()
-        if provider_name == 'SES':
+        provider_name = getattr(settings, 'EMAIL_PROVIDER', 'BREVO').upper()
+        if provider_name == 'SMTP':
+            return DjangoSMTPAdapter()
+        elif provider_name == 'SES':
             return AmazonSESAdapter()
         elif provider_name == 'SENDGRID':
             return SendGridAdapter()
         elif provider_name == 'MAILGUN':
             return MailgunAdapter()
-        return DjangoSMTPAdapter()
+        # Default active production provider is Brevo REST API
+        return BrevoEmailAdapter()
 
     @classmethod
     def _can_send_to_user(cls, user, category: str = 'TRANSACTIONAL', notification_type: str = 'general') -> bool:
@@ -259,6 +236,12 @@ class EmailService:
             </div>
             """
 
+        logo_url = getattr(
+            settings,
+            'EMAIL_LOGO_URL',
+            'https://cdn.jsdelivr.net/gh/gautamadhikari-078/Kaapool@main/static/images/Kaapool%20logo%20.png'
+        )
+
         return f"""
         <!DOCTYPE html>
         <html>
@@ -274,15 +257,14 @@ class EmailService:
                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
                             <!-- HEADER -->
                             <tr>
-                                <td style="background-color: #ffffff; padding: 25px 30px; text-align: center; border-bottom: 3px solid #f89516;">
-                                    <div style="margin-bottom: 8px;">
-                                        <img src="cid:kaapool_logo" alt="Kaapool Logo" style="width: 140px; max-width: 160px; height: auto; border: 0; outline: none; text-decoration: none; display: inline-block;" />
+                                <td style="background-color: #ffffff; padding: 26px 30px 20px 30px; text-align: center; border-bottom: 3px solid #f89516;">
+                                    <div style="margin: 0 auto; text-align: center;">
+                                        <a href="https://kaapool.com" target="_blank" style="text-decoration: none; display: inline-block;">
+                                            <img src="{logo_url}" alt="Kaapool" width="180" style="width: 180px; max-width: 200px; height: auto; border: 0; outline: none; text-decoration: none; display: block; margin: 0 auto;" />
+                                        </a>
                                     </div>
-                                    <h1 style="margin: 0; color: #f89516; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">
-                                        Kaapool
-                                    </h1>
-                                    <p style="margin: 4px 0 0 0; color: #718096; font-size: 13px; font-weight: 500;">
-                                        Share Rides • Save Money • Connect People
+                                    <p style="margin: 8px 0 0 0; color: #718096; font-size: 13px; font-weight: 500; letter-spacing: 0.3px;">
+                                        Share Rides &bull; Save Money &bull; Connect People
                                     </p>
                                 </td>
                             </tr>
@@ -305,7 +287,7 @@ class EmailService:
                             <tr>
                                 <td style="background-color: #f8fafc; padding: 20px 30px; border-top: 1px solid #e2e8f0; text-align: center; color: #718096; font-size: 12px; line-height: 1.5;">
                                     <p style="margin: 0 0 6px 0;">Need help or have questions? Contact support at <a href="mailto:support@kaapool.com" style="color: #f89516; text-decoration: none;">support@kaapool.com</a>.</p>
-                                    <p style="margin: 0;">&copy; 2026 Kaapool Inc. All rights reserved. • High-Speed & Safe Carpooling</p>
+                                    <p style="margin: 0;">&copy; 2026 Kaapool Inc. All rights reserved. &bull; High-Speed & Safe Carpooling</p>
                                 </td>
                             </tr>
                         </table>
@@ -565,9 +547,60 @@ class EmailService:
         return cls.send_email(subject, user.email, html, user=user, notification_type='account_status', category='TRANSACTIONAL', async_send=async_send)
 
     @classmethod
+    def send_password_reset_email(cls, user, reset_url: str, async_send: bool = True) -> bool:
+        """Sends password reset link to user."""
+        subject = "Reset your Kaapool password"
+        body_content = f"""
+        <p>Hi <strong>{user.first_name or user.username}</strong>,</p>
+        <p>We received a request to reset your Kaapool account password. Click the button below to choose a new password:</p>
+        <div style="text-align: center; margin: 25px 0;">
+            <a href="{reset_url}" target="_blank" style="background-color: #f89516; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 700; font-size: 15px; display: inline-block;">
+                Reset Password
+            </a>
+        </div>
+        <p style="font-size: 13px; color: #718096;">If you didn't request a password reset, you can safely ignore this email.</p>
+        """
+        html = cls._build_html_template(
+            title="Password Reset Request",
+            body_content=body_content,
+            button_text="Reset Password",
+            button_url=reset_url,
+            badge_text="Security"
+        )
+        return cls.send_email(subject, user.email, html, user=user, notification_type='password_reset', category='TRANSACTIONAL', async_send=async_send)
+
+    @classmethod
+    def send_booking_confirmation(cls, booking, async_send: bool = True) -> bool:
+        """Sends booking confirmation email to passenger."""
+        passenger = booking.passenger
+        ride = booking.ride
+        subject = f"Booking Confirmed: {ride.origin} to {ride.destination}"
+        dep_str = ride.departure_datetime.strftime('%b %d, %Y at %I:%M %p') if getattr(ride, 'departure_datetime', None) else 'Scheduled'
+
+        body_content = f"""
+        <p>Hi <strong>{passenger.first_name or passenger.username}</strong>,</p>
+        <p>Your ride booking on Kaapool has been confirmed! Here are your trip details:</p>
+        <div style="background-color: #f8fafc; border-left: 4px solid #10b981; padding: 15px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+            <p style="margin: 0 0 6px 0;"><strong>Route:</strong> {ride.origin} → {ride.destination}</p>
+            <p style="margin: 0 0 6px 0;"><strong>Departure:</strong> {dep_str}</p>
+            <p style="margin: 0 0 6px 0;"><strong>Seats Booked:</strong> {booking.seats_booked}</p>
+            <p style="margin: 0 0 6px 0;"><strong>Total Fare:</strong> ₹{booking.total_price}</p>
+            <p style="margin: 0;"><strong>Driver:</strong> {ride.driver.get_full_name() or ride.driver.username}</p>
+        </div>
+        """
+        html = cls._build_html_template(
+            title="Ride Booking Confirmed",
+            body_content=body_content,
+            button_text="View Booking",
+            button_url=f"http://127.0.0.1:8000/bookings/{booking.id}/",
+            badge_text="Booking Confirmed"
+        )
+        return cls.send_email(subject, passenger.email, html, user=passenger, notification_type='ride_booked', category='TRANSACTIONAL', async_send=async_send)
+
+    @classmethod
     def send_reengagement_email(cls, user, rule_name: str = '7 days', async_send: bool = True) -> bool:
         """Sends configurable inactivity re-engagement email."""
-        subject = "We miss you on Kaapool 👋"
+        subject = "We miss you on Kaapool"
 
         body_content = f"""
         <p>Hi <strong>{user.first_name or user.username}</strong>,</p>
@@ -587,7 +620,7 @@ class EmailService:
     @classmethod
     def send_contact_form_to_admin(cls, name: str, sender_email: str, phone: str, category: str, subject_text: str, message_text: str, admin_email: str = "gautamadhikari071@gmail.com", async_send: bool = True) -> bool:
         """Sends notification to Admin when a user submits a contact form."""
-        subject = f"📬 New Contact Inquiry: {subject_text}"
+        subject = f"New Contact Inquiry: {subject_text}"
         body_content = f"""
         <p>A new inquiry was submitted on the Kaapool website:</p>
         <ul style="list-style: none; padding: 0;">

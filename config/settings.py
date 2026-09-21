@@ -211,7 +211,17 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
-# Email & SMTP Settings
+# Email Settings
+EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', 'brevo')
+
+# Brevo REST API Settings (Active Production Provider)
+BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
+BREVO_SENDER_EMAIL = os.getenv('BREVO_SENDER_EMAIL', 'gautamadhikari071@gmail.com')
+BREVO_SENDER_NAME = os.getenv('BREVO_SENDER_NAME', 'Kaapool')
+BREVO_API_BASE_URL = os.getenv('BREVO_API_BASE_URL', 'https://api.brevo.com/v3')
+EMAIL_LOGO_URL = os.getenv('EMAIL_LOGO_URL', 'https://cdn.jsdelivr.net/gh/gautamadhikari-078/Kaapool@main/static/images/Kaapool%20logo%20.png')
+
+# Legacy SMTP Settings (Preserved for Fallback / Local / Future use)
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))

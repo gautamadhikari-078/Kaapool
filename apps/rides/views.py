@@ -579,7 +579,21 @@ class CancelRideView(LoginRequiredMixin, View):
         if ride.status not in ['completed', 'cancelled']:
             ride.status = 'cancelled'
             ride.save(update_fields=['status'])
+            
+            # Fetch active passengers before status update
+            active_bookings = list(ride.bookings.filter(status__in=['pending', 'confirmed']).select_related('passenger'))
             ride.bookings.filter(status__in=['pending', 'confirmed']).update(status='cancelled')
+            
+            # Send cancellation notifications via centralized EmailService (Brevo)
+            try:
+                from apps.core.email_service import EmailService
+                EmailService.send_ride_cancelled_email(request.user, ride, is_driver=True)
+                for booking in active_bookings:
+                    if booking.passenger and booking.passenger.email:
+                        EmailService.send_ride_cancelled_email(booking.passenger, ride, is_driver=False)
+            except Exception as email_err:
+                logger.error(f"Failed to send ride cancellation email: {email_err}")
+
             messages.success(request, f"Ride to {ride.destination} has been cancelled.")
         else:
             messages.info(request, f"Ride is already {ride.status}.")
