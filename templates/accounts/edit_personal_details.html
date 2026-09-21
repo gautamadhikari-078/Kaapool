@@ -239,7 +239,7 @@
     <div class="edit-container">
         <!-- TOP NAV BAR WITH BACK ARROW -->
         <div class="top-nav-bar">
-            <a href="{% url 'accounts:profile' %}" id="backArrowBtn" class="btn-back-arrow" title="Back to Profile">
+            <a href="{% url 'accounts:personal_details' %}" id="backArrowBtn" class="btn-back-arrow" title="Back to Personal Details">
                 <i class="fa-solid fa-arrow-left"></i>
             </a>
             <div></div> <!-- Spacer -->
@@ -364,7 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Discard & Leave button inside modal
     btnDiscardChanges.addEventListener('click', function() {
         formSubmitted = true; // suppress warnings
-        window.location.href = "{% url 'accounts:profile' %}";
+        window.location.href = "{% url 'accounts:personal_details' %}";
     });
 
     // Close modal if user clicks outside modal card

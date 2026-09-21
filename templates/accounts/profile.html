@@ -695,7 +695,7 @@
             <div class="profile-section-block">
                 <div class="profile-section-title">About you</div>
                 
-                <div class="profile-row-item" onclick="openProfileModal('editProfileModal')">
+                <div class="profile-row-item" onclick="openProfileModal('miniBioModal')">
                     <div class="icon-blue-plus">
                         <i class="fa-solid fa-plus"></i>
                     </div>
@@ -882,6 +882,38 @@
             <div style="display: flex; gap: 1rem; margin-top: 1.75rem;">
                 <button type="button" style="flex: 1; padding: 0.85rem; background: #f1f5f9; border: none; border-radius: 14px; font-weight: 700; color: #475569; cursor: pointer;" onclick="closeProfileModal('addVehicleModal')">Cancel</button>
                 <button type="submit" style="flex: 1; padding: 0.85rem; background: #f89516; border: none; border-radius: 14px; font-weight: 700; color: #ffffff; cursor: pointer;">Save Vehicle</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MINI BIO MODAL (FOCUSED ONLY ON BIO) -->
+<div class="profile-modal-bg" id="miniBioModal">
+    <div class="profile-modal-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0;">
+                {% if user.bio %}Edit Mini Bio{% else %}Add a Mini Bio{% endif %}
+            </h3>
+            <button type="button" style="background: none; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer;" onclick="closeProfileModal('miniBioModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'accounts:profile' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_bio">
+            <div class="modal-input-group">
+                <label for="miniBioTextarea">Tell other members a bit about yourself</label>
+                <textarea id="miniBioTextarea" name="bio" rows="4" maxlength="500" placeholder="e.g. I love road trips, indie music, and keeping rides on time!">{{ user.bio }}</textarea>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem;">
+                    <small style="color: #64748b; font-size: 0.8rem;">Short bio displayed on your profile</small>
+                    <small id="bioCharCount" style="color: #94a3b8; font-size: 0.8rem; font-weight: 600;">{{ user.bio|length }}/500</small>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.75rem;">
+                <button type="button" style="flex: 1; padding: 0.85rem; background: #f1f5f9; border: none; border-radius: 14px; font-weight: 700; color: #475569; cursor: pointer;" onclick="closeProfileModal('miniBioModal')">Cancel</button>
+                <button type="submit" style="flex: 1; padding: 0.85rem; background: #f89516; border: none; border-radius: 14px; font-weight: 700; color: #ffffff; cursor: pointer; box-shadow: 0 4px 12px rgba(248, 149, 22, 0.3);">Save Bio</button>
             </div>
         </form>
     </div>
@@ -1165,6 +1197,14 @@
     function closeProfileModal(modalId) {
         const m = document.getElementById(modalId);
         if (m) m.style.display = 'none';
+    }
+
+    const bioTextarea = document.getElementById('miniBioTextarea');
+    const bioCounter = document.getElementById('bioCharCount');
+    if (bioTextarea && bioCounter) {
+        bioTextarea.addEventListener('input', function() {
+            bioCounter.textContent = this.value.length + '/500';
+        });
     }
 </script>
 {% endblock content %}

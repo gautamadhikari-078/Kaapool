@@ -889,8 +889,7 @@
                 </div>
                 <div class="detail-info-row">
                     <span class="detail-label">Date of Birth</span>
-                    <span class="detail-value">{% if user.date_of_birth %}{{ user.date_of_birth|date:"F d, Y" }}{% else
-                        %}Not specified{% endif %}</span>
+                    <span class="detail-value">{% if user.date_of_birth %}{{ user.date_of_birth|date:"F d, Y" }}{% else %}Not specified{% endif %}</span>
                 </div>
                 <div class="detail-info-row">
                     <span class="detail-label">Email Address</span>
@@ -898,13 +897,11 @@
                 </div>
                 <div class="detail-info-row">
                     <span class="detail-label">Mobile Phone</span>
-                    <span class="detail-value">{% if user.phone_number %}{{ user.phone_number }}{% else %}Not
-                        specified{% endif %}</span>
+                    <span class="detail-value">{% if user.phone_number %}{{ user.phone_number }}{% else %}Not specified{% endif %}</span>
                 </div>
                 <div class="detail-info-row full-width">
                     <span class="detail-label">Mini Bio</span>
-                    <span class="detail-value">{% if user.bio %}{{ user.bio }}{% else %}I'm chatty when I feel
-                        comfortable{% endif %}</span>
+                    <span class="detail-value">{% if user.bio %}{{ user.bio }}{% else %}I'm chatty when I feel comfortable{% endif %}</span>
                 </div>
             </div>
         </div>

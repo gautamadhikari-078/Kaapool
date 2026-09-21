@@ -265,6 +265,13 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 messages.success(request, f" Vehicle '{car_model}' added to your profile!")
             return redirect('accounts:profile')
 
+        if action == 'update_bio':
+            bio = request.POST.get('bio', '').strip()
+            user.bio = bio
+            user.save(update_fields=['bio'])
+            messages.success(request, " Mini bio updated successfully!")
+            return redirect('accounts:profile')
+
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
         email = request.POST.get('email', '').strip()
@@ -393,7 +400,7 @@ class EditPersonalDetailsView(LoginRequiredMixin, View):
 
         user.save()
         messages.success(request, " Personal details updated successfully!")
-        return redirect('accounts:profile')
+        return redirect('accounts:personal_details')
 
 
 class DocumentViewView(LoginRequiredMixin, View):
