@@ -45,7 +45,7 @@ class CustomLoginView(DjangoLoginView):
         user.save(update_fields=['last_login_at', 'last_activity_at', 'last_login_ip', 'last_login_user_agent'])
 
         user_display = user.get_full_name() or user.username
-        messages.success(self.request, f"Welcome back, {user_display}! You have logged in successfully.")
+        messages.success(self.request, f" Welcome back, {user_display}! You have logged in successfully.")
         return response
 
 
@@ -53,7 +53,7 @@ class CustomLogoutView(DjangoLogoutView):
     next_page = 'core:home'
 
     def dispatch(self, request, *args, **kwargs):
-        messages.info(request, "You have logged out successfully. See you soon!")
+        messages.info(request, " You have logged out successfully. See you soon!")
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -73,7 +73,7 @@ class SignUpView(CreateView):
             try:
                 from apps.core.email_service import EmailService
                 EmailService.generate_and_send_otp(user, purpose='signup')
-                messages.info(self.request, f"A 6-digit verification code has been sent to {user.email}.")
+                messages.info(self.request, f" A 6-digit verification code has been sent to {user.email}.")
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).error(f"Error sending signup OTP: {e}")
@@ -105,11 +105,11 @@ class EmailOTPVerifyView(LoginRequiredMixin, View):
             fifteen_mins_ago = timezone.now() - datetime.timedelta(minutes=15)
             recent_resends = EmailOTP.objects.filter(user=user, purpose='signup', created_at__gte=fifteen_mins_ago).count()
             if recent_resends >= 3:
-                messages.error(request, "Maximum resend attempts reached. Please wait 15 minutes before requesting another OTP.")
+                messages.error(request, " Maximum resend attempts reached. Please wait 15 minutes before requesting another OTP.")
                 return render(request, self.template_name, {'user': user, 'is_error': True})
 
             EmailService.generate_and_send_otp(user, purpose='signup')
-            messages.success(request, f"A new 6-digit verification code has been sent to {user.email}.")
+            messages.success(request, f" A new 6-digit verification code has been sent to {user.email}.")
             return render(request, self.template_name, {'user': user, 'resent': True})
 
         otp_code = request.POST.get('otp_code', '').strip()
@@ -123,17 +123,17 @@ class EmailOTPVerifyView(LoginRequiredMixin, View):
             return render(request, self.template_name, {'user': user})
 
         if timezone.now() > otp_record.expires_at:
-            messages.error(request, "Verification code has expired. Please click Resend OTP.")
+            messages.error(request, " Verification code has expired. Please click Resend OTP.")
             return render(request, self.template_name, {'user': user, 'expired': True})
 
         if otp_record.attempts_count >= 5:
-            messages.error(request, "Too many incorrect attempts. Please click Resend OTP for a new code.")
+            messages.error(request, " Too many incorrect attempts. Please click Resend OTP for a new code.")
             return render(request, self.template_name, {'user': user})
 
         if otp_record.otp_code != otp_code:
             otp_record.attempts_count += 1
             otp_record.save()
-            messages.error(request, f"Incorrect verification code ({5 - otp_record.attempts_count} attempt(s) remaining).")
+            messages.error(request, f" Incorrect verification code ({5 - otp_record.attempts_count} attempt(s) remaining).")
             return render(request, self.template_name, {'user': user})
 
         # Verification Success!
@@ -149,7 +149,7 @@ class EmailOTPVerifyView(LoginRequiredMixin, View):
         except Exception:
             pass
 
-        messages.success(request, "Email verified successfully! Welcome to Kaapool.")
+        messages.success(request, " Email verified successfully! Welcome to Kaapool.")
         return redirect('accounts:personal_details')
 
 
@@ -180,7 +180,7 @@ class NotificationPreferencesView(LoginRequiredMixin, View):
             user.unsubscribed_at = None
         user.save()
 
-        messages.success(request, "Notification preferences updated successfully!")
+        messages.success(request, " Notification preferences updated successfully!")
         return render(request, self.template_name, {'pref': pref, 'user': user})
 
 
@@ -262,7 +262,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     license_plate=license_plate,
                     color=color
                 )
-                messages.success(request, f"Vehicle '{car_model}' added to your profile!")
+                messages.success(request, f" Vehicle '{car_model}' added to your profile!")
             return redirect('accounts:profile')
 
         first_name = request.POST.get('first_name', '').strip()
@@ -281,7 +281,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             user.profile_picture = request.FILES['profile_picture']
 
         user.save()
-        messages.success(request, "Your profile details have been updated successfully!")
+        messages.success(request, " Your profile details have been updated successfully!")
         return redirect('accounts:profile')
 
 
@@ -320,7 +320,7 @@ class VehicleEditFeaturesView(LoginRequiredMixin, View):
         vehicle.features = features
         vehicle.save()
 
-        messages.success(request, f"Vehicle '{vehicle.make_model}' updated successfully!")
+        messages.success(request, f" Vehicle '{vehicle.make_model}' updated successfully!")
         return redirect('accounts:vehicle_detail', pk=vehicle.pk)
 
 
@@ -330,7 +330,7 @@ class VehicleDeleteView(LoginRequiredMixin, View):
         vehicle = get_object_or_404(Vehicle, pk=pk, user=request.user)
         make_name = vehicle.make_model
         vehicle.delete()
-        messages.success(request, f"Vehicle '{make_name}' has been deleted.")
+        messages.success(request, f" Vehicle '{make_name}' has been deleted.")
         return redirect('accounts:profile')
 
 
@@ -363,7 +363,7 @@ class EditPersonalDetailsView(LoginRequiredMixin, View):
 
         # Mobile Phone Compulsory Validation
         if not phone_number:
-            messages.error(request, "Mobile phone number is required.")
+            messages.error(request, "⚠️ Mobile phone number is required.")
             max_dob = (datetime.date.today() - datetime.timedelta(days=18*365.25)).strftime('%Y-%m-%d')
             return render(request, 'accounts/edit_personal_details.html', {'user': user, 'max_dob': max_dob})
 
@@ -375,7 +375,7 @@ class EditPersonalDetailsView(LoginRequiredMixin, View):
                 today = datetime.date.today()
                 age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
                 if age < 18:
-                    messages.error(request, "You must be at least 18 years old to use Kaapool.")
+                    messages.error(request, " You must be at least 18 years old to use Kaapool.")
                     max_dob = (today - datetime.timedelta(days=18*365.25)).strftime('%Y-%m-%d')
                     return render(request, 'accounts/edit_personal_details.html', {'user': user, 'max_dob': max_dob})
             except ValueError:
@@ -392,7 +392,7 @@ class EditPersonalDetailsView(LoginRequiredMixin, View):
             user.profile_picture = request.FILES['profile_picture']
 
         user.save()
-        messages.success(request, "Personal details updated successfully!")
+        messages.success(request, " Personal details updated successfully!")
         return redirect('accounts:profile')
 
 
@@ -432,7 +432,7 @@ class AddVehicleView(LoginRequiredMixin, View):
                 color=color,
                 features=features
             )
-            messages.success(request, f"Vehicle '{make_model}' added successfully!")
+            messages.success(request, f"🚗 Vehicle '{make_model}' added successfully!")
 
         return redirect('accounts:profile')
 
@@ -483,12 +483,12 @@ class ProfilePictureEditView(LoginRequiredMixin, View):
             if ext == 'jpeg': ext = 'jpg'
             filename = f"user_{user.id}_avatar.{ext}"
             user.profile_picture.save(filename, ContentFile(base64.b64decode(imgstr)), save=True)
-            messages.success(request, "Profile picture updated successfully!")
+            messages.success(request, " Profile picture updated successfully!")
             return redirect('accounts:personal_details')
         elif 'profile_picture' in request.FILES:
             user.profile_picture = request.FILES['profile_picture']
             user.save()
-            messages.success(request, "Profile picture updated successfully!")
+            messages.success(request, " Profile picture updated successfully!")
             return redirect('accounts:personal_details')
         
         messages.warning(request, "Please choose an image first.")
@@ -502,7 +502,7 @@ class DeleteProfilePictureView(LoginRequiredMixin, View):
             user.profile_picture.delete(save=False)
             user.profile_picture = None
             user.save()
-            messages.success(request, "Profile picture deleted successfully.")
+            messages.success(request, " Profile picture deleted successfully.")
         else:
             messages.info(request, "No profile picture to delete.")
         return redirect('accounts:profile')
@@ -616,7 +616,7 @@ class DocumentUploadView(LoginRequiredMixin, View):
             if is_ajax:
                 return JsonResponse(result)
 
-            messages.success(request, f"{doc_title} Uploaded & Verified Successfully!")
+            messages.success(request, f"🎉 {doc_title} Uploaded & Verified Successfully!")
             return redirect('accounts:personal_details')
 
         elif result['status'] == 'REVIEW':
@@ -792,7 +792,7 @@ class PasswordResetConfirmView(View):
         login(request, user)
 
         user_display = user.get_full_name() or user.username
-        messages.success(request, f"Welcome back, {user_display}! Your password has been updated successfully and you are now logged in.")
+        messages.success(request, f" Welcome back, {user_display}! Your password has been updated successfully and you are now logged in.")
         return redirect('accounts:profile')
 
 

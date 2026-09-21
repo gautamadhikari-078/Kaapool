@@ -1,118 +1,231 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Ratings - Kaapool{% endblock title %}
+{% block title %}Ratings & Reviews - Kaapool{% endblock title %}
 
 {% block extra_css %}
 <style>
 .ratings-page-wrapper {
-    background-color: #ffffff;
-    min-height: 90vh;
-    padding: 2.5rem 1.5rem 5rem 1.5rem;
+    background-color: #fcfdfd;
+    min-height: calc(100vh - 80px);
+    padding: 6.5rem 1.5rem 5rem 1.5rem;
     font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
     position: relative;
 }
 
 .ratings-container {
-    max-width: 600px;
+    max-width: 620px;
     margin: 0 auto;
     position: relative;
-    padding-top: 0.5rem;
 }
 
-/* TOP HEADING */
+/* BACK NAVIGATION LINK */
+.ratings-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #64748b;
+    text-decoration: none;
+    margin-bottom: 1.75rem;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.ratings-back-link:hover {
+    color: #f89516;
+    transform: translateX(-3px);
+}
+
+/* TOP HEADER BLOCK */
+.ratings-header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #fff7ed;
+    color: #ea580c;
+    border: 1px solid #ffedd5;
+    padding: 0.35rem 0.9rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.85rem;
+}
+
 .ratings-header-title {
     font-family: var(--font-heading, 'Outfit', sans-serif);
-    font-size: 2.5rem;
+    font-size: 2.25rem;
     font-weight: 800;
     color: #051528;
-    text-align: center;
-    margin-bottom: 2rem;
+    margin: 0 0 1.5rem 0;
     line-height: 1.2;
+    letter-spacing: -0.5px;
 }
 
-/* SCORE BLOCK */
-.rating-score-block {
-    margin-bottom: 2.5rem;
+/* MAIN SCORE CARD */
+.rating-score-card {
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(5, 21, 40, 0.04);
+    margin-bottom: 2rem;
+}
+
+.rating-score-top {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
 }
 
 .rating-big-number {
     font-family: var(--font-heading, 'Outfit', sans-serif);
-    font-size: 4.5rem;
+    font-size: 3.75rem;
     font-weight: 800;
     color: #051528;
     line-height: 1;
-    margin-bottom: 0.25rem;
     letter-spacing: -1px;
 }
 
-.rating-count-sub {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #64748b;
-    margin-bottom: 2rem;
+.rating-max-number {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #94a3b8;
 }
 
-/* BREAKDOWN TABLE */
+.rating-stars-row {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: #f89516;
+    font-size: 1.15rem;
+    margin-bottom: 0.5rem;
+}
+
+.rating-count-sub {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 1.5rem;
+}
+
+/* BREAKDOWN PROGRESS BARS */
 .rating-breakdown-list {
     border-top: 1px solid #f1f5f9;
-    margin-bottom: 2rem;
+    padding-top: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
 }
 
 .rating-breakdown-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 1.1rem 0;
-    font-size: 1.05rem;
+    gap: 1rem;
+    font-size: 0.95rem;
+}
+
+.breakdown-label {
+    min-width: 140px;
     font-weight: 700;
-    color: #051528;
-    border-bottom: 1px solid #f8fafc;
+    color: #334155;
 }
 
-.rating-breakdown-count {
+.breakdown-bar-track {
+    flex: 1;
+    height: 9px;
+    background: #f1f5f9;
+    border-radius: 9999px;
+    overflow: hidden;
+    position: relative;
+}
+
+.breakdown-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f89516 0%, #ea580c 100%);
+    border-radius: 9999px;
+    transition: width 0.4s ease;
+}
+
+.breakdown-count {
+    min-width: 24px;
+    text-align: right;
     font-weight: 800;
-    font-size: 1.15rem;
     color: #051528;
+    font-size: 0.95rem;
 }
 
-/* DIVIDER */
-.ratings-section-divider {
-    height: 4px;
-    background: #051528;
-    border-radius: 2px;
-    margin: 2.5rem 0;
+/* SECTION DIVIDER */
+.ratings-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 2.5rem 0 1.25rem 0;
+}
+
+.ratings-section-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #051528;
+    margin: 0;
 }
 
 /* REVIEWS CARD LIST */
 .reviews-list-block {
     display: flex;
     flex-direction: column;
-    gap: 1.75rem;
+    gap: 1.25rem;
 }
 
 .review-item-card {
-    padding: 0.5rem 0;
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
+    border-radius: 18px;
+    padding: 1.5rem 1.75rem;
+    box-shadow: 0 4px 16px rgba(5, 21, 40, 0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.review-item-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(248, 149, 22, 0.08);
 }
 
 .reviewer-user-header {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.85rem;
     margin-bottom: 0.85rem;
 }
 
 .reviewer-badge-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #00aff5;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f89516 0%, #e07d08 100%);
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(248, 149, 22, 0.25);
+}
+
+.reviewer-meta-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.reviewer-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .reviewer-name {
@@ -122,75 +235,201 @@
     color: #051528;
 }
 
+.kaapool-verified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: #fff7ed;
+    color: #ea580c;
+    border: 1px solid #fed7aa;
+    padding: 0.15rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.review-date-text {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
 .review-category-title {
     font-size: 1.05rem;
     font-weight: 800;
     color: #051528;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.35rem;
 }
 
 .review-comment-text {
     font-size: 0.95rem;
     font-weight: 500;
     color: #475569;
-    margin-bottom: 0.4rem;
+    margin: 0;
+    line-height: 1.55;
+}
+
+/* EMPTY STATE */
+.ratings-empty-card {
+    background: #ffffff;
+    border: 2px dashed #fed7aa;
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.empty-icon-circle {
+    width: 64px;
+    height: 64px;
+    background: #fff7ed;
+    color: #f89516;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    margin: 0 auto 1.25rem auto;
+}
+
+.empty-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #051528;
+    margin-bottom: 0.5rem;
+}
+
+.empty-desc {
+    font-size: 0.95rem;
+    color: #64748b;
+    max-width: 420px;
+    margin: 0 auto 1.5rem auto;
     line-height: 1.5;
 }
 
-.review-date-text {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #94a3b8;
+.btn-kaapool-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f89516;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(248, 149, 22, 0.25);
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.btn-kaapool-action:hover {
+    background: #e07d08;
+    color: #ffffff;
+    transform: translateY(-2px);
 }
 </style>
 {% endblock extra_css %}
 
 {% block content %}
 <div class="ratings-page-wrapper">
-    <a href="{% url 'accounts:personal_details' %}" class="btn-page-back" title="Go back">
-        <i class="fa-solid fa-chevron-left"></i>
-    </a>
-
     <div class="ratings-container">
-        <!-- PAGE TITLE -->
-        <h1 class="ratings-header-title">Ratings</h1>
+        <!-- BACK LINK -->
+        <a href="{% url 'accounts:profile' %}" class="ratings-back-link" title="Return to Profile">
+            <i class="fa-solid fa-arrow-left"></i> Back to Profile
+        </a>
 
-        <!-- SCORE BLOCK -->
-        <div class="rating-score-block">
-            <div class="rating-big-number">{{ average_rating }}</div>
-            <div class="rating-count-sub">{{ total_ratings }} rating</div>
-        </div>
-
-        <!-- RATING BREAKDOWN LIST -->
-        <div class="rating-breakdown-list">
-            {% for item in breakdown %}
-            <div class="rating-breakdown-row">
-                <span>{{ item.label }}</span>
-                <span class="rating-breakdown-count">{{ item.count }}</span>
+        <!-- HEADER -->
+        <div>
+            <div class="ratings-header-badge">
+                <i class="fa-solid fa-shield-halved"></i> Member Reputation
             </div>
-            {% endfor %}
+            <h1 class="ratings-header-title">Ratings & Reviews</h1>
         </div>
 
-        <!-- DIVIDER -->
-        <div class="ratings-section-divider"></div>
+        <!-- SCORE CARD -->
+        <div class="rating-score-card">
+            <div class="rating-score-top">
+                <span class="rating-big-number">{{ average_rating }}</span>
+                <span class="rating-max-number">/ 5</span>
+            </div>
+
+            <div class="rating-stars-row">
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+            </div>
+
+            <div class="rating-count-sub">
+                {{ total_ratings }} verified rating{{ total_ratings|pluralize }} &bull; Kaapool Trust Score
+            </div>
+
+            <!-- BREAKDOWN PROGRESS BARS -->
+            <div class="rating-breakdown-list">
+                {% for item in breakdown %}
+                <div class="rating-breakdown-row">
+                    <span class="breakdown-label">{{ item.label }}</span>
+                    <div class="breakdown-bar-track">
+                        <div class="breakdown-bar-fill" style="width: {{ item.percent|default:0 }}%;"></div>
+                    </div>
+                    <span class="breakdown-count">{{ item.count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- REVIEWS HEADER -->
+        <div class="ratings-section-header">
+            <h2 class="ratings-section-title">Community Feedback</h2>
+        </div>
 
         <!-- REVIEWS LIST -->
+        {% if reviews %}
         <div class="reviews-list-block">
             {% for review in reviews %}
             <div class="review-item-card">
                 <div class="reviewer-user-header">
                     <div class="reviewer-badge-avatar">
-                        <i class="fa-solid fa-comment-dots"></i>
+                        {% if review.is_system %}
+                        <i class="fa-solid fa-shield-halved"></i>
+                        {% else %}
+                        <i class="fa-solid fa-user"></i>
+                        {% endif %}
                     </div>
-                    <div class="reviewer-name">{{ review.reviewer_name }}</div>
+                    <div class="reviewer-meta-wrap">
+                        <div class="reviewer-title-row">
+                            <span class="reviewer-name">{{ review.reviewer_name }}</span>
+                            {% if review.is_system %}
+                            <span class="kaapool-verified-badge">
+                                <i class="fa-solid fa-circle-check"></i> Official
+                            </span>
+                            {% endif %}
+                        </div>
+                        <span class="review-date-text">{{ review.date }}</span>
+                    </div>
                 </div>
 
                 <div class="review-category-title">{{ review.rating_label }}</div>
-                <div class="review-comment-text">{{ review.comment }}</div>
-                <div class="review-date-text">{{ review.date }}</div>
+                <p class="review-comment-text">{{ review.comment }}</p>
             </div>
             {% endfor %}
         </div>
+        {% else %}
+        <!-- EMPTY STATE -->
+        <div class="ratings-empty-card">
+            <div class="empty-icon-circle">
+                <i class="fa-solid fa-star"></i>
+            </div>
+            <h3 class="empty-title">No ratings yet</h3>
+            <p class="empty-desc">
+                Your verified ratings from fellow passengers and carpoolers will appear here as you travel with Kaapool.
+            </p>
+            <a href="{% url 'rides:search' %}" class="btn-kaapool-action">
+                <i class="fa-solid fa-magnifying-glass"></i> Explore Rides
+            </a>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock content %}
