@@ -1,6 +1,6 @@
 from django.urls import path
 from apps.admin_panel.views import (
-    AdminLoginView, AdminLogoutView, AdminDashboardView,
+    AdminLoginView, AdminLogoutView, AdminPasswordResetRequestView, AdminPasswordResetConfirmView, AdminDashboardView,
     AdminUserListView, AdminUserDetailView, AdminUserActionView, AdminUserCreateView, AdminUserEditView, AdminUserDeleteView,
     AdminVerificationListView, AdminVerificationDetailView, AdminVerificationActionView, AdminVerificationCreateView, AdminVerificationDeleteView,
     AdminDriverListView,
@@ -29,6 +29,8 @@ urlpatterns = [
     # Auth Routes
     path('login/', AdminLoginView.as_view(), name='login'),
     path('logout/', AdminLogoutView.as_view(), name='logout'),
+    path('password-reset/', AdminPasswordResetRequestView.as_view(), name='password_reset'),
+    path('password-reset-confirm/<uidb64>/<token>/', AdminPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
 
     # Dashboard
     path('', AdminDashboardView.as_view(), name='dashboard'),

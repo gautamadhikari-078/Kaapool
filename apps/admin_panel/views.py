@@ -16,6 +16,10 @@ from apps.admin_panel.models import (
     VerificationRecord, Complaint, FAQ, Blog, WebsiteContent, AuditLog, SystemSetting, ContactInquiry
 )
 from apps.admin_panel.permissions import AdminRequiredMixin, PermissionRequiredMixin, log_audit_action
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import default_token_generator
+from apps.core.email_service import EmailService
 
 User = get_user_model()
 
@@ -70,6 +74,87 @@ class AdminLogoutView(View):
             log_audit_action(request.user, 'ADMIN_LOGOUT', target_type='User', target_id=request.user.id, request=request)
             logout(request)
         messages.info(request, 'You have been logged out of the Admin Panel.')
+        return redirect('admin_panel:login')
+
+
+class AdminPasswordResetRequestView(View):
+    """Admin Password Reset Request View - emails reset link to admin."""
+    template_name = 'admin_panel/password_reset.html'
+
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated and getattr(request.user, 'is_admin', False):
+            return redirect('admin_panel:dashboard')
+        return render(request, self.template_name)
+
+    def post(self, request, *args, **kwargs):
+        identity = request.POST.get('identity', '').strip()
+        if not identity:
+            messages.error(request, "Please enter your admin username or email address.")
+            return render(request, self.template_name)
+
+        user = User.objects.filter(Q(username__iexact=identity) | Q(email__iexact=identity)).first()
+
+        # Check if user exists, is active, has an admin role, and is not blocked
+        if user and user.is_active and getattr(user, 'is_admin', False) and not getattr(user, 'is_blocked', False):
+            if user.email:
+                uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+                token = default_token_generator.make_token(user)
+                reset_url = request.build_absolute_uri(
+                    reverse('admin_panel:password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
+                )
+                try:
+                    EmailService.send_password_reset_email(user, reset_url)
+                    log_audit_action(user, 'ADMIN_PASSWORD_RESET_REQUESTED', target_type='User', target_id=user.id, request=request)
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).error(f"Failed to send admin password reset email: {e}")
+
+        # Always show done page for security (prevent username/email harvesting)
+        return render(request, 'admin_panel/password_reset_done.html', {'identity': identity})
+
+
+class AdminPasswordResetConfirmView(View):
+    """Admin Password Reset Confirmation View - verifies token and sets new password."""
+    template_name = 'admin_panel/password_reset_confirm.html'
+
+    def get_user_and_valid_token(self, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.filter(pk=uid).first()
+            if user and getattr(user, 'is_admin', False) and not getattr(user, 'is_blocked', False):
+                if default_token_generator.check_token(user, token):
+                    return user, True
+        except (TypeError, ValueError, OverflowError):
+            pass
+        return None, False
+
+    def get(self, request, uidb64, token, *args, **kwargs):
+        user, is_valid = self.get_user_and_valid_token(uidb64, token)
+        if not is_valid:
+            return render(request, 'admin_panel/password_reset_invalid.html')
+        return render(request, self.template_name, {'uidb64': uidb64, 'token': token, 'target_user': user})
+
+    def post(self, request, uidb64, token, *args, **kwargs):
+        user, is_valid = self.get_user_and_valid_token(uidb64, token)
+        if not is_valid:
+            return render(request, 'admin_panel/password_reset_invalid.html')
+
+        password = request.POST.get('password', '').strip()
+        confirm_password = request.POST.get('confirm_password', '').strip()
+
+        if len(password) < 8:
+            messages.error(request, "Password must be at least 8 characters long.")
+            return render(request, self.template_name, {'uidb64': uidb64, 'token': token, 'target_user': user})
+
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match. Please try again.")
+            return render(request, self.template_name, {'uidb64': uidb64, 'token': token, 'target_user': user})
+
+        user.set_password(password)
+        user.save()
+
+        log_audit_action(user, 'ADMIN_PASSWORD_RESET_COMPLETED', target_type='User', target_id=user.id, request=request)
+        messages.success(request, "Your admin password has been updated successfully! You can now log in with your new password.")
         return redirect('admin_panel:login')
 
 
