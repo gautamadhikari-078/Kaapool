@@ -8,7 +8,7 @@
 .ratings-page-wrapper {
     background-color: #fcfdfd;
     min-height: calc(100vh - 80px);
-    padding: 6.5rem 1.5rem 5rem 1.5rem;
+    padding: 2.5rem 1.5rem 5rem 1.5rem;
     font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
     position: relative;
 }
@@ -17,6 +17,7 @@
     max-width: 620px;
     margin: 0 auto;
     position: relative;
+    padding-top: 1rem;
 }
 
 /* BACK NAVIGATION LINK */
@@ -340,10 +341,15 @@
 
 {% block content %}
 <div class="ratings-page-wrapper">
+    <!-- CIRCULAR FLOATING BACK BUTTON -->
+    <a href="{% url 'accounts:personal_details' %}" class="btn-page-back" title="Go back" onclick="if (window.history.length > 1 && document.referrer) { event.preventDefault(); window.history.back(); }">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
     <div class="ratings-container">
         <!-- BACK LINK -->
-        <a href="{% url 'accounts:profile' %}" class="ratings-back-link" title="Return to Profile">
-            <i class="fa-solid fa-arrow-left"></i> Back to Profile
+        <a href="{% url 'accounts:personal_details' %}" class="ratings-back-link" title="Back to Personal Details" onclick="if (window.history.length > 1 && document.referrer) { event.preventDefault(); window.history.back(); }">
+            <i class="fa-solid fa-arrow-left"></i> Back to Personal Details
         </a>
 
         <!-- HEADER -->
