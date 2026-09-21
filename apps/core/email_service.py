@@ -164,41 +164,51 @@ class EmailService:
                 reply_to_list = [r.strip() for r in reply_to if r and r.strip()]
 
         def _dispatch():
-            adapter = cls.get_provider_adapter()
-            result = adapter.send(
-                subject=subject,
-                recipients=recipient_list,
-                html_content=html_content,
-                text_content=plain_text,
-                from_email=sender,
-                reply_to=reply_to_list
-            )
-
-            # Log execution in NotificationLog DB table safely
             try:
-                from apps.notifications.models import NotificationLog
-                User = get_user_model()
-                log_user = user if isinstance(user, User) else User.objects.filter(email__iexact=recipient_list[0]).first()
-
-                NotificationLog.objects.create(
-                    user=log_user,
-                    email=recipient_list[0],
-                    notification_type=notification_type,
-                    category=category,
+                adapter = cls.get_provider_adapter()
+                result = adapter.send(
                     subject=subject,
-                    provider_name=result.get('provider', 'SMTP'),
-                    provider_message_id=result.get('message_id'),
-                    status='SENT' if result.get('success') else 'FAILED',
-                    failure_reason=result.get('error'),
-                    sent_at=timezone.now() if result.get('success') else None
+                    recipients=recipient_list,
+                    html_content=html_content,
+                    text_content=plain_text,
+                    from_email=sender,
+                    reply_to=reply_to_list
                 )
-            except Exception as log_err:
-                logger.error(f"Error recording NotificationLog: {log_err}")
 
-            return result.get('success', False)
+                # Log execution in NotificationLog DB table safely
+                try:
+                    from apps.notifications.models import NotificationLog
+                    User = get_user_model()
+                    log_user = user if isinstance(user, User) else User.objects.filter(email__iexact=recipient_list[0]).first()
+
+                    NotificationLog.objects.create(
+                        user=log_user,
+                        email=recipient_list[0],
+                        notification_type=notification_type,
+                        category=category,
+                        subject=subject,
+                        provider_name=result.get('provider', 'Brevo'),
+                        provider_message_id=result.get('message_id'),
+                        status='SENT' if result.get('success') else 'FAILED',
+                        failure_reason=result.get('error'),
+                        sent_at=timezone.now() if result.get('success') else None
+                    )
+                except Exception as log_err:
+                    logger.error(f"Error recording NotificationLog: {log_err}")
+
+                return result.get('success', False)
+            except Exception as dispatch_err:
+                logger.error(f"Unexpected error in email dispatch: {dispatch_err}")
+                return False
+            finally:
+                try:
+                    from django.db import connection
+                    connection.close()
+                except Exception:
+                    pass
 
         if async_send:
-            thread = threading.Thread(target=_dispatch, daemon=True)
+            thread = threading.Thread(target=_dispatch, daemon=False)
             thread.start()
             return True
         else:

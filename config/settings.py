@@ -215,7 +215,7 @@ REST_FRAMEWORK = {
 EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', 'brevo')
 
 # Brevo REST API Settings (Active Production Provider)
-BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
+BREVO_API_KEY = os.getenv('BREVO_API_KEY', '').strip()
 BREVO_SENDER_EMAIL = os.getenv('BREVO_SENDER_EMAIL', 'gautamadhikari071@gmail.com')
 BREVO_SENDER_NAME = os.getenv('BREVO_SENDER_NAME', 'Kaapool')
 BREVO_API_BASE_URL = os.getenv('BREVO_API_BASE_URL', 'https://api.brevo.com/v3')

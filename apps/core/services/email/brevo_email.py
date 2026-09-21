@@ -17,10 +17,22 @@ class BrevoEmailAdapter(BaseEmailProviderAdapter):
     """
 
     def __init__(self):
-        self.api_key = getattr(settings, 'BREVO_API_KEY', None) or os.getenv('BREVO_API_KEY', '')
-        self.base_url = (getattr(settings, 'BREVO_API_BASE_URL', None) or os.getenv('BREVO_API_BASE_URL', 'https://api.brevo.com/v3')).rstrip('/')
-        self.sender_email = getattr(settings, 'BREVO_SENDER_EMAIL', None) or os.getenv('BREVO_SENDER_EMAIL', 'gautamadhikari071@gmail.com')
-        self.sender_name = getattr(settings, 'BREVO_SENDER_NAME', None) or os.getenv('BREVO_SENDER_NAME', 'Kaapool')
+        self.api_key = (
+            getattr(settings, 'BREVO_API_KEY', None)
+            or os.getenv('BREVO_API_KEY', '')
+        ).strip()
+        self.base_url = (
+            getattr(settings, 'BREVO_API_BASE_URL', None)
+            or os.getenv('BREVO_API_BASE_URL', 'https://api.brevo.com/v3')
+        ).rstrip('/')
+        self.sender_email = (
+            getattr(settings, 'BREVO_SENDER_EMAIL', None)
+            or os.getenv('BREVO_SENDER_EMAIL', 'gautamadhikari071@gmail.com')
+        ).strip()
+        self.sender_name = (
+            getattr(settings, 'BREVO_SENDER_NAME', None)
+            or os.getenv('BREVO_SENDER_NAME', 'Kaapool')
+        ).strip()
 
     def send(
         self,
@@ -48,18 +60,29 @@ class BrevoEmailAdapter(BaseEmailProviderAdapter):
             logger.warning(f"Brevo send failed: {err_msg}")
             return {"success": False, "error": err_msg, "provider": "Brevo"}
 
-        # Sender resolution
+        # Verified Sender enforcement (Brevo strictly requires account-verified senders)
+        verified_senders = ['gautamadhikari071@gmail.com', 'gautamadhikari078@gmail.com']
         s_email = self.sender_email
         s_name = self.sender_name
         if from_email and '<' in from_email and '>' in from_email:
             try:
                 raw_name, raw_email = from_email.split('<')
-                s_name = raw_name.strip().strip('"') or s_name
-                s_email = raw_email.replace('>', '').strip() or s_email
+                cand_name = raw_name.strip().strip('"')
+                cand_email = raw_email.replace('>', '').strip()
+                if cand_name:
+                    s_name = cand_name
+                if cand_email.lower() in verified_senders:
+                    s_email = cand_email
+                elif not reply_to:
+                    reply_to = [cand_email]
             except Exception:
                 pass
         elif from_email and '@' in from_email:
-            s_email = from_email.strip()
+            cand_email = from_email.strip()
+            if cand_email.lower() in verified_senders:
+                s_email = cand_email
+            elif not reply_to:
+                reply_to = [cand_email]
 
         # Build Brevo to list
         to_payload = []
