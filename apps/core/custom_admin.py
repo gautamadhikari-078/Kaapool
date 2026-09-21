@@ -32,7 +32,7 @@ def custom_admin_index(request, extra_context=None):
         recent_bookings_qs = Booking.objects.select_related('passenger', 'ride').order_by('-created_at')[:6]
         recent_bookings = list(recent_bookings_qs)
 
-        live_rides_qs = Ride.objects.select_related('driver').order_by('-departure_time')[:3]
+        live_rides_qs = Ride.objects.select_related('driver').order_by('-departure_datetime')[:3]
         live_rides = list(live_rides_qs)
     except Exception:
         total_rides = 128

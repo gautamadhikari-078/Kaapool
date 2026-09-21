@@ -13,11 +13,14 @@ class Command(BaseCommand):
         import os
 
         admin_username = os.getenv('DJANGO_SUPERUSER_USERNAME') or os.getenv('ADMIN_USERNAME') or 'admin'
-        admin_email = os.getenv('DJANGO_SUPERUSER_EMAIL') or os.getenv('ADMIN_EMAIL') or 'admin@kaapool.com'
+        admin_email = os.getenv('DJANGO_SUPERUSER_EMAIL') or os.getenv('ADMIN_EMAIL') or 'gautamadhikari071@gmail.com'
         admin_password = os.getenv('DJANGO_SUPERUSER_PASSWORD') or os.getenv('ADMIN_PASSWORD') or 'admin123'
 
-        # 1. Create default superuser if none exists, or update password to admin123
-        admin_user = User.objects.filter(username=admin_username).first() or User.objects.filter(email=admin_email).first()
+        # 1. Create or update default superuser 'admin' linked to gautamadhikari071@gmail.com
+        admin_user = User.objects.filter(username=admin_username).first()
+        if not admin_user:
+            admin_user = User.objects.filter(email=admin_email).first()
+
         if not admin_user:
             admin_user = User.objects.create_superuser(
                 username=admin_username,
@@ -29,27 +32,41 @@ class Command(BaseCommand):
             admin_user.save()
             self.stdout.write(self.style.SUCCESS(f"Created default Super Admin '{admin_username}' ({admin_email})."))
         else:
+            admin_user.email = admin_email
             admin_user.set_password(admin_password)
             admin_user.is_superuser = True
             admin_user.is_staff = True
             admin_user.role = 'super_admin'
             admin_user.email_verified = True
             admin_user.save()
-            self.stdout.write(self.style.SUCCESS(f"Elevated user '{admin_user.username}' to 'super_admin' with updated password."))
+            self.stdout.write(self.style.SUCCESS(f"Updated user '{admin_user.username}' ({admin_user.email}) to 'super_admin' with password '{admin_password}'."))
 
-        # 2. Automatically promote owner emails to super_admin
-        owner_emails = ['gautamadhikari078@gmail.com', 'gautamadhikari071@gmail.com']
+        # 2. Automatically promote and sync owner emails to super_admin
+        owner_emails = ['gautamadhikari071@gmail.com', 'gautamadhikari078@gmail.com']
         custom_emails = [e.strip() for e in os.getenv('ADMIN_EMAILS', '').split(',') if e.strip()]
         all_owner_emails = set(owner_emails + custom_emails)
 
         for email_addr in all_owner_emails:
-            for u in User.objects.filter(email__iexact=email_addr):
-                if not u.is_superuser or not u.is_staff or u.role != 'super_admin':
+            users_with_email = list(User.objects.filter(email__iexact=email_addr))
+            if not users_with_email and email_addr == 'gautamadhikari071@gmail.com':
+                u = User.objects.create_superuser(
+                    username='gautamadhikari071',
+                    email='gautamadhikari071@gmail.com',
+                    password=admin_password
+                )
+                u.role = 'super_admin'
+                u.email_verified = True
+                u.save()
+                self.stdout.write(self.style.SUCCESS(f"Created owner super_admin '{u.username}' ({u.email})."))
+            else:
+                for u in users_with_email:
                     u.is_superuser = True
                     u.is_staff = True
                     u.role = 'super_admin'
+                    u.email_verified = True
+                    u.set_password(admin_password)
                     u.save()
-                    self.stdout.write(self.style.SUCCESS(f"Promoted '{u.email}' ({u.username}) to 'super_admin'."))
+                    self.stdout.write(self.style.SUCCESS(f"Promoted and synced password for '{u.email}' ({u.username}) to 'super_admin'."))
 
         # 3. Ensure any other superusers have role='super_admin'
         for su in User.objects.filter(is_superuser=True):

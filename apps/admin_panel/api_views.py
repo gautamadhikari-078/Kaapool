@@ -77,7 +77,7 @@ class APIAdminRideListView(views.APIView):
             'driver': r.driver.get_full_name() or r.driver.username,
             'origin': r.origin,
             'destination': r.destination,
-            'departure_time': r.departure_time.strftime('%Y-%m-%d %H:%M'),
+            'departure_time': r.departure_datetime.strftime('%Y-%m-%d %H:%M') if r.departure_datetime else '',
             'price': float(r.price_per_seat),
             'seats': r.available_seats,
             'status': r.status

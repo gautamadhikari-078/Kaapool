@@ -78,39 +78,49 @@ class AdminLogoutView(View):
 
 
 class AdminPasswordResetRequestView(View):
-    """Admin Password Reset Request View - emails reset link to admin."""
+    """Admin Password Reset Request View - sends reset link directly to linked admin email."""
     template_name = 'admin_panel/password_reset.html'
+    ADMIN_LINKED_EMAIL = 'gautamadhikari071@gmail.com'
+
+    def get_admin_user(self):
+        user = User.objects.filter(email__iexact=self.ADMIN_LINKED_EMAIL).first()
+        if not user:
+            user = User.objects.filter(username='admin').first()
+        if not user:
+            user = User.objects.filter(is_superuser=True).first()
+        return user
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated and getattr(request.user, 'is_admin', False):
             return redirect('admin_panel:dashboard')
-        return render(request, self.template_name)
+        return render(request, self.template_name, {
+            'linked_email': self.ADMIN_LINKED_EMAIL
+        })
 
     def post(self, request, *args, **kwargs):
-        identity = request.POST.get('identity', '').strip()
-        if not identity:
-            messages.error(request, "Please enter your admin username or email address.")
-            return render(request, self.template_name)
+        user = self.get_admin_user()
 
-        user = User.objects.filter(Q(username__iexact=identity) | Q(email__iexact=identity)).first()
+        if user:
+            user.is_superuser = True
+            user.is_staff = True
+            user.role = 'super_admin'
+            user.save()
 
-        # Check if user exists, is active, has an admin role, and is not blocked
-        if user and user.is_active and getattr(user, 'is_admin', False) and not getattr(user, 'is_blocked', False):
-            if user.email:
-                uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-                token = default_token_generator.make_token(user)
-                reset_url = request.build_absolute_uri(
-                    reverse('admin_panel:password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
-                )
-                try:
-                    EmailService.send_password_reset_email(user, reset_url)
-                    log_audit_action(user, 'ADMIN_PASSWORD_RESET_REQUESTED', target_type='User', target_id=user.id, request=request)
-                except Exception as e:
-                    import logging
-                    logging.getLogger(__name__).error(f"Failed to send admin password reset email: {e}")
+            uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            reset_url = request.build_absolute_uri(
+                reverse('admin_panel:password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
+            )
+            try:
+                EmailService.send_password_reset_email(user, reset_url, async_send=False)
+                log_audit_action(user, 'ADMIN_PASSWORD_RESET_REQUESTED', target_type='User', target_id=user.id, request=request)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Failed to send admin password reset email: {e}")
 
-        # Always show done page for security (prevent username/email harvesting)
-        return render(request, 'admin_panel/password_reset_done.html', {'identity': identity})
+        return render(request, 'admin_panel/password_reset_done.html', {
+            'email': self.ADMIN_LINKED_EMAIL
+        })
 
 
 class AdminPasswordResetConfirmView(View):
@@ -153,8 +163,20 @@ class AdminPasswordResetConfirmView(View):
         user.set_password(password)
         user.save()
 
+        # Keep admin user and owner account in sync
+        if user.username != 'admin':
+            admin_user = User.objects.filter(username='admin').first()
+            if admin_user:
+                admin_user.set_password(password)
+                admin_user.save()
+        else:
+            owner_user = User.objects.filter(email='gautamadhikari071@gmail.com').first()
+            if owner_user and owner_user != user:
+                owner_user.set_password(password)
+                owner_user.save()
+
         log_audit_action(user, 'ADMIN_PASSWORD_RESET_COMPLETED', target_type='User', target_id=user.id, request=request)
-        messages.success(request, "Your admin password has been updated successfully! You can now log in with your new password.")
+        messages.success(request, "Your admin password has been updated successfully! You can now sign in with your new password.")
         return redirect('admin_panel:login')
 
 
@@ -174,7 +196,7 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
         active_drivers = User.objects.filter(offered_rides__status='active').distinct().count()
         
         active_rides = Ride.objects.filter(status='active').count()
-        upcoming_rides = Ride.objects.filter(status='active', departure_time__gte=timezone.now()).count()
+        upcoming_rides = Ride.objects.filter(status='active', departure_datetime__gte=timezone.now()).count()
         completed_rides = Ride.objects.filter(status='completed').count()
         cancelled_rides = Ride.objects.filter(status='cancelled').count()
         
@@ -429,7 +451,7 @@ class AdminRideListView(AdminRequiredMixin, ListView):
     paginate_by = 15
 
     def get_queryset(self):
-        queryset = Ride.objects.select_related('driver').order_by('-departure_time')
+        queryset = Ride.objects.select_related('driver').order_by('-departure_datetime')
         status_filter = self.request.GET.get('status', '').strip()
         search = self.request.GET.get('search', '').strip()
 
@@ -1259,7 +1281,7 @@ class AdminRideCreateView(PermissionRequiredMixin, View):
             origin=origin,
             destination=destination,
             pickup_point=pickup_point,
-            departure_time=departure_time or timezone.now(),
+            departure_datetime=departure_time or timezone.now(),
             price_per_seat=price_per_seat,
             available_seats=available_seats,
             status=status,
@@ -1280,7 +1302,7 @@ class AdminRideEditView(PermissionRequiredMixin, View):
         ride.destination = request.POST.get('destination', ride.destination).strip()
         ride.pickup_point = request.POST.get('pickup_point', ride.pickup_point).strip()
         if request.POST.get('departure_time'):
-            ride.departure_time = request.POST.get('departure_time')
+            ride.departure_datetime = request.POST.get('departure_time')
         ride.price_per_seat = request.POST.get('price_per_seat', ride.price_per_seat)
         ride.available_seats = request.POST.get('available_seats', ride.available_seats)
         ride.status = request.POST.get('status', ride.status)
