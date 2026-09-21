@@ -1207,6 +1207,16 @@
             });
         }
 
+        pickupInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const firstCard = sugList.querySelector('.mapbox-pickup-card');
+                if (firstCard) {
+                    firstCard.click();
+                }
+            }
+        });
+
         renderDefaultPickupSuggestions();
     }
 
@@ -1300,38 +1310,83 @@
         const sugList = document.getElementById('pickup-sug-list');
         if (!sugList) return;
 
-        try {
-            const url = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${encodeURIComponent(query)}&access_token=${MAPBOX_ACCESS_TOKEN}&session_token=${mapboxPickupSessionToken}&language=en`;
-            const res = await fetch(url);
-            const data = await res.json();
+        let suggestions = [];
 
-            const suggestions = data.suggestions || [];
-            
-            let html = `
-                <div class="blabla-suggestion-card" id="pickup-use-current-location">
+        // 1. Try Mapbox Search Box Suggest API if token is present
+        if (MAPBOX_ACCESS_TOKEN) {
+            try {
+                const url = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${encodeURIComponent(query)}&access_token=${MAPBOX_ACCESS_TOKEN}&session_token=${mapboxPickupSessionToken}&language=en`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    suggestions = data.suggestions || [];
+                }
+            } catch (err) {
+                console.warn('Mapbox Search Box Suggest API Error:', err);
+            }
+        }
+
+        // 2. Fallback to internal geocoding API if Mapbox returned no results or no token
+        if (suggestions.length === 0) {
+            try {
+                const fallbackRes = await fetch(`/rides/api/geocode/?q=${encodeURIComponent(query)}`);
+                if (fallbackRes.ok) {
+                    const fallbackData = await fallbackRes.json();
+                    suggestions = (fallbackData || []).map((item, idx) => ({
+                        mapbox_id: `fallback_pickup_${idx}_${Date.now()}`,
+                        name: item.name || (item.display_name ? item.display_name.split(',')[0] : query),
+                        full_address: item.display_name || item.name || query,
+                        lat: item.lat,
+                        lng: item.lng,
+                        is_fallback: true
+                    }));
+                }
+            } catch (fallbackErr) {
+                console.warn('Fallback pickup geocode failed:', fallbackErr);
+            }
+        }
+
+        let html = `
+            <div class="blabla-suggestion-card" id="pickup-use-current-location">
+                <div class="blabla-sug-left">
+                    <div class="blabla-sug-icon" style="background: #ecfdf5; color: #059669;">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                    </div>
+                    <div>
+                        <div class="blabla-sug-title">Use my current location</div>
+                        <div class="blabla-sug-address">Enable GPS to select exact location</div>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right blabla-sug-chevron"></i>
+            </div>
+        `;
+
+        if (suggestions.length === 0) {
+            html += `
+                <div class="blabla-suggestion-card" style="cursor: default; opacity: 0.75;">
                     <div class="blabla-sug-left">
-                        <div class="blabla-sug-icon" style="background: #ecfdf5; color: #059669;">
-                            <i class="fa-solid fa-location-crosshairs"></i>
-                        </div>
+                        <div class="blabla-sug-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
                         <div>
-                            <div class="blabla-sug-title">Use my current location</div>
-                            <div class="blabla-sug-address">Enable GPS to select exact location</div>
+                            <div class="blabla-sug-title">No locations found for "${escapeHtml(query)}"</div>
+                            <div class="blabla-sug-address">Try checking spelling or typing a city name</div>
                         </div>
                     </div>
-                    <i class="fa-solid fa-chevron-right blabla-sug-chevron"></i>
                 </div>
             `;
-
+        } else {
             suggestions.forEach(item => {
                 const mapboxId = item.mapbox_id;
                 const name = item.name || '';
                 const address = item.full_address || item.place_formatted || item.address || '';
+                const latAttr = (item.lat !== undefined && item.lat !== null) ? `data-lat="${item.lat}"` : '';
+                const lngAttr = (item.lng !== undefined && item.lng !== null) ? `data-lng="${item.lng}"` : '';
                 
                 html += `
                     <div class="blabla-suggestion-card mapbox-pickup-card" 
                          data-mapbox-id="${escapeHtml(mapboxId)}" 
                          data-name="${escapeHtml(name)}" 
-                         data-address="${escapeHtml(address)}">
+                         data-address="${escapeHtml(address)}"
+                         ${latAttr} ${lngAttr}>
                         <div class="blabla-sug-left">
                             <div class="blabla-sug-icon">
                                 <i class="fa-solid fa-location-dot"></i>
@@ -1345,30 +1400,42 @@
                     </div>
                 `;
             });
-
-            sugList.innerHTML = html;
-
-            const gpsCard = document.getElementById('pickup-use-current-location');
-            if (gpsCard) gpsCard.addEventListener('click', handleUseCurrentLocationPickup);
-
-            document.querySelectorAll('.mapbox-pickup-card').forEach(card => {
-                card.addEventListener('click', function() {
-                    const mapboxId = card.getAttribute('data-mapbox-id');
-                    const fallbackName = card.getAttribute('data-name');
-                    const fallbackAddress = card.getAttribute('data-address');
-                    selectPickupSuggestion(mapboxId, fallbackName, fallbackAddress);
-                });
-            });
-
-        } catch (err) {
-            console.error('Mapbox Search Box Suggest API Error:', err);
         }
+
+        sugList.innerHTML = html;
+
+        const gpsCard = document.getElementById('pickup-use-current-location');
+        if (gpsCard) gpsCard.addEventListener('click', handleUseCurrentLocationPickup);
+
+        document.querySelectorAll('.mapbox-pickup-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const mapboxId = card.getAttribute('data-mapbox-id');
+                const fallbackName = card.getAttribute('data-name');
+                const fallbackAddress = card.getAttribute('data-address');
+                const lat = card.getAttribute('data-lat');
+                const lng = card.getAttribute('data-lng');
+                selectPickupSuggestion(mapboxId, fallbackName, fallbackAddress, lat, lng);
+            });
+        });
     }
 
-    async function selectPickupSuggestion(mapboxId, fallbackName, fallbackAddress) {
+    async function selectPickupSuggestion(mapboxId, fallbackName, fallbackAddress, directLat, directLng) {
         const pickupInput = document.getElementById('pickup_search_input');
         const errorMsg = document.getElementById('pickup-error-msg');
         const clearBtn = document.getElementById('clear-pickup-icon');
+
+        if (directLat && directLng && directLat !== 'null' && directLng !== 'null') {
+            const lat = parseFloat(directLat);
+            const lng = parseFloat(directLng);
+            savePickupLocation(mapboxId, fallbackName, fallbackAddress || fallbackName, lat, lng);
+
+            const displayVal = fallbackName + (fallbackAddress && fallbackAddress !== fallbackName ? `, ${fallbackAddress}` : '');
+            pickupInput.value = displayVal;
+
+            if (clearBtn) clearBtn.style.display = 'block';
+            if (errorMsg) errorMsg.style.display = 'none';
+            return;
+        }
 
         try {
             const url = `https://api.mapbox.com/search/searchbox/v1/retrieve/${mapboxId}?access_token=${MAPBOX_ACCESS_TOKEN}&session_token=${mapboxPickupSessionToken}`;
@@ -1471,6 +1538,16 @@
                 dropInput.focus();
             });
         }
+
+        dropInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const firstCard = sugList.querySelector('.mapbox-drop-card');
+                if (firstCard) {
+                    firstCard.click();
+                }
+            }
+        });
 
         renderDefaultDropSuggestions();
     }
@@ -1597,38 +1674,83 @@
         const sugList = document.getElementById('drop-sug-list');
         if (!sugList) return;
 
-        try {
-            const url = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${encodeURIComponent(query)}&access_token=${MAPBOX_ACCESS_TOKEN}&session_token=${mapboxDropSessionToken}&language=en`;
-            const res = await fetch(url);
-            const data = await res.json();
+        let suggestions = [];
 
-            const suggestions = data.suggestions || [];
-            
-            let html = `
-                <div class="blabla-suggestion-card" id="drop-use-current-location">
+        // 1. Try Mapbox Search Box Suggest API if token is present
+        if (MAPBOX_ACCESS_TOKEN) {
+            try {
+                const url = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${encodeURIComponent(query)}&access_token=${MAPBOX_ACCESS_TOKEN}&session_token=${mapboxDropSessionToken}&language=en`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    suggestions = data.suggestions || [];
+                }
+            } catch (err) {
+                console.warn('Mapbox Drop Search Box Suggest API Error:', err);
+            }
+        }
+
+        // 2. Fallback to internal geocoding API if Mapbox returned no results or no token
+        if (suggestions.length === 0) {
+            try {
+                const fallbackRes = await fetch(`/rides/api/geocode/?q=${encodeURIComponent(query)}`);
+                if (fallbackRes.ok) {
+                    const fallbackData = await fallbackRes.json();
+                    suggestions = (fallbackData || []).map((item, idx) => ({
+                        mapbox_id: `fallback_drop_${idx}_${Date.now()}`,
+                        name: item.name || (item.display_name ? item.display_name.split(',')[0] : query),
+                        full_address: item.display_name || item.name || query,
+                        lat: item.lat,
+                        lng: item.lng,
+                        is_fallback: true
+                    }));
+                }
+            } catch (fallbackErr) {
+                console.warn('Fallback drop geocode failed:', fallbackErr);
+            }
+        }
+
+        let html = `
+            <div class="blabla-suggestion-card" id="drop-use-current-location">
+                <div class="blabla-sug-left">
+                    <div class="blabla-sug-icon" style="background: #ecfdf5; color: #059669;">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                    </div>
+                    <div>
+                        <div class="blabla-sug-title">Use my current location</div>
+                        <div class="blabla-sug-address">Enable GPS to select exact location</div>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right blabla-sug-chevron"></i>
+            </div>
+        `;
+
+        if (suggestions.length === 0) {
+            html += `
+                <div class="blabla-suggestion-card" style="cursor: default; opacity: 0.75;">
                     <div class="blabla-sug-left">
-                        <div class="blabla-sug-icon" style="background: #ecfdf5; color: #059669;">
-                            <i class="fa-solid fa-location-crosshairs"></i>
-                        </div>
+                        <div class="blabla-sug-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
                         <div>
-                            <div class="blabla-sug-title">Use my current location</div>
-                            <div class="blabla-sug-address">Enable GPS to select exact location</div>
+                            <div class="blabla-sug-title">No locations found for "${escapeHtml(query)}"</div>
+                            <div class="blabla-sug-address">Try checking spelling or typing a city name</div>
                         </div>
                     </div>
-                    <i class="fa-solid fa-chevron-right blabla-sug-chevron"></i>
                 </div>
             `;
-
+        } else {
             suggestions.forEach(item => {
                 const mapboxId = item.mapbox_id;
                 const name = item.name || '';
                 const address = item.full_address || item.place_formatted || item.address || '';
+                const latAttr = (item.lat !== undefined && item.lat !== null) ? `data-lat="${item.lat}"` : '';
+                const lngAttr = (item.lng !== undefined && item.lng !== null) ? `data-lng="${item.lng}"` : '';
                 
                 html += `
                     <div class="blabla-suggestion-card mapbox-drop-card" 
                          data-mapbox-id="${escapeHtml(mapboxId)}" 
                          data-name="${escapeHtml(name)}" 
-                         data-address="${escapeHtml(address)}">
+                         data-address="${escapeHtml(address)}"
+                         ${latAttr} ${lngAttr}>
                         <div class="blabla-sug-left">
                             <div class="blabla-sug-icon">
                                 <i class="fa-solid fa-location-dot"></i>
@@ -1642,31 +1764,47 @@
                     </div>
                 `;
             });
-
-            sugList.innerHTML = html;
-
-            const gpsCard = document.getElementById('drop-use-current-location');
-            if (gpsCard) gpsCard.addEventListener('click', handleUseCurrentLocationDrop);
-
-            document.querySelectorAll('.mapbox-drop-card').forEach(card => {
-                card.addEventListener('click', function() {
-                    // Requirement 3: Clear error as soon as user selects a different place
-                    hideDropError();
-                    const mapboxId = card.getAttribute('data-mapbox-id');
-                    const fallbackName = card.getAttribute('data-name');
-                    const fallbackAddress = card.getAttribute('data-address');
-                    selectDropSuggestion(mapboxId, fallbackName, fallbackAddress);
-                });
-            });
-
-        } catch (err) {
-            console.error('Mapbox Search Box Suggest API Error for Drop:', err);
         }
+
+        sugList.innerHTML = html;
+
+        const gpsCard = document.getElementById('drop-use-current-location');
+        if (gpsCard) gpsCard.addEventListener('click', handleUseCurrentLocationDrop);
+
+        document.querySelectorAll('.mapbox-drop-card').forEach(card => {
+            card.addEventListener('click', function() {
+                hideDropError();
+                const mapboxId = card.getAttribute('data-mapbox-id');
+                const fallbackName = card.getAttribute('data-name');
+                const fallbackAddress = card.getAttribute('data-address');
+                const lat = card.getAttribute('data-lat');
+                const lng = card.getAttribute('data-lng');
+                selectDropSuggestion(mapboxId, fallbackName, fallbackAddress, lat, lng);
+            });
+        });
     }
 
-    async function selectDropSuggestion(mapboxId, fallbackName, fallbackAddress) {
+    async function selectDropSuggestion(mapboxId, fallbackName, fallbackAddress, directLat, directLng) {
         const dropInput = document.getElementById('drop_search_input');
         const clearBtn = document.getElementById('clear-drop-icon');
+
+        if (directLat && directLng && directLat !== 'null' && directLng !== 'null') {
+            const lat = parseFloat(directLat);
+            const lng = parseFloat(directLng);
+            const candidate = { id: mapboxId, name: fallbackName, address: fallbackAddress || fallbackName, lat: lat, lng: lng };
+            if (isSamePlace(rideDraft.origin, candidate)) {
+                showDropError("Drop-off can't be the same as pick-up");
+                isDropConfirmed = false;
+                clearDropHiddenFields();
+                return;
+            }
+            saveDropLocation(mapboxId, fallbackName, fallbackAddress || fallbackName, lat, lng);
+            const displayVal = fallbackName + (fallbackAddress && fallbackAddress !== fallbackName ? `, ${fallbackAddress}` : '');
+            dropInput.value = displayVal;
+            if (clearBtn) clearBtn.style.display = 'block';
+            hideDropError();
+            return;
+        }
 
         try {
             const url = `https://api.mapbox.com/search/searchbox/v1/retrieve/${mapboxId}?access_token=${MAPBOX_ACCESS_TOKEN}&session_token=${mapboxDropSessionToken}`;
@@ -1834,17 +1972,25 @@
         if (!mapContainer) return;
 
         if (!mapboxGlMap) {
-            mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
-            mapboxGlMap = new mapboxgl.Map({
-                container: 'route-map-container',
-                style: 'mapbox://styles/mapbox/streets-v12',
-                center: [rideDraft.origin.lng, rideDraft.origin.lat],
-                zoom: 9
-            });
+            if (!MAPBOX_ACCESS_TOKEN) {
+                console.warn('Mapbox access token is not configured on this environment.');
+                return;
+            }
+            try {
+                mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
+                mapboxGlMap = new mapboxgl.Map({
+                    container: 'route-map-container',
+                    style: 'mapbox://styles/mapbox/streets-v12',
+                    center: [rideDraft.origin.lng, rideDraft.origin.lat],
+                    zoom: 9
+                });
 
-            mapboxGlMap.on('load', function() {
-                renderRoutesAndMarkersOnMap();
-            });
+                mapboxGlMap.on('load', function() {
+                    renderRoutesAndMarkersOnMap();
+                });
+            } catch (mapErr) {
+                console.warn('Mapbox GL Map Init Error:', mapErr);
+            }
         } else {
             mapboxGlMap.resize();
             renderRoutesAndMarkersOnMap();
