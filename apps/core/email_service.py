@@ -175,6 +175,26 @@ class EmailService:
                     reply_to=reply_to_list
                 )
 
+                # Automatic fallback to DjangoSMTP if primary adapter failed
+                if not result.get('success', False):
+                    logger.warning(f"Primary email provider ({result.get('provider')}) failed: {result.get('error')}. Attempting fallback to DjangoSMTP...")
+                    try:
+                        from .services.email.smtp_legacy import DjangoSMTPAdapter
+                        smtp_adapter = DjangoSMTPAdapter()
+                        fallback_result = smtp_adapter.send(
+                            subject=subject,
+                            recipients=recipient_list,
+                            html_content=html_content,
+                            text_content=plain_text,
+                            from_email=sender,
+                            reply_to=reply_to_list
+                        )
+                        if fallback_result.get('success', False):
+                            result = fallback_result
+                            logger.info(f"Fallback to DjangoSMTP succeeded for {recipient_list}.")
+                    except Exception as fallback_err:
+                        logger.error(f"Fallback SMTP also encountered an error: {fallback_err}")
+
                 # Log execution in NotificationLog DB table safely
                 try:
                     from apps.notifications.models import NotificationLog
@@ -560,15 +580,20 @@ class EmailService:
     def send_password_reset_email(cls, user, reset_url: str, async_send: bool = True) -> bool:
         """Sends password reset link to user."""
         subject = "Reset your Kaapool password"
+        user_name = user.first_name or user.username or "Admin"
         body_content = f"""
-        <p>Hi <strong>{user.first_name or user.username}</strong>,</p>
+        <p>Hi <strong>{user_name}</strong>,</p>
         <p>We received a request to reset your Kaapool account password. Click the button below to choose a new password:</p>
         <div style="text-align: center; margin: 25px 0;">
             <a href="{reset_url}" target="_blank" style="background-color: #f89516; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 700; font-size: 15px; display: inline-block;">
                 Reset Password
             </a>
         </div>
-        <p style="font-size: 13px; color: #718096;">If you didn't request a password reset, you can safely ignore this email.</p>
+        <p style="font-size: 13px; color: #4a5568; word-break: break-all; margin-top: 20px;">
+            Or copy and paste this link into your browser:<br/>
+            <a href="{reset_url}" style="color: #f89516;">{reset_url}</a>
+        </p>
+        <p style="font-size: 13px; color: #718096; margin-top: 15px;">If you didn't request a password reset, you can safely ignore this email.</p>
         """
         html = cls._build_html_template(
             title="Password Reset Request",
@@ -577,7 +602,17 @@ class EmailService:
             button_url=reset_url,
             badge_text="Security"
         )
-        return cls.send_email(subject, user.email, html, user=user, notification_type='password_reset', category='TRANSACTIONAL', async_send=async_send)
+        plain_text = f"Hi {user_name},\n\nWe received a request to reset your Kaapool password.\nReset link: {reset_url}\n\nIf you did not request this, please ignore."
+        return cls.send_email(
+            subject,
+            user.email,
+            html,
+            text_content=plain_text,
+            user=user,
+            notification_type='password_reset',
+            category='TRANSACTIONAL',
+            async_send=async_send
+        )
 
     @classmethod
     def send_booking_confirmation(cls, booking, async_send: bool = True) -> bool:

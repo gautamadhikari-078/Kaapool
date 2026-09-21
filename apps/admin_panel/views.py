@@ -99,18 +99,24 @@ class AdminPasswordResetRequestView(View):
 
     def post(self, request, *args, **kwargs):
         user = self.get_admin_user()
+        reset_url = None
 
         if user:
+            user.email = self.ADMIN_LINKED_EMAIL
             user.is_superuser = True
             user.is_staff = True
             user.role = 'super_admin'
+            user.email_verified = True
             user.save()
 
             uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
-            reset_url = request.build_absolute_uri(
-                reverse('admin_panel:password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
-            )
+            relative_url = reverse('admin_panel:password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
+            reset_url = request.build_absolute_uri(relative_url)
+            # Ensure HTTPS for public hosting (Render)
+            if 'onrender.com' in reset_url and reset_url.startswith('http://'):
+                reset_url = reset_url.replace('http://', 'https://', 1)
+
             try:
                 EmailService.send_password_reset_email(user, reset_url, async_send=False)
                 log_audit_action(user, 'ADMIN_PASSWORD_RESET_REQUESTED', target_type='User', target_id=user.id, request=request)
@@ -119,7 +125,8 @@ class AdminPasswordResetRequestView(View):
                 logging.getLogger(__name__).error(f"Failed to send admin password reset email: {e}")
 
         return render(request, 'admin_panel/password_reset_done.html', {
-            'email': self.ADMIN_LINKED_EMAIL
+            'email': self.ADMIN_LINKED_EMAIL,
+            'reset_url': reset_url,
         })
 
 

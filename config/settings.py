@@ -230,6 +230,9 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'gautamadhikari071@gmail.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'xcrmswfdxquftzmv')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Kaapool <gautamadhikari071@gmail.com>')
 
+# Reverse proxy SSL detection (Render / Heroku / Nginx)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # CSRF Security & Trusted Origins
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
