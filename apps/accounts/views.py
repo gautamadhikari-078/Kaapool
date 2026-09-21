@@ -453,7 +453,7 @@ class RatingsView(LoginRequiredMixin, View):
             ],
             'reviews': [
                 {
-                    'reviewer_name': 'BlaBlaCar',
+                    'reviewer_name': 'Kaapool',
                     'rating_label': 'Very disappointing',
                     'comment': 'Automatic rating: passenger cancelled late',
                     'date': 'Sept 2026',

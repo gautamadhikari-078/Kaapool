@@ -206,14 +206,22 @@
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: linear-gradient(135deg, #f89516 0%, #e07d08 100%);
-    color: #ffffff;
+    background: #ffffff;
+    border: 1.5px solid #fed7aa;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
     flex-shrink: 0;
-    box-shadow: 0 4px 10px rgba(248, 149, 22, 0.25);
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(248, 149, 22, 0.12);
+    overflow: hidden;
+}
+
+.reviewer-kaapool-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
 }
 
 .reviewer-meta-wrap {
@@ -392,14 +400,14 @@
                 <div class="reviewer-user-header">
                     <div class="reviewer-badge-avatar">
                         {% if review.is_system %}
-                        <i class="fa-solid fa-shield-halved"></i>
+                        <img src="{% static 'images/kaapool_logo.png' %}" alt="Kaapool Logo" class="reviewer-kaapool-logo">
                         {% else %}
-                        <i class="fa-solid fa-user"></i>
+                        <i class="fa-solid fa-user" style="color: #64748b;"></i>
                         {% endif %}
                     </div>
                     <div class="reviewer-meta-wrap">
                         <div class="reviewer-title-row">
-                            <span class="reviewer-name">{{ review.reviewer_name }}</span>
+                            <span class="reviewer-name">Kaapool</span>
                             {% if review.is_system %}
                             <span class="kaapool-verified-badge">
                                 <i class="fa-solid fa-circle-check"></i> Official
