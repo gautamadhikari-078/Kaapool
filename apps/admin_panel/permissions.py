@@ -1,7 +1,7 @@
 from django.contrib.auth.mixins import AccessMixin
-from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
 from django.contrib import messages
+from django.http import HttpResponseRedirect
 from apps.admin_panel.models import AuditLog
 
 
@@ -9,7 +9,7 @@ class AdminRequiredMixin(AccessMixin):
     """
     Mixin that verifies current user is logged in AND has an admin role or staff status.
     Redirects unauthenticated users to /admin/login/.
-    Returns 403 Forbidden for authenticated non-admin users.
+    Redirects authenticated non-admin users to /admin/login/ with an informative message.
     """
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -21,8 +21,8 @@ class AdminRequiredMixin(AccessMixin):
             return redirect('accounts:login')
 
         if not getattr(request.user, 'is_admin', False):
-            messages.error(request, "Access denied. You do not have administrator permissions.")
-            raise PermissionDenied("You do not have administrative privileges.")
+            messages.error(request, f"Access denied. Account '{request.user.email or request.user.username}' does not have administrator privileges. Please log in with an Admin account.")
+            return redirect('admin_panel:login')
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -35,10 +35,12 @@ class PermissionRequiredMixin(AdminRequiredMixin):
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
+        if isinstance(response, HttpResponseRedirect) or getattr(response, 'status_code', 200) in [301, 302]:
+            return response
         if self.required_permission and hasattr(request.user, 'has_admin_permission'):
             if not request.user.has_admin_permission(self.required_permission):
                 messages.error(request, f"Permission denied for '{self.required_permission}'.")
-                raise PermissionDenied(f"Permission '{self.required_permission}' is required.")
+                return redirect('admin_panel:dashboard')
         return response
 
 

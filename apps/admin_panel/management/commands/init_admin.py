@@ -10,13 +10,51 @@ class Command(BaseCommand):
     help = "Initializes default Super Admin role and populates initial dynamic CMS data."
 
     def handle(self, *args, **options):
-        # 1. Promote existing superusers to super_admin role
-        superusers = User.objects.filter(is_superuser=True)
-        for su in superusers:
+        import os
+
+        admin_username = os.getenv('DJANGO_SUPERUSER_USERNAME') or os.getenv('ADMIN_USERNAME') or 'admin'
+        admin_email = os.getenv('DJANGO_SUPERUSER_EMAIL') or os.getenv('ADMIN_EMAIL') or 'admin@kaapool.com'
+        admin_password = os.getenv('DJANGO_SUPERUSER_PASSWORD') or os.getenv('ADMIN_PASSWORD') or 'KaapoolAdmin@2026'
+
+        # 1. Create default superuser if none exists
+        admin_user = User.objects.filter(username=admin_username).first() or User.objects.filter(email=admin_email).first()
+        if not admin_user:
+            admin_user = User.objects.create_superuser(
+                username=admin_username,
+                email=admin_email,
+                password=admin_password
+            )
+            admin_user.role = 'super_admin'
+            admin_user.email_verified = True
+            admin_user.save()
+            self.stdout.write(self.style.SUCCESS(f"Created default Super Admin '{admin_username}' ({admin_email})."))
+        else:
+            if not admin_user.is_superuser or not admin_user.is_staff or admin_user.role != 'super_admin':
+                admin_user.is_superuser = True
+                admin_user.is_staff = True
+                admin_user.role = 'super_admin'
+                admin_user.save()
+                self.stdout.write(self.style.SUCCESS(f"Elevated user '{admin_user.username}' to 'super_admin'."))
+
+        # 2. Automatically promote owner emails to super_admin
+        owner_emails = ['gautamadhikari078@gmail.com', 'gautamadhikari071@gmail.com']
+        custom_emails = [e.strip() for e in os.getenv('ADMIN_EMAILS', '').split(',') if e.strip()]
+        all_owner_emails = set(owner_emails + custom_emails)
+
+        for email_addr in all_owner_emails:
+            for u in User.objects.filter(email__iexact=email_addr):
+                if not u.is_superuser or not u.is_staff or u.role != 'super_admin':
+                    u.is_superuser = True
+                    u.is_staff = True
+                    u.role = 'super_admin'
+                    u.save()
+                    self.stdout.write(self.style.SUCCESS(f"Promoted '{u.email}' ({u.username}) to 'super_admin'."))
+
+        # 3. Ensure any other superusers have role='super_admin'
+        for su in User.objects.filter(is_superuser=True):
             if su.role != 'super_admin':
                 su.role = 'super_admin'
                 su.save()
-                self.stdout.write(self.style.SUCCESS(f"Updated superuser '{su.username}' role to 'super_admin'."))
 
         # 2. Populate Website Content defaults if missing
         default_stats = {

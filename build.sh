@@ -6,6 +6,7 @@ set -o errexit
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Run static assets collection and database migrations
+# Run static assets collection, database migrations, and admin initialization
 python manage.py collectstatic --noinput
 python manage.py migrate
+python manage.py init_admin
