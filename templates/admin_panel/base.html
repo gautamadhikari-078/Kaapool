@@ -612,40 +612,10 @@
                 </a>
             </li>
 
-            <li class="menu-category">Website & CMS</li>
-
-            <li class="menu-item {% if active_section == 'content' %}active{% endif %}">
-                <a href="{% url 'admin_panel:content_cms' %}" class="menu-link">
-                    <i class="fa-solid fa-pen-to-square"></i>
-                    <span>Website Content</span>
-                </a>
-            </li>
-
-            <li class="menu-item {% if active_section == 'faq' %}active{% endif %}">
-                <a href="{% url 'admin_panel:faq_list' %}" class="menu-link">
-                    <i class="fa-solid fa-circle-question"></i>
-                    <span>FAQs</span>
-                </a>
-            </li>
-
-            <li class="menu-item {% if active_section == 'blogs' %}active{% endif %}">
-                <a href="{% url 'admin_panel:blog_list' %}" class="menu-link">
-                    <i class="fa-solid fa-newspaper"></i>
-                    <span>Blogs</span>
-                </a>
-            </li>
-
             <li class="menu-item {% if active_section == 'contact_inquiries' %}active{% endif %}">
                 <a href="{% url 'admin_panel:contact_inquiry_list' %}" class="menu-link">
                     <i class="fa-solid fa-envelope-open-text"></i>
                     <span>Contact Inquiries</span>
-                </a>
-            </li>
-
-            <li class="menu-item {% if active_section == 'notifications' %}active{% endif %}">
-                <a href="{% url 'admin_panel:notification_overview' %}" class="menu-link">
-                    <i class="fa-solid fa-bullhorn"></i>
-                    <span>Notifications</span>
                 </a>
             </li>
 

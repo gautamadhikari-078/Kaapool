@@ -10,7 +10,7 @@ from apps.bookings.models import Booking
 from apps.payments.models import Payment
 from apps.notifications.models import Notification
 from apps.admin_panel.models import (
-    VerificationRecord, Complaint, FAQ, Blog, WebsiteContent, AuditLog
+    VerificationRecord, Complaint, AuditLog
 )
 
 User = get_user_model()
@@ -99,46 +99,4 @@ class APIAdminBookingListView(views.APIView):
             'status': b.status,
             'created_at': b.created_at.strftime('%Y-%m-%d %H:%M')
         } for b in bookings]
-        return Response({'results': data})
-
-
-class APIAdminFAQViewSet(views.APIView):
-    permission_classes = [IsAdminUserPermission]
-
-    def get(self, request):
-        faqs = FAQ.objects.all().order_by('display_order', '-created_at')
-        data = [{
-            'id': f.id,
-            'question': f.question,
-            'answer': f.answer,
-            'category': f.category,
-            'is_published': f.is_published,
-            'display_order': f.display_order
-        } for f in faqs]
-        return Response({'results': data})
-
-    def post(self, request):
-        question = request.data.get('question')
-        answer = request.data.get('answer')
-        category = request.data.get('category', 'general')
-        if not question or not answer:
-            return Response({'error': 'Question and answer are required.'}, status=400)
-        faq = FAQ.objects.create(question=question, answer=answer, category=category)
-        return Response({'id': faq.id, 'status': 'created'}, status=201)
-
-
-class APIAdminBlogViewSet(views.APIView):
-    permission_classes = [IsAdminUserPermission]
-
-    def get(self, request):
-        blogs = Blog.objects.all().order_by('-created_at')
-        data = [{
-            'id': b.id,
-            'title': b.title,
-            'slug': b.slug,
-            'category': b.category,
-            'author': b.author_name,
-            'is_published': b.is_published,
-            'published_at': b.published_at.strftime('%Y-%m-%d') if b.published_at else None
-        } for b in blogs]
         return Response({'results': data})

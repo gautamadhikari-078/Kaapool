@@ -10,17 +10,11 @@ from apps.admin_panel.views import (
     AdminPaymentListView, AdminPaymentCreateView, AdminPaymentEditView, AdminPaymentDeleteView,
     AdminComplaintListView, AdminComplaintDetailView, AdminComplaintUpdateView, AdminComplaintCreateView, AdminComplaintDeleteView,
     AdminContactInquiryListView, AdminContactInquiryReplyView, AdminContactInquiryDeleteView,
-    AdminNotificationOverviewView, AdminNotificationComposeView, AdminNotificationTemplatesView,
-    AdminNotificationAutomationsView, AdminNotificationLogsView, AdminNotificationSettingsView,
-    AdminContentCMSView,
-    AdminFAQView, AdminFAQDeleteView,
-    AdminBlogView, AdminBlogCreateView, AdminBlogEditView, AdminBlogDeleteView,
     AdminAdminsView, AdminSettingsView, AdminAuditLogView
 )
 from apps.admin_panel.api_views import (
     APIAdminUserListView, APIAdminVerificationListView,
-    APIAdminRideListView, APIAdminBookingListView,
-    APIAdminFAQViewSet, APIAdminBlogViewSet
+    APIAdminRideListView, APIAdminBookingListView
 )
 
 app_name = 'admin_panel'
@@ -91,24 +85,6 @@ urlpatterns = [
     path('contact-inquiries/<int:pk>/reply/', AdminContactInquiryReplyView.as_view(), name='contact_inquiry_reply'),
     path('contact-inquiries/<int:pk>/delete/', AdminContactInquiryDeleteView.as_view(), name='contact_inquiry_delete'),
 
-    # CMS, FAQs, Blogs, Notifications
-    path('notifications/', AdminNotificationOverviewView.as_view(), name='notifications'),
-    path('notifications/overview/', AdminNotificationOverviewView.as_view(), name='notification_overview'),
-    path('notifications/send/', AdminNotificationComposeView.as_view(), name='notification_send'),
-    path('notifications/templates/', AdminNotificationTemplatesView.as_view(), name='notification_templates'),
-    path('notifications/automations/', AdminNotificationAutomationsView.as_view(), name='notification_automations'),
-    path('notifications/logs/', AdminNotificationLogsView.as_view(), name='notification_logs'),
-    path('notifications/settings/', AdminNotificationSettingsView.as_view(), name='notification_settings'),
-    path('content/', AdminContentCMSView.as_view(), name='content_cms'),
-
-    path('faq/', AdminFAQView.as_view(), name='faq_list'),
-    path('faq/<int:pk>/delete/', AdminFAQDeleteView.as_view(), name='faq_delete'),
-
-    path('blogs/', AdminBlogView.as_view(), name='blog_list'),
-    path('blogs/create/', AdminBlogCreateView.as_view(), name='blog_create'),
-    path('blogs/<int:pk>/edit/', AdminBlogEditView.as_view(), name='blog_edit'),
-    path('blogs/<int:pk>/delete/', AdminBlogDeleteView.as_view(), name='blog_delete'),
-
     # Admin Settings & Audit Logs
     path('admins/', AdminAdminsView.as_view(), name='admins_list'),
     path('settings/', AdminSettingsView.as_view(), name='settings'),
@@ -119,6 +95,4 @@ urlpatterns = [
     path('api/verifications/', APIAdminVerificationListView.as_view(), name='api_verifications'),
     path('api/rides/', APIAdminRideListView.as_view(), name='api_rides'),
     path('api/bookings/', APIAdminBookingListView.as_view(), name='api_bookings'),
-    path('api/faqs/', APIAdminFAQViewSet.as_view(), name='api_faqs'),
-    path('api/blogs/', APIAdminBlogViewSet.as_view(), name='api_blogs'),
 ]
