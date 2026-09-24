@@ -72,13 +72,13 @@ def trigger_return_ride_reminder_if_needed(ride):
 
     # Send In-App Notification
     try:
-        prompt_url = reverse('rides:return_ride_prompt', kwargs={'pk': ride.id})
+        offer_url = reverse('rides:return_ride_offer', kwargs={'pk': ride.id})
         Notification.objects.create(
             user=ride.driver,
             notification_type='return_ride_reminder',
             title='Need a return ride?',
             message=f"Your ride from {ride.origin} to {ride.destination} is completed. Would you like to create a return ride?",
-            link=prompt_url
+            link=offer_url
         )
         logger.info(f"Triggered return ride reminder notification for Ride #{ride.id} to {ride.driver.username}")
         return True

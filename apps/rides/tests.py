@@ -85,15 +85,15 @@ class ReturnRideEndToEndTests(TestCase):
         """
         self.client.login(username='driver_raj', password='Password123!')
 
-        # Access Return Ride Prompt
-        prompt_url = reverse('rides:return_ride_prompt', kwargs={'pk': self.original_ride.pk})
-        response = self.client.get(prompt_url)
+        # Access Return Ride Offer
+        offer_url = reverse('rides:return_ride_offer', kwargs={'pk': self.original_ride.pk})
+        response = self.client.get(offer_url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Delhi')
         self.assertContains(response, 'Jaipur')
 
         # Click Skip
-        skip_resp = self.client.post(prompt_url, {'action': 'skip'})
+        skip_resp = self.client.post(offer_url, {'action': 'skip'})
         self.assertRedirects(skip_resp, reverse('rides:my_rides'))
 
         # Check DB State
@@ -182,8 +182,8 @@ class ReturnRideEndToEndTests(TestCase):
         self.client.login(username='driver_raj', password='Password123!')
 
         # Choose Schedule for Later
-        prompt_url = reverse('rides:return_ride_prompt', kwargs={'pk': self.original_ride.pk})
-        sched_resp = self.client.post(prompt_url, {'action': 'schedule_later'})
+        offer_url = reverse('rides:return_ride_offer', kwargs={'pk': self.original_ride.pk})
+        sched_resp = self.client.post(offer_url, {'action': 'schedule_later'})
         self.assertRedirects(sched_resp, reverse('rides:my_rides'))
 
         self.original_ride.refresh_from_db()

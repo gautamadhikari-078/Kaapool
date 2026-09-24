@@ -3,7 +3,7 @@ from .views import (
     RideSearchView, RideCreateView, RideDetailView, MyRidesView, RidePublicationView,
     RouteCalculateAPIView, GeocodeAPIView, ReverseGeocodeAPIView,
     StartRideView, CompleteRideView, CancelRideView, UpdateLocationAPIView, LiveStatusAPIView,
-    ReturnRidePromptView, ReturnRideCreateView, ScheduleReturnRideLaterView, SkipReturnRideView,
+    ReturnRideOfferView, ReturnRideCreateView, ScheduleReturnRideLaterView, SkipReturnRideView,
     ReturnRideOptionsAPIView, ReturnRideScheduleAPIView, ReturnRideSkipAPIView
 )
 
@@ -16,7 +16,7 @@ urlpatterns = [
     path('my-rides/', MyRidesView.as_view(), name='my_rides'),
 
     # Return Ride Endpoints
-    path('<int:pk>/return-ride-prompt/', ReturnRidePromptView.as_view(), name='return_ride_prompt'),
+    path('<int:pk>/return-ride-offer/', ReturnRideOfferView.as_view(), name='return_ride_offer'),
     path('<int:pk>/return-ride-create/', ReturnRideCreateView.as_view(), name='return_ride_create'),
     path('<int:pk>/return-ride-schedule/', ScheduleReturnRideLaterView.as_view(), name='return_ride_schedule'),
     path('<int:pk>/return-ride-skip/', SkipReturnRideView.as_view(), name='return_ride_skip'),

@@ -198,3 +198,53 @@ def send_brevo_email(
 
 # Alias as requested
 send_transactional_email = send_brevo_email
+
+
+from django.core.mail.backends.base import BaseEmailBackend
+
+
+class BrevoEmailBackend(BaseEmailBackend):
+    """
+    Django Email Backend implementation for Brevo REST API v3 over HTTPS.
+    Allows django.core.mail.send_mail and standard Django email functions to seamlessly
+    use Brevo API without SMTP overhead.
+    """
+    def send_messages(self, email_messages):
+        if not email_messages:
+            return 0
+        num_sent = 0
+        adapter = BrevoEmailAdapter()
+        for message in email_messages:
+            recipients = message.to
+            if not recipients:
+                continue
+            subject = message.subject
+            body = message.body
+            from_email = message.from_email
+            reply_to = message.reply_to if hasattr(message, 'reply_to') else None
+
+            html_content = ""
+            text_content = body or ""
+
+            if hasattr(message, 'alternatives'):
+                for alt_content, alt_mimetype in message.alternatives:
+                    if alt_mimetype == 'text/html':
+                        html_content = alt_content
+                        break
+            if not html_content and getattr(message, 'content_subtype', '') == 'html':
+                html_content = body
+            if not html_content:
+                html_content = f"<div style='font-family: sans-serif; font-size: 14px; color: #333;'>{body.replace(chr(10), '<br>') if body else ''}</div>"
+
+            res = adapter.send(
+                subject=subject,
+                recipients=recipients,
+                html_content=html_content,
+                text_content=text_content,
+                from_email=from_email,
+                reply_to=reply_to
+            )
+            if res.get('success'):
+                num_sent += 1
+        return num_sent
+

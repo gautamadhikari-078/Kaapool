@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Publish your return ride now! - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+.return-offer-page-wrapper {
+    background-color: #ffffff;
+    min-height: 82vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+}
+
+.return-offer-grid {
+    max-width: 920px;
+    width: 100%;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 4.5rem;
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .return-offer-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+}
+
+/* LEFT ILLUSTRATION CARD (KAAPOOL ORANGE THEME) */
+.return-illustration-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.return-illustration-blob {
+    width: 260px;
+    height: 260px;
+    background: #ffedd5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 16px 40px rgba(248, 149, 22, 0.12);
+}
+
+/* RIGHT CONTENT AREA */
+.return-content-box {
+    display: flex;
+    flex-direction: column;
+}
+
+.return-main-title {
+    font-family: var(--font-heading, system-ui, sans-serif);
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #051429;
+    letter-spacing: -0.8px;
+    line-height: 1.2;
+    margin: 0 0 2.5rem 0;
+}
+
+/* LIST OPTIONS */
+.return-options-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.return-option-row {
+    border-top: 1px solid #e2e8f0;
+    background: transparent;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    width: 100%;
+    padding: 1.4rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+}
+
+.return-option-row:last-child {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.return-option-label {
+    font-size: 1.2rem;
+    font-weight: 800;
+    transition: color 0.15s ease;
+}
+
+.label-primary {
+    color: #f89516;
+}
+
+.label-secondary {
+    color: #051429;
+}
+
+.return-option-row:hover .label-primary {
+    color: #ea580c;
+}
+
+.return-option-row:hover .label-secondary {
+    color: #f89516;
+}
+
+.return-option-chevron {
+    font-size: 1.15rem;
+    color: #475569;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.return-option-row:hover .return-option-chevron {
+    transform: translateX(5px);
+    color: #f89516;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="return-offer-page-wrapper">
+    <div class="return-offer-grid">
+        
+        <!-- LEFT SIDE ILLUSTRATION (KAAPOOL ORANGE) -->
+        <div class="return-illustration-container">
+            <div class="return-illustration-blob">
+                <svg width="170" height="170" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Rounded Ribbon Arrow graphic -->
+                    <path d="M50 110C45 65 75 40 115 40C155 40 170 70 155 105C140 140 100 150 70 145" stroke="#f89516" stroke-width="26" stroke-linecap="round"/>
+                    <path d="M120 28L158 44L144 82" stroke="#f89516" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE CONTENT -->
+        <div class="return-content-box">
+            <span style="display: none;">Outbound: {{ original_ride.origin }} &rarr; {{ original_ride.destination }}</span>
+            <h1 class="return-main-title">
+                Coming back as well? Publish your return ride now!
+            </h1>
+
+            <div class="return-options-list">
+                <!-- OPTION 1: YES SURE -->
+                <form method="post" action="{% url 'rides:return_ride_offer' pk=original_ride.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="make_now">
+                    <button type="submit" class="return-option-row" id="btn-make-return-ride">
+                        <span class="return-option-label label-primary">Yes, sure!</span>
+                        <i class="fa-solid fa-chevron-right return-option-chevron"></i>
+                    </button>
+                </form>
+
+                <!-- OPTION 2: LATER -->
+                <form method="post" action="{% url 'rides:return_ride_offer' pk=original_ride.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="schedule_later">
+                    <button type="submit" class="return-option-row" id="btn-schedule-later">
+                        <span class="return-option-label label-secondary">I'll publish my return ride later</span>
+                        <i class="fa-solid fa-chevron-right return-option-chevron"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock content %}

@@ -463,25 +463,30 @@
 .info-sub-banner {
     background: #fff7ed;
     border: 1px solid #fed7aa;
-    color: #9a3412;
-    padding: 0.85rem 1.25rem;
-    border-radius: 14px;
-    font-size: 0.9rem;
+    color: #c2410c;
+    padding: 1rem 1.35rem;
+    border-radius: 16px;
+    font-size: 0.95rem;
     font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 2rem;
-    max-width: 600px;
+    gap: 0.85rem;
+    margin-bottom: 2.25rem;
+    max-width: 650px;
+    width: 100%;
+}
+
+.calendar-step-box {
+    max-width: 880px !important;
     width: 100%;
 }
 
 .dual-calendar-wrapper {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
+    border: none;
     border-radius: 20px;
-    padding: 1.5rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+    padding: 0;
+    box-shadow: none;
     margin-bottom: 2rem;
     width: 100%;
 }
@@ -489,21 +494,23 @@
 .calendar-grid-months {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2rem;
+    gap: 3rem;
+    width: 100%;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
     .calendar-grid-months {
         grid-template-columns: 1fr;
+        gap: 2rem;
     }
 }
 
 .calendar-month-title {
     font-family: var(--font-heading);
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     font-weight: 800;
-    color: #0f172a;
-    margin-bottom: 1rem;
+    color: #051429;
+    margin-bottom: 1.25rem;
     text-align: center;
 }
 
@@ -511,42 +518,50 @@
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     text-align: center;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 700;
     color: #64748b;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .calendar-days-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
+    gap: 8px;
 }
 
 .cal-day-cell {
-    aspect-ratio: 1;
+    height: 48px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #0f172a;
-    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #051429;
+    background: #ffffff;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.15s ease-in-out;
 }
 
 .cal-day-cell:hover:not(.disabled) {
-    background: #f1f5f9;
+    border-color: #f89516;
+    color: #f89516;
+    background: #fff7ed;
 }
 
 .cal-day-cell.selected {
-    background: #f89516;
-    color: #ffffff;
+    border: 2.5px solid #f89516;
+    background: #ffffff;
+    color: #f89516;
     font-weight: 800;
+    box-shadow: 0 4px 14px rgba(248, 149, 22, 0.2);
 }
 
 .cal-day-cell.disabled {
+    border: none;
+    background: transparent;
     color: #cbd5e1;
     cursor: not-allowed;
 }
@@ -831,11 +846,15 @@
                  SCREEN 3: WHAT IS YOUR ROUTE? (MAP + ORS ROUTING)
                  ========================================== -->
             <div class="wizard-step-pane" id="step-pane-3">
+                {% if not is_return_ride_mode and not original_ride %}
                 <button type="button" class="back-btn-link" onclick="goToStep(2)">
                     <i class="fa-solid fa-arrow-left"></i> Change locations
                 </button>
+                {% endif %}
 
-                <h2 class="step-title" style="text-align: left; margin-bottom: 1.5rem;">What is your route?</h2>
+                <h2 class="step-title" style="text-align: left; margin-bottom: 1.5rem;">
+                    {% if is_return_ride_mode or original_ride %}What is your return route?{% else %}What is your route?{% endif %}
+                </h2>
                 
                 <div class="step3-grid">
                     <div class="route-options-card">
@@ -899,7 +918,7 @@
                  SCREEN 5: WHEN ARE YOU GOING? (DATE CALENDAR)
                  ========================================== -->
             <div class="wizard-step-pane" id="step-pane-5">
-                <div class="step-center-box">
+                <div class="step-center-box calendar-step-box">
                     <button type="button" class="back-btn-link" onclick="goToStep(4)">
                         <i class="fa-solid fa-arrow-left"></i> Change stopovers
                     </button>
@@ -907,21 +926,21 @@
                     <h2 class="step-title">When are you going?</h2>
 
                     <div class="info-sub-banner">
-                        <i class="fa-solid fa-calendar-check" style="font-size: 1.2rem;"></i>
-                        <span>Doing this ride often? You can now select departure date!</span>
+                        <i class="fa-solid fa-calendar-plus" style="font-size: 1.25rem; color: #f89516;"></i>
+                        <span>Doing this ride often? You can now select up to 20 dates in one go!</span>
                     </div>
 
                     <div class="dual-calendar-wrapper">
                         <div class="calendar-grid-months">
                             <div>
-                                <div class="calendar-month-title" id="cal-month-title-1">September 2026</div>
+                                <div class="calendar-month-title" id="cal-month-title-1">September</div>
                                 <div class="calendar-days-header">
                                     <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
                                 </div>
                                 <div class="calendar-days-grid" id="cal-days-grid-1"></div>
                             </div>
                             <div>
-                                <div class="calendar-month-title" id="cal-month-title-2">October 2026</div>
+                                <div class="calendar-month-title" id="cal-month-title-2">October</div>
                                 <div class="calendar-days-header">
                                     <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
                                 </div>
@@ -932,9 +951,11 @@
 
                     <input type="hidden" name="selected_date" id="selected_date_val">
 
-                    <div class="wizard-actions-bar">
+                    <div class="wizard-actions-bar" style="margin-top: 2.5rem;">
                         <button type="button" class="btn-wizard-prev" onclick="goToStep(4)">Back</button>
-                        <button type="button" class="btn-wizard-next" onclick="goToStep(6)">Continue <i class="fa-solid fa-arrow-right"></i></button>
+                        <button type="button" class="btn-wizard-next" style="background: #f89516; border-radius: 9999px; padding: 0.85rem 2.25rem; box-shadow: 0 8px 24px rgba(248, 149, 22, 0.3);" onclick="goToStep(6)">
+                            Select up to 20 dates <i class="fa-solid fa-arrow-right"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1056,7 +1077,7 @@
                     <div class="wizard-actions-bar">
                         <button type="button" class="btn-wizard-prev" onclick="goToStep(7)">Back</button>
                         <button type="submit" class="btn-wizard-next" style="background: #f89516; box-shadow: 0 8px 24px rgba(248, 149, 22, 0.3);">
-                            Confirm & Publish Ride <i class="fa-solid fa-check"></i>
+                            {% if is_return_ride_mode or original_ride %}Confirm & Publish Return Ride{% else %}Confirm & Publish Ride{% endif %} <i class="fa-solid fa-check"></i>
                         </button>
                     </div>
                 </div>
@@ -1154,12 +1175,126 @@
             .replace(/'/g, '&#039;');
     }
 
+    let initialReturnData = null;
+    {% if initial_return_data_json %}
+    try {
+        initialReturnData = JSON.parse('{{ initial_return_data_json|escapejs }}');
+    } catch(e) {
+        console.error('Error parsing initial return ride data:', e);
+    }
+    {% endif %}
+
+    function applyInitialReturnRideData() {
+        if (!initialReturnData) return;
+
+        // 1. Origin (Reversed from original destination)
+        if (initialReturnData.origin && initialReturnData.origin.name) {
+            rideDraft.origin = {
+                id: initialReturnData.origin.place_id || initialReturnData.origin.name,
+                name: initialReturnData.origin.name,
+                address: initialReturnData.origin.address || initialReturnData.origin.name,
+                lat: parseFloat(initialReturnData.origin.lat),
+                lng: parseFloat(initialReturnData.origin.lng),
+                place_id: initialReturnData.origin.place_id || ''
+            };
+
+            const pickupInput = document.getElementById('pickup_search_input');
+            if (pickupInput) {
+                pickupInput.value = initialReturnData.origin.address || initialReturnData.origin.name;
+                const clearBtn = document.getElementById('clear-pickup-icon');
+                if (clearBtn) clearBtn.style.display = 'block';
+            }
+
+            document.getElementById('id_origin').value = initialReturnData.origin.name;
+            document.getElementById('id_pickup_address').value = initialReturnData.origin.address || initialReturnData.origin.name;
+            if (initialReturnData.origin.lat) document.getElementById('id_pickup_latitude').value = initialReturnData.origin.lat;
+            if (initialReturnData.origin.lng) document.getElementById('id_pickup_longitude').value = initialReturnData.origin.lng;
+            if (initialReturnData.origin.place_id) document.getElementById('id_pickup_place_id').value = initialReturnData.origin.place_id;
+
+            isPickupConfirmed = true;
+        }
+
+        // 2. Destination (Reversed from original origin)
+        if (initialReturnData.destination && initialReturnData.destination.name) {
+            rideDraft.destination = {
+                id: initialReturnData.destination.place_id || initialReturnData.destination.name,
+                name: initialReturnData.destination.name,
+                address: initialReturnData.destination.address || initialReturnData.destination.name,
+                lat: parseFloat(initialReturnData.destination.lat),
+                lng: parseFloat(initialReturnData.destination.lng),
+                place_id: initialReturnData.destination.place_id || ''
+            };
+
+            const dropInput = document.getElementById('drop_search_input');
+            if (dropInput) {
+                dropInput.value = initialReturnData.destination.address || initialReturnData.destination.name;
+                const clearBtn = document.getElementById('clear-drop-icon');
+                if (clearBtn) clearBtn.style.display = 'block';
+            }
+
+            document.getElementById('id_destination').value = initialReturnData.destination.name;
+            document.getElementById('id_drop_address').value = initialReturnData.destination.address || initialReturnData.destination.name;
+            if (initialReturnData.destination.lat) document.getElementById('id_drop_latitude').value = initialReturnData.destination.lat;
+            if (initialReturnData.destination.lng) document.getElementById('id_drop_longitude').value = initialReturnData.destination.lng;
+            if (initialReturnData.destination.place_id) document.getElementById('id_drop_place_id').value = initialReturnData.destination.place_id;
+
+            isDropConfirmed = true;
+        }
+
+        // 3. Date & Time
+        if (initialReturnData.suggested_date) {
+            const dateParts = initialReturnData.suggested_date.split('-');
+            if (dateParts.length === 3) {
+                selectedDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+            }
+        }
+        if (initialReturnData.suggested_time) {
+            setTime(initialReturnData.suggested_time);
+        }
+
+        // 4. Seats
+        if (initialReturnData.seats) {
+            const seatInput = document.getElementById('id_available_seats');
+            if (seatInput) seatInput.value = initialReturnData.seats;
+            const seatDisp = document.getElementById('seats-display-count');
+            if (seatDisp) seatDisp.innerText = initialReturnData.seats;
+        }
+
+        // 5. Vehicle
+        if (initialReturnData.vehicle) {
+            const vehInput = document.getElementById('id_vehicle_info');
+            if (vehInput) vehInput.value = initialReturnData.vehicle;
+        }
+
+        // 6. Price
+        if (initialReturnData.price != null && !isNaN(initialReturnData.price)) {
+            const val = Math.round(initialReturnData.price);
+            const priceInput = document.getElementById('id_price_per_seat');
+            if (priceInput) priceInput.value = val;
+            const priceDisp = document.getElementById('price-display-val');
+            if (priceDisp) priceDisp.innerText = '₹' + val;
+        }
+
+        // 7. Notes
+        if (initialReturnData.notes) {
+            const notesInput = document.getElementById('id_notes');
+            if (notesInput) notesInput.value = initialReturnData.notes;
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         initMap();
-        renderDualCalendar();
         initPickupMapboxSearch();
         initDropoffMapboxSearch();
-        goToStep(1);
+        if (typeof applyInitialReturnRideData === 'function') {
+            applyInitialReturnRideData();
+        }
+        renderDualCalendar();
+        if (typeof initialReturnData !== 'undefined' && initialReturnData) {
+            goToStep(3);
+        } else {
+            goToStep(1);
+        }
     });
 
     // ==========================================
@@ -2197,7 +2332,19 @@
         const m = monthDate.getMonth();
         const firstDay = new Date(y, m, 1).getDay();
         const daysInMonth = new Date(y, m + 1, 0).getDate();
-        const today = new Date(); today.setHours(0,0,0,0);
+        
+        let minAllowedDate = new Date();
+        minAllowedDate.setHours(0,0,0,0);
+        if (typeof initialReturnData !== 'undefined' && initialReturnData && initialReturnData.min_date) {
+            const minParts = initialReturnData.min_date.split('-');
+            if (minParts.length === 3) {
+                const parsedMin = new Date(parseInt(minParts[0]), parseInt(minParts[1]) - 1, parseInt(minParts[2]));
+                parsedMin.setHours(0,0,0,0);
+                if (parsedMin > minAllowedDate) {
+                    minAllowedDate = parsedMin;
+                }
+            }
+        }
 
         for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
 
@@ -2207,7 +2354,7 @@
             cell.innerText = d;
             const thisDate = new Date(y, m, d);
 
-            if (thisDate < today) {
+            if (thisDate < minAllowedDate) {
                 cell.classList.add('disabled');
             } else {
                 if (thisDate.toDateString() === selectedDate.toDateString()) cell.classList.add('selected');

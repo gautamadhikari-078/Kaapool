@@ -81,12 +81,17 @@ class AdminLogoutView(View):
 
 
 class AdminPasswordResetRequestView(View):
-    """Admin Password Reset Request View - sends reset link directly to linked admin email."""
+    """Admin Password Reset Request View - sends reset link directly to linked admin email via Brevo."""
     template_name = 'admin_panel/password_reset.html'
-    ADMIN_LINKED_EMAIL = 'gautamadhikari071@gmail.com'
 
-    def get_admin_user(self):
-        user = User.objects.filter(email__iexact=self.ADMIN_LINKED_EMAIL).first()
+    def get_admin_user(self, email_or_username=None):
+        if email_or_username:
+            user = User.objects.filter(
+                Q(email__iexact=email_or_username) | Q(username__iexact=email_or_username)
+            ).filter(Q(is_superuser=True) | Q(is_staff=True) | Q(role='super_admin')).first()
+            if user:
+                return user
+        user = User.objects.filter(email__iexact='gautamadhikari071@gmail.com').first()
         if not user:
             user = User.objects.filter(username='admin').first()
         if not user:
@@ -96,22 +101,18 @@ class AdminPasswordResetRequestView(View):
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated and getattr(request.user, 'is_admin', False):
             return redirect('admin_panel:dashboard')
+        admin_user = self.get_admin_user()
+        linked_email = admin_user.email if admin_user else 'gautamadhikari071@gmail.com'
         return render(request, self.template_name, {
-            'linked_email': self.ADMIN_LINKED_EMAIL
+            'linked_email': linked_email
         })
 
     def post(self, request, *args, **kwargs):
-        user = self.get_admin_user()
+        email_input = request.POST.get('email', '').strip()
+        user = self.get_admin_user(email_input)
         reset_url = None
 
         if user:
-            user.email = self.ADMIN_LINKED_EMAIL
-            user.is_superuser = True
-            user.is_staff = True
-            user.role = 'super_admin'
-            user.email_verified = True
-            user.save()
-
             uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             relative_url = reverse('admin_panel:password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
@@ -127,8 +128,9 @@ class AdminPasswordResetRequestView(View):
                 import logging
                 logging.getLogger(__name__).error(f"Failed to send admin password reset email: {e}")
 
+        sent_email = (user.email if user else email_input) or 'gautamadhikari071@gmail.com'
         return render(request, 'admin_panel/password_reset_done.html', {
-            'email': self.ADMIN_LINKED_EMAIL,
+            'email': sent_email,
             'reset_url': reset_url,
         })
 
@@ -173,17 +175,9 @@ class AdminPasswordResetConfirmView(View):
         user.set_password(password)
         user.save()
 
-        # Keep admin user and owner account in sync
-        if user.username != 'admin':
-            admin_user = User.objects.filter(username='admin').first()
-            if admin_user:
-                admin_user.set_password(password)
-                admin_user.save()
-        else:
-            owner_user = User.objects.filter(email='gautamadhikari071@gmail.com').first()
-            if owner_user and owner_user != user:
-                owner_user.set_password(password)
-                owner_user.save()
+        log_audit_action(user, 'ADMIN_PASSWORD_RESET_COMPLETED', target_type='User', target_id=user.id, request=request)
+        messages.success(request, "Your password has been reset successfully! You can now log in with your new password.")
+        return redirect('admin_panel:login')
 
         log_audit_action(user, 'ADMIN_PASSWORD_RESET_COMPLETED', target_type='User', target_id=user.id, request=request)
         messages.success(request, "Your admin password has been updated successfully! You can now sign in with your new password.")

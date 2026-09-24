@@ -78,12 +78,19 @@ class HomeView(TemplateView):
             'stat4_label': meta.get('stat4_label', 'Member Cost Saved'),
         }
 
-        dynamic_routes = []
-        active_rides = Ride.objects.filter(status='active').order_by('-created_at')
+        from django.utils import timezone
+        now = timezone.now()
 
-        if active_rides.exists():
+        dynamic_routes = []
+        # Only show upcoming rides (departure >= now), exclude cancelled/completed/expired
+        upcoming_rides = Ride.objects.filter(
+            departure_datetime__gte=now,
+            status__in=['scheduled', 'active']
+        ).order_by('departure_datetime')
+
+        if upcoming_rides.exists():
             grouped_routes = {}
-            for ride in active_rides:
+            for ride in upcoming_rides:
                 orig_city = clean_city_name(ride.origin, ride.pickup_address)
                 dest_city = clean_city_name(ride.destination, ride.drop_address)
 
@@ -117,37 +124,32 @@ class HomeView(TemplateView):
                     if price < grouped_routes[pair_key]['min_price']:
                         grouped_routes[pair_key]['min_price'] = price
 
-            for key, data in list(grouped_routes.items())[:6]:
+            # Sort by ride count (most popular first)
+            sorted_routes = sorted(grouped_routes.values(), key=lambda x: x['count'], reverse=True)
+
+            for data in sorted_routes[:6]:
+                count = data['count']
                 dynamic_routes.append({
                     'origin': data['origin'],
                     'destination': data['destination'],
                     'search_origin': data['search_origin'],
                     'search_dest': data['search_dest'],
                     'min_price': int(data['min_price']) if data['min_price'] == int(data['min_price']) else data['min_price'],
-                    'freq_text': f"{data['count']} active ride(s)"
+                    'freq_text': f"{count} ride{'s' if count != 1 else ''} available"
                 })
-        else:
-            default_routes = [
-                {'origin': 'Delhi', 'destination': 'Jaipur', 'search_origin': 'Delhi', 'search_dest': 'Jaipur', 'min_price': 450, 'freq_text': 'Daily 15+ rides'},
-                {'origin': 'Gurgaon', 'destination': 'Rohtak', 'search_origin': 'Gurgaon', 'search_dest': 'Rohtak', 'min_price': 150, 'freq_text': 'Daily 25+ rides'},
-                {'origin': 'Mumbai', 'destination': 'Pune', 'search_origin': 'Mumbai', 'search_dest': 'Pune', 'min_price': 350, 'freq_text': 'Daily 30+ rides'},
-                {'origin': 'Bangalore', 'destination': 'Mysore', 'search_origin': 'Bangalore', 'search_dest': 'Mysore', 'min_price': 300, 'freq_text': 'Daily 20+ rides'},
-                {'origin': 'Jaipur', 'destination': 'Jodhpur', 'search_origin': 'Jaipur', 'search_dest': 'Jodhpur', 'min_price': 400, 'freq_text': 'Daily 12+ rides'},
-                {'origin': 'Jaipur', 'destination': 'Alwar', 'search_origin': 'Jaipur', 'search_dest': 'Alwar', 'min_price': 250, 'freq_text': 'Daily 18+ rides'},
-            ]
-            dynamic_routes = default_routes[:6]
 
-        context['popular_routes'] = dynamic_routes[:6]
+        context['popular_routes'] = dynamic_routes
         context['faqs'] = FAQ.objects.filter(is_published=True)[:6]
 
         try:
             context['recent_rides'] = (
                 Ride.objects
-                .filter(status='active')
-                .order_by('-created_at')[:4]
+                .filter(status__in=['scheduled', 'active'], departure_datetime__gte=now)
+                .order_by('departure_datetime')[:4]
             )
         except Exception:
             context['recent_rides'] = []
+
 
         return context
 

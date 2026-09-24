@@ -623,7 +623,7 @@
                     <p style="margin: 0 0 0.75rem 0; font-size: 0.875rem; color: #7c2d12;">
                         Need a ride back from {{ ride.destination }} to {{ ride.origin }}?
                     </p>
-                    <a href="{% url 'rides:return_ride_prompt' ride.id %}" style="display: inline-flex; align-items: center; gap: 0.4rem; background: #f89516; color: #ffffff !important; font-weight: 700; padding: 0.5rem 1rem; border-radius: 9999px; text-decoration: none; font-size: 0.85rem;">
+                    <a href="{% url 'rides:return_ride_offer' ride.id %}" style="display: inline-flex; align-items: center; gap: 0.4rem; background: #f89516; color: #ffffff !important; font-weight: 700; padding: 0.5rem 1rem; border-radius: 9999px; text-decoration: none; font-size: 0.85rem;">
                         + Create Return Ride
                     </a>
                 </div>

@@ -139,12 +139,33 @@ class RideCreateView(LoginRequiredMixin, CreateView):
     ]
     success_url = reverse_lazy('rides:my_rides')
 
-    def form_valid(self, form):
-        form.instance.driver = self.request.user
-        form.instance.status = 'scheduled'
-        if not form.instance.departure_datetime and self.request.POST.get('departure_time'):
-            form.instance.departure_datetime = self.request.POST.get('departure_time')
-        return super().form_valid(form)
+    def post(self, request, *args, **kwargs):
+        post_data = request.POST.copy()
+        
+        # Populate departure_datetime from departure_time or selected_date/time
+        dep_dt = post_data.get('departure_datetime') or post_data.get('departure_time')
+        sel_date = post_data.get('selected_date')
+        sel_time = post_data.get('selected_time', '08:00')
+
+        if not dep_dt and sel_date:
+            dep_dt = f"{sel_date}T{sel_time}"
+
+        if dep_dt:
+            if 'T' in dep_dt:
+                try:
+                    dt_obj = datetime.datetime.strptime(dep_dt, "%Y-%m-%dT%H:%M")
+                    post_data['departure_datetime'] = timezone.make_aware(dt_obj).strftime("%Y-%m-%d %H:%M:%S")
+                except Exception:
+                    post_data['departure_datetime'] = dep_dt.replace('T', ' ')
+            else:
+                post_data['departure_datetime'] = dep_dt
+
+        # Ensure pickup_point is populated
+        if not post_data.get('pickup_point'):
+            post_data['pickup_point'] = post_data.get('pickup_address') or post_data.get('origin', 'As arranged')
+
+        request.POST = post_data
+        return super().post(request, *args, **kwargs)
 
     def get_initial(self):
         initial = super().get_initial()
@@ -192,6 +213,7 @@ class RideCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.driver = self.request.user
+        form.instance.status = 'scheduled'
         form.instance.pickup_point = form.instance.pickup_address or form.instance.origin
 
         # Extract POST parameters for coordinates & route geometry
@@ -205,7 +227,6 @@ class RideCreateView(LoginRequiredMixin, CreateView):
         route_geom_str = post_data.get('route_geometry')
         est_dist = post_data.get('estimated_distance_km')
         est_dur = post_data.get('estimated_duration_mins')
-
 
         # Geocode origin/destination if coordinates missing
         if not pickup_lat or not pickup_lng:
@@ -264,10 +285,17 @@ class RideCreateView(LoginRequiredMixin, CreateView):
 
         return response
 
+    def form_invalid(self, form):
+        logger.error(f"Ride creation form invalid errors: {form.errors}")
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f"{field.replace('_', ' ').title()}: {error}")
+        return super().form_invalid(form)
+
     def get_success_url(self):
         if getattr(self.object, 'is_return_ride', False):
             return reverse('rides:my_rides')
-        return reverse('rides:return_ride_prompt', kwargs={'pk': self.object.pk})
+        return reverse('rides:return_ride_offer', kwargs={'pk': self.object.pk})
 
 
 class RideDetailView(DetailView):
@@ -311,11 +339,8 @@ class RideDetailView(DetailView):
         return context
 
 
-class MyRidesView(LoginRequiredMixin, ListView):
-    model = Ride
+class MyRidesView(LoginRequiredMixin, View):
     template_name = 'rides/my_rides.html'
-    context_object_name = 'offered_rides'
-    paginate_by = 10
 
     def auto_sync_past_rides(self, user):
         """
@@ -326,7 +351,6 @@ class MyRidesView(LoginRequiredMixin, ListView):
         today = timezone.localdate()
         now = timezone.now()
 
-        # Update past in-progress rides to completed
         past_in_prog = Ride.objects.filter(
             driver=user,
             status='in_progress',
@@ -338,7 +362,6 @@ class MyRidesView(LoginRequiredMixin, ListView):
             r.save(update_fields=['status', 'completed_at'])
             r.bookings.filter(status='confirmed').update(status='completed')
 
-        # Update past unstarted scheduled rides to expired
         past_sched = Ride.objects.filter(
             driver=user,
             status__in=['scheduled', 'active'],
@@ -349,142 +372,198 @@ class MyRidesView(LoginRequiredMixin, ListView):
             r.save(update_fields=['status'])
             r.bookings.filter(status__in=['pending', 'confirmed']).update(status='cancelled')
 
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            self.auto_sync_past_rides(request.user)
-        return super().dispatch(request, *args, **kwargs)
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        self.auto_sync_past_rides(user)
 
-    def get_queryset(self):
-        user = self.request.user
         now = timezone.now()
-        today = timezone.localdate()
-        tomorrow = today + datetime.timedelta(days=1)
-        week_start = today - datetime.timedelta(days=today.weekday())
-        week_end = week_start + datetime.timedelta(days=6)
 
-        queryset = Ride.objects.filter(driver=user).select_related('driver').prefetch_related('bookings', 'bookings__passenger')
+        # 1. Fetch created rides (offered by user)
+        created_rides = Ride.objects.filter(driver=user).select_related('driver').prefetch_related('bookings')
 
-        # 1. Tabs Filtering (All, Upcoming, In progress, Completed, Cancelled)
-        status_filter = self.request.GET.get('status', 'all').strip().lower()
+        # 2. Fetch booked rides (where user is passenger)
+        from apps.bookings.models import Booking
+        user_bookings = Booking.objects.filter(passenger=user).select_related('ride', 'ride__driver')
+
+        # ComputeCounts & Tab Visibilities
+        created_count = created_rides.count()
+        booked_count = user_bookings.exclude(status='cancelled').count()
+        has_created = created_count > 0
+        has_booked = booked_count > 0
+
+        # Build list of normalized ride objects
+        all_items = []
+
+        # Process Created Rides
+        for r in created_rides:
+            item = {
+                'id': f'created_{r.id}',
+                'ride_id': r.id,
+                'ride': r,
+                'type': 'created',
+                'is_created': True,
+                'is_booked': False,
+                'badge_text': 'You offered',
+                'badge_class': 'badge-offered',
+                'origin': r.origin,
+                'destination': r.destination,
+                'pickup_address': r.pickup_address or r.origin,
+                'drop_address': r.drop_address or r.destination,
+                'departure_datetime': r.departure_datetime,
+                'available_seats': r.available_seats,
+                'price_per_seat': r.price_per_seat,
+                'driver': r.driver,
+                'driver_name': r.driver.get_full_name() or r.driver.username,
+                'status': r.status,
+                'can_create_return_ride': r.can_create_return_ride,
+                'has_return_ride': r.has_return_ride,
+                'return_ride': r.return_ride if r.has_return_ride else None,
+            }
+            all_items.append(item)
+
+        # Process Booked Rides
+        for b in user_bookings:
+            r = b.ride
+            item = {
+                'id': f'booked_{b.id}',
+                'ride_id': r.id,
+                'booking_id': b.id,
+                'ride': r,
+                'booking': b,
+                'type': 'booked',
+                'is_created': False,
+                'is_booked': True,
+                'badge_text': 'Booked by you',
+                'badge_class': 'badge-booked',
+                'origin': r.origin,
+                'destination': r.destination,
+                'pickup_address': r.pickup_address or r.origin,
+                'drop_address': r.drop_address or r.destination,
+                'departure_datetime': r.departure_datetime,
+                'available_seats': r.available_seats,
+                'price_per_seat': r.price_per_seat,
+                'seats_booked': b.seats_booked,
+                'total_price': b.total_price,
+                'driver': r.driver,
+                'driver_name': r.driver.get_full_name() or r.driver.username,
+                'status': b.status if b.status == 'cancelled' else r.status,
+                'can_create_return_ride': False,
+                'has_return_ride': False,
+            }
+            all_items.append(item)
+
+        # Tab Counts
+        all_count = len(all_items)
+        past_count = sum(1 for item in all_items if item['departure_datetime'] < now and item['status'] != 'cancelled')
+        cancelled_count = sum(1 for item in all_items if item['status'] == 'cancelled')
+
+        # Filter parameters
+        status_filter = request.GET.get('status', 'all').strip().lower()
         if not status_filter:
             status_filter = 'all'
 
-        tab_default_sort = 'default'
-        if status_filter == 'upcoming':
-            # Upcoming: status=scheduled AND departure in future, sorted soonest first
-            queryset = queryset.filter(
-                Q(status='scheduled') | Q(status='active'),
-                departure_datetime__gt=now
-            )
-            tab_default_sort = 'soonest'
-        elif status_filter == 'in_progress':
-            queryset = queryset.filter(status='in_progress')
-            tab_default_sort = 'latest'
-        elif status_filter == 'completed':
-            # Completed: completed + expired, newest first
-            queryset = queryset.filter(status__in=['completed', 'expired'])
-            tab_default_sort = 'latest'
-        elif status_filter == 'cancelled':
-            # Cancelled: newest first
-            queryset = queryset.filter(status='cancelled')
-            tab_default_sort = 'latest'
-        else:
-            # All: upcoming first, then past
+        # Strict Tab Visibility Override (User requirement)
+        if status_filter == 'created' and not has_created:
             status_filter = 'all'
-            tab_default_sort = 'all_default'
+        elif status_filter == 'booked' and not has_booked:
+            status_filter = 'all'
 
-        # 2. Date Chips: Today, Tomorrow, This week (combine with tab)
-        date_filter = self.request.GET.get('date', '').strip().lower()
-        if date_filter == 'today':
-            queryset = queryset.filter(departure_datetime__date=today)
-        elif date_filter == 'tomorrow':
-            queryset = queryset.filter(departure_datetime__date=tomorrow)
-        elif date_filter == 'this_week':
-            queryset = queryset.filter(departure_datetime__date__range=[week_start, week_end])
+        # Search Query
+        search_q = request.GET.get('q', '').strip()
 
-        # 3. Sort dropdown ("Soonest first" / "Latest first") that overrides tab default
-        sort_filter = self.request.GET.get('sort', '').strip().lower()
-        if sort_filter == 'soonest':
-            queryset = queryset.order_by('departure_datetime')
-        elif sort_filter == 'latest':
-            queryset = queryset.order_by('-departure_datetime')
-        else:
-            if tab_default_sort == 'soonest':
-                queryset = queryset.order_by('departure_datetime')
-            elif tab_default_sort == 'latest':
-                queryset = queryset.order_by('-departure_datetime')
-            else:
-                # All default: upcoming first (soonest first), then past
-                is_past_expr = Case(
-                    When(departure_datetime__lt=now, then=Value(1)),
-                    default=Value(0),
-                    output_field=IntegerField()
+        # Sort option
+        sort_opt = request.GET.get('sort', 'latest').strip().lower()
+
+        # Apply filtering
+        filtered_items = []
+        for item in all_items:
+            # 1. Status Filter
+            if status_filter == 'created' and not item['is_created']:
+                continue
+            elif status_filter == 'booked' and not item['is_booked']:
+                continue
+            elif status_filter == 'past' and (item['departure_datetime'] >= now or item['status'] == 'cancelled'):
+                continue
+            elif status_filter == 'cancelled' and item['status'] != 'cancelled':
+                continue
+
+            # 2. Search Filter
+            if search_q:
+                q_lower = search_q.lower()
+                q_match = (
+                    q_lower in item['origin'].lower() or
+                    q_lower in item['destination'].lower() or
+                    q_lower in item['pickup_address'].lower() or
+                    q_lower in item['drop_address'].lower() or
+                    q_lower in item['driver_name'].lower()
                 )
-                queryset = queryset.annotate(is_past=is_past_expr).order_by('is_past', 'departure_datetime')
+                if not q_match:
+                    continue
 
-        return queryset
+            filtered_items.append(item)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        now = timezone.now()
-        today = timezone.localdate()
-        tomorrow = today + datetime.timedelta(days=1)
+        # Apply Sorting
+        if sort_opt == 'soonest':
+            filtered_items.sort(key=lambda x: x['departure_datetime'])
+        else:
+            # default: latest first
+            filtered_items.sort(key=lambda x: x['departure_datetime'], reverse=True)
 
-        # Compute all tab counts in a single aggregate query
-        tab_counts = Ride.objects.filter(driver=user).aggregate(
-            all_count=Count('id'),
-            upcoming_count=Count('id', filter=(Q(status='scheduled') | Q(status='active')) & Q(departure_datetime__gt=now)),
-            in_progress_count=Count('id', filter=Q(status='in_progress')),
-            completed_count=Count('id', filter=Q(status__in=['completed', 'expired'])),
-            cancelled_count=Count('id', filter=Q(status='cancelled'))
-        )
+        # Next upcoming ride banner
+        upcoming_items = [
+            item for item in all_items
+            if item['departure_datetime'] > now and item['status'] not in ['cancelled', 'completed', 'expired']
+        ]
+        upcoming_items.sort(key=lambda x: x['departure_datetime'])
+        next_ride = upcoming_items[0] if upcoming_items else None
+        
+        if next_ride:
+            delta = next_ride['departure_datetime'] - now
+            days = delta.days
+            if days == 0:
+                hours = int(delta.seconds / 3600)
+                next_ride['days_text'] = f"In {hours} hours" if hours > 0 else "Starting soon"
+            elif days == 1:
+                next_ride['days_text'] = "Tomorrow"
+            else:
+                next_ride['days_text'] = f"In {days} days"
 
-        current_status = self.request.GET.get('status', 'all').strip().lower() or 'all'
-        current_date = self.request.GET.get('date', '').strip().lower()
-        current_sort = self.request.GET.get('sort', '').strip().lower()
-
-        context['total_count'] = tab_counts.get('all_count', 0)
-        context['all_count'] = tab_counts.get('all_count', 0)
-        context['upcoming_count'] = tab_counts.get('upcoming_count', 0)
-        context['in_progress_count'] = tab_counts.get('in_progress_count', 0)
-        context['completed_count'] = tab_counts.get('completed_count', 0)
-        context['cancelled_count'] = tab_counts.get('cancelled_count', 0)
-
-        context['current_status'] = current_status
-        context['current_date'] = current_date
-        context['current_sort'] = current_sort
-        context['today'] = today
-        context['tomorrow'] = tomorrow
-        context['now'] = now
-
-        # Group page rides by date for header rendering ("Today", "Tomorrow", etc.)
-        rides_page = context.get('page_obj')
-        rides_list = list(rides_page.object_list) if rides_page else list(context.get('offered_rides', []))
-
+        # Group filtered items by Month & Year e.g. "October 2026"
         user_tz = timezone.get_current_timezone()
-        grouped_dict = {}
-        for r in rides_list:
-            r_date = r.departure_datetime.astimezone(user_tz).date()
-            if r_date not in grouped_dict:
-                if r_date == today:
-                    label = "Today"
-                elif r_date == tomorrow:
-                    label = "Tomorrow"
-                else:
-                    label = r_date.strftime("%a, %d %b")
-                grouped_dict[r_date] = {'date': r_date, 'label': label, 'rides': []}
-            grouped_dict[r_date]['rides'].append(r)
+        grouped_months = {}
+        for item in filtered_items:
+            dt_local = item['departure_datetime'].astimezone(user_tz)
+            month_key = dt_local.strftime("%Y-%m")
+            month_name = dt_local.strftime("%B %Y")
 
-        context['grouped_rides'] = list(grouped_dict.values())
+            if month_key not in grouped_months:
+                grouped_months[month_key] = {
+                    'month_key': month_key,
+                    'month_name': month_name,
+                    'items': []
+                }
+            grouped_months[month_key]['items'].append(item)
 
-        # Build query string preserving all params except page for pagination links
-        params = self.request.GET.copy()
-        if 'page' in params:
-            del params['page']
-        context['query_params_no_page'] = params.urlencode()
+        # Sort month groups (newest month first)
+        grouped_months_list = list(grouped_months.values())
+        grouped_months_list.sort(key=lambda x: x['month_key'], reverse=True)
 
-        return context
+        context = {
+            'has_created': has_created,
+            'has_booked': has_booked,
+            'created_count': created_count,
+            'booked_count': booked_count,
+            'all_count': all_count,
+            'past_count': past_count,
+            'cancelled_count': cancelled_count,
+            'status_filter': status_filter,
+            'search_q': search_q,
+            'sort_opt': sort_opt,
+            'next_ride': next_ride,
+            'grouped_months': grouped_months_list,
+            'total_filtered': len(filtered_items),
+        }
+        return render(request, self.template_name, context)
 
 
 class RidePublicationView(LoginRequiredMixin, DetailView):
@@ -1006,16 +1085,15 @@ class APIRideViewSet(viewsets.ModelViewSet):
 # RETURN RIDE VIEWS & APIS
 # ==========================================================
 
-class ReturnRidePromptView(LoginRequiredMixin, View):
+class ReturnRideOfferView(LoginRequiredMixin, View):
     """
-    Step 2: Post-ride-creation prompt screen.
+    Step 2: Post-ride-creation return ride offer screen.
     Displays:
-    - Original ride reference card (From, To, Date, Time)
+    - Original ride reference details
     - Option 1: Make Return Ride (Immediate flow)
     - Option 2: Schedule for Later (Reminder after original ride completed)
-    - Option 3: Skip (Navigate directly to My Rides)
     """
-    template_name = 'rides/return_ride_prompt.html'
+    template_name = 'rides/return_ride_offer.html'
 
     def get(self, request, pk):
         ride = get_object_or_404(Ride, pk=pk)
@@ -1063,12 +1141,12 @@ class ReturnRidePromptView(LoginRequiredMixin, View):
 
 class ReturnRideCreateView(LoginRequiredMixin, View):
     """
-    Step 3: Return Ride Creation Flow.
-    Pre-fills reversed origin & destination, pre-fills fare, seats, vehicle.
+    Step 3: Return Ride Creation Flow using the multi-step wizard.
+    Pre-fills reversed origin & destination, fare, seats, vehicle.
     Enforces strict departure timing validation (> original ride departure).
     Prevents duplicate return ride creation.
     """
-    template_name = 'rides/return_ride_create.html'
+    template_name = 'rides/create.html'
 
     def get(self, request, pk):
         original_ride = get_object_or_404(Ride, pk=pk)
@@ -1090,19 +1168,34 @@ class ReturnRideCreateView(LoginRequiredMixin, View):
             suggested_delta = datetime.timedelta(minutes=original_ride.estimated_duration_mins + 120)
         suggested_dt = original_ride.departure_datetime + suggested_delta
 
-        context = {
-            'original_ride': original_ride,
-            'default_origin': original_ride.destination,
-            'default_destination': original_ride.origin,
-            'default_pickup_address': original_ride.drop_address or original_ride.destination,
-            'default_drop_address': original_ride.pickup_address or original_ride.origin,
-            'default_date': suggested_dt.strftime('%Y-%m-%d'),
-            'default_time': suggested_dt.strftime('%H:%M'),
+        initial_return_data = {
+            'origin': {
+                'name': original_ride.destination,
+                'address': original_ride.drop_address or original_ride.destination,
+                'lat': original_ride.drop_latitude,
+                'lng': original_ride.drop_longitude,
+                'place_id': original_ride.drop_place_id or '',
+            },
+            'destination': {
+                'name': original_ride.origin,
+                'address': original_ride.pickup_address or original_ride.origin,
+                'lat': original_ride.pickup_latitude,
+                'lng': original_ride.pickup_longitude,
+                'place_id': original_ride.pickup_place_id or '',
+            },
+            'suggested_date': suggested_dt.strftime('%Y-%m-%d'),
+            'suggested_time': suggested_dt.strftime('%H:%M'),
             'min_date': original_ride.departure_datetime.strftime('%Y-%m-%d'),
-            'default_seats': original_ride.available_seats,
-            'default_price': original_ride.price_per_seat,
-            'default_vehicle': original_ride.vehicle_info,
-            'default_notes': original_ride.notes,
+            'seats': original_ride.available_seats,
+            'price': float(original_ride.price_per_seat) if original_ride.price_per_seat else 0.0,
+            'vehicle': original_ride.vehicle_info or '',
+            'notes': original_ride.notes or '',
+        }
+
+        context = {
+            'is_return_ride_mode': True,
+            'original_ride': original_ride,
+            'initial_return_data_json': json.dumps(initial_return_data),
             'mapbox_access_token': getattr(settings, 'MAPBOX_ACCESS_TOKEN', '') or os.getenv('MAPBOX_ACCESS_TOKEN', ''),
         }
         return render(request, self.template_name, context)
@@ -1123,25 +1216,34 @@ class ReturnRideCreateView(LoginRequiredMixin, View):
 
         origin = request.POST.get('origin', '').strip() or original_ride.destination
         destination = request.POST.get('destination', '').strip() or original_ride.origin
-        date_str = request.POST.get('departure_date', '').strip()
-        time_str = request.POST.get('departure_time', '').strip()
-        seats_str = request.POST.get('available_seats', '').strip()
-        price_str = request.POST.get('price_per_seat', '').strip()
-        vehicle_info = request.POST.get('vehicle_info', '').strip() or original_ride.vehicle_info
-        notes = request.POST.get('notes', '').strip()
 
-        # Parse departure datetime
+        # Handle date and time inputs from wizard
+        date_str = request.POST.get('selected_date', '').strip() or request.POST.get('departure_date', '').strip()
+        time_str = request.POST.get('selected_time', '').strip() or request.POST.get('departure_time', '').strip()
+        dep_time_raw = request.POST.get('departure_time', '').strip()
+
         departure_datetime = None
-        if date_str and time_str:
+        if dep_time_raw and 'T' in dep_time_raw:
             try:
-                departure_datetime = timezone.make_aware(
-                    datetime.datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
-                )
+                dt_obj = datetime.datetime.strptime(dep_time_raw, "%Y-%m-%dT%H:%M")
+                departure_datetime = timezone.make_aware(dt_obj)
+            except Exception:
+                pass
+
+        if not departure_datetime and date_str and time_str:
+            try:
+                dt_obj = datetime.datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+                departure_datetime = timezone.make_aware(dt_obj)
             except Exception:
                 try:
                     departure_datetime = datetime.datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
                 except Exception:
                     pass
+
+        seats_str = request.POST.get('available_seats', '2').strip()
+        price_str = request.POST.get('price_per_seat', '0').strip()
+        vehicle_info = request.POST.get('vehicle_info', '').strip() or original_ride.vehicle_info
+        notes = request.POST.get('notes', '').strip()
 
         errors = []
         if not departure_datetime:
@@ -1169,19 +1271,33 @@ class ReturnRideCreateView(LoginRequiredMixin, View):
         if errors:
             for err in errors:
                 messages.error(request, err)
-            context = {
-                'original_ride': original_ride,
-                'default_origin': origin,
-                'default_destination': destination,
-                'default_pickup_address': request.POST.get('pickup_address', ''),
-                'default_drop_address': request.POST.get('drop_address', ''),
-                'default_date': date_str,
-                'default_time': time_str,
+            initial_return_data = {
+                'origin': {
+                    'name': origin,
+                    'address': request.POST.get('pickup_address', origin),
+                    'lat': request.POST.get('pickup_latitude'),
+                    'lng': request.POST.get('pickup_longitude'),
+                    'place_id': request.POST.get('pickup_place_id', ''),
+                },
+                'destination': {
+                    'name': destination,
+                    'address': request.POST.get('drop_address', destination),
+                    'lat': request.POST.get('drop_latitude'),
+                    'lng': request.POST.get('drop_longitude'),
+                    'place_id': request.POST.get('drop_place_id', ''),
+                },
+                'suggested_date': date_str,
+                'suggested_time': time_str,
                 'min_date': original_ride.departure_datetime.strftime('%Y-%m-%d'),
-                'default_seats': seats_str,
-                'default_price': price_str,
-                'default_vehicle': vehicle_info,
-                'default_notes': notes,
+                'seats': seats_str,
+                'price': price_str,
+                'vehicle': vehicle_info,
+                'notes': notes,
+            }
+            context = {
+                'is_return_ride_mode': True,
+                'original_ride': original_ride,
+                'initial_return_data_json': json.dumps(initial_return_data),
                 'mapbox_access_token': getattr(settings, 'MAPBOX_ACCESS_TOKEN', '') or os.getenv('MAPBOX_ACCESS_TOKEN', ''),
             }
             return render(request, self.template_name, context)
@@ -1192,8 +1308,11 @@ class ReturnRideCreateView(LoginRequiredMixin, View):
         
         pickup_lat = request.POST.get('pickup_latitude')
         pickup_lng = request.POST.get('pickup_longitude')
+        pickup_place_id = request.POST.get('pickup_place_id', '')
+
         drop_lat = request.POST.get('drop_latitude')
         drop_lng = request.POST.get('drop_longitude')
+        drop_place_id = request.POST.get('drop_place_id', '')
 
         # Fallback to reversed coordinates from original ride if origin/destination match
         if (not pickup_lat or not pickup_lng) and origin == original_ride.destination:
@@ -1223,6 +1342,9 @@ class ReturnRideCreateView(LoginRequiredMixin, View):
             except Exception:
                 pass
 
+        dist_km = request.POST.get('estimated_distance_km') or original_ride.estimated_distance_km
+        dur_min = request.POST.get('estimated_duration_mins') or original_ride.estimated_duration_mins
+
         ride_data = {
             'origin': origin,
             'destination': destination,
@@ -1231,11 +1353,13 @@ class ReturnRideCreateView(LoginRequiredMixin, View):
             'drop_address': drop_address,
             'pickup_latitude': float(pickup_lat) if pickup_lat else None,
             'pickup_longitude': float(pickup_lng) if pickup_lng else None,
+            'pickup_place_id': pickup_place_id,
             'drop_latitude': float(drop_lat) if drop_lat else None,
             'drop_longitude': float(drop_lng) if drop_lng else None,
+            'drop_place_id': drop_place_id,
             'route_geometry': route_geometry,
-            'estimated_distance_km': original_ride.estimated_distance_km,
-            'estimated_duration_mins': original_ride.estimated_duration_mins,
+            'estimated_distance_km': float(dist_km) if dist_km else None,
+            'estimated_duration_mins': int(dur_min) if dur_min else None,
             'departure_datetime': departure_datetime,
             'available_seats': seats,
             'price_per_seat': price,

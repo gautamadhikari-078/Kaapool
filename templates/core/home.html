@@ -96,13 +96,14 @@
     </div>
 </section>
 
-<!-- 3. TOP CARPOOL RIDES (DARK THEME CONTRAST SECTION) -->
+<!-- 3. TOP CARPOOL RIDES (DYNAMIC - ONLY UPCOMING RIDES) -->
+{% if popular_routes %}
 <section class="top-rides-section">
     <div class="section-container">
         <div class="section-header center">
             <span class="sub-tag">POPULAR ROUTES</span>
             <h2>Top carpool rides</h2>
-            <p>Find frequent, reliable rides on top intercity routes available every single day.</p>
+            <p>Find frequent, reliable rides on top intercity routes available right now.</p>
         </div>
 
         <div class="top-rides-grid">
@@ -127,6 +128,7 @@
         </div>
     </div>
 </section>
+{% endif %}
 
 <!-- 4. THREE STOPS HOW IT WORKS -->
 <section class="how-it-works-section">

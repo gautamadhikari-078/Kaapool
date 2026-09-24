@@ -17,12 +17,12 @@ class Command(BaseCommand):
         admin_email = os.getenv('DJANGO_SUPERUSER_EMAIL') or os.getenv('ADMIN_EMAIL') or 'gautamadhikari071@gmail.com'
         admin_password = os.getenv('DJANGO_SUPERUSER_PASSWORD') or os.getenv('ADMIN_PASSWORD') or 'admin123'
 
-        # 1. Create or update default superuser 'admin' linked to gautamadhikari071@gmail.com
-        admin_user = User.objects.filter(username=admin_username).first()
-        if not admin_user:
-            admin_user = User.objects.filter(email=admin_email).first()
+        # 1. Create default superuser ONLY if no superuser / admin user exists in the database
+        existing_admin = User.objects.filter(
+            Q(is_superuser=True) | Q(role='super_admin') | Q(username=admin_username) | Q(email__iexact=admin_email)
+        ).first()
 
-        if not admin_user:
+        if not existing_admin:
             admin_user = User.objects.create_superuser(
                 username=admin_username,
                 email=admin_email,
@@ -31,53 +31,12 @@ class Command(BaseCommand):
             admin_user.role = 'super_admin'
             admin_user.email_verified = True
             admin_user.save()
-            self.stdout.write(self.style.SUCCESS(f"Created default Super Admin '{admin_username}' ({admin_email})."))
+            self.stdout.write(self.style.SUCCESS(f"Created initial Super Admin '{admin_username}' ({admin_email})."))
         else:
-            admin_user.email = admin_email
-            admin_user.set_password(admin_password)
-            admin_user.is_superuser = True
-            admin_user.is_staff = True
-            admin_user.role = 'super_admin'
-            admin_user.email_verified = True
-            admin_user.save()
-            self.stdout.write(self.style.SUCCESS(f"Updated user '{admin_user.username}' ({admin_user.email}) to 'super_admin' with password '{admin_password}'."))
-
-        # 2. Automatically promote and sync owner emails to super_admin
-        owner_emails = ['gautamadhikari071@gmail.com', 'gautamadhikari078@gmail.com']
-        custom_emails = [e.strip() for e in os.getenv('ADMIN_EMAILS', '').split(',') if e.strip()]
-        all_owner_emails = set(owner_emails + custom_emails)
-
-        for email_addr in all_owner_emails:
-            users_with_email = list(User.objects.filter(email__iexact=email_addr))
-            if not users_with_email and email_addr == 'gautamadhikari071@gmail.com':
-                u = User.objects.create_superuser(
-                    username='gautamadhikari071',
-                    email='gautamadhikari071@gmail.com',
-                    password=admin_password
-                )
-                u.role = 'super_admin'
-                u.email_verified = True
-                u.save()
-                self.stdout.write(self.style.SUCCESS(f"Created owner super_admin '{u.username}' ({u.email})."))
-            else:
-                for u in users_with_email:
-                    u.is_superuser = True
-                    u.is_staff = True
-                    u.role = 'super_admin'
-                    u.email_verified = True
-                    u.set_password(admin_password)
-                    u.save()
-                    self.stdout.write(self.style.SUCCESS(f"Promoted and synced password for '{u.email}' ({u.username}) to 'super_admin'."))
-
-        # 3. Ensure all superusers and admins have password synced to admin_password
-        for su in User.objects.filter(Q(is_superuser=True) | Q(role='super_admin') | Q(username='admin')):
-            su.is_superuser = True
-            su.is_staff = True
-            su.role = 'super_admin'
-            su.email_verified = True
-            su.set_password(admin_password)
-            su.save()
-            self.stdout.write(self.style.SUCCESS(f"Synced password '{admin_password}' for admin user '{su.username}' ({su.email})."))
+            self.stdout.write(self.style.SUCCESS(
+                f"Super Admin account '{existing_admin.username}' ({existing_admin.email}) already exists. "
+                f"Skipping credential modification to preserve persistent database credentials."
+            ))
 
         # 2. Populate Website Content defaults if missing
         default_stats = {
