@@ -577,6 +577,58 @@
                 </div>
             </div>
 
+            <!-- CONNECTED RETURN RIDE CARD -->
+            {% if ride.is_return_ride %}
+                <div style="margin: 1.5rem 0; padding: 1.25rem; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <div style="font-weight: 800; color: #0369a1; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-arrows-rotate"></i> Return Ride
+                        </div>
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #0284c7; background: #e0f2fe; padding: 0.2rem 0.6rem; border-radius: 9999px;">
+                            Linked Outbound
+                        </span>
+                    </div>
+                    <p style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: #334155;">
+                        This ride is the return trip for ride <strong>#{{ ride.original_ride.id }}</strong> ({{ ride.original_ride.origin }} &rarr; {{ ride.original_ride.destination }}).
+                    </p>
+                    {% if ride.original_ride %}
+                        <a href="{% url 'rides:detail' ride.original_ride.id %}" style="display: inline-flex; align-items: center; gap: 0.35rem; color: #0284c7; font-weight: 700; font-size: 0.875rem; text-decoration: none;">
+                            View Original Outbound Ride &rarr;
+                        </a>
+                    {% endif %}
+                </div>
+            {% elif ride.has_return_ride %}
+                <div style="margin: 1.5rem 0; padding: 1.25rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <div style="font-weight: 800; color: #15803d; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-circle-check"></i> Return Ride Linked
+                        </div>
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #16a34a; background: #dcfce7; padding: 0.2rem 0.6rem; border-radius: 9999px;">
+                            {{ ride.return_ride.status|capfirst }}
+                        </span>
+                    </div>
+                    <p style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: #334155;">
+                        Return Ride: <strong>{{ ride.return_ride.origin }} &rarr; {{ ride.return_ride.destination }}</strong><br>
+                        <span style="color: #64748b; font-size: 0.85rem;">Departs {{ ride.return_ride.departure_datetime|date:"D, d M Y • h:i A" }} • ₹{{ ride.return_ride.price_per_seat|floatformat:0 }}/seat</span>
+                    </p>
+                    <a href="{% url 'rides:detail' ride.return_ride.id %}" style="display: inline-flex; align-items: center; gap: 0.35rem; color: #16a34a; font-weight: 700; font-size: 0.875rem; text-decoration: none;">
+                        View Return Ride &rarr;
+                    </a>
+                </div>
+            {% elif is_driver and ride.can_create_return_ride %}
+                <div style="margin: 1.5rem 0; padding: 1.25rem; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 16px;">
+                    <div style="font-weight: 800; color: #c2410c; font-size: 0.95rem; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-arrows-rotate"></i> Plan Your Return Trip
+                    </div>
+                    <p style="margin: 0 0 0.75rem 0; font-size: 0.875rem; color: #7c2d12;">
+                        Need a ride back from {{ ride.destination }} to {{ ride.origin }}?
+                    </p>
+                    <a href="{% url 'rides:return_ride_prompt' ride.id %}" style="display: inline-flex; align-items: center; gap: 0.4rem; background: #f89516; color: #ffffff !important; font-weight: 700; padding: 0.5rem 1rem; border-radius: 9999px; text-decoration: none; font-size: 0.85rem;">
+                        + Create Return Ride
+                    </a>
+                </div>
+            {% endif %}
+
             <!-- ACTION LINKS -->
             <div class="plan-actions-footer">
                 {% if is_driver %}

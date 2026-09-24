@@ -803,6 +803,47 @@
                         </div>
                     </div>
 
+                    <!-- RETURN RIDE STATUS STRIP -->
+                    <div class="return-ride-status-strip" style="padding: 0.65rem 1.5rem; background: #f8fafc; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem; flex-wrap: wrap; gap: 0.5rem;">
+                        {% if ride.is_return_ride %}
+                            <div style="display: flex; align-items: center; gap: 0.4rem; color: #475569; font-weight: 600;">
+                                <i class="fa-solid fa-arrows-rotate" style="color: #0284c7;"></i>
+                                <span>Return Ride of: <strong>{{ ride.original_ride.origin }} &rarr; {{ ride.original_ride.destination }}</strong></span>
+                            </div>
+                            {% if ride.original_ride %}
+                            <a href="{% url 'rides:detail' ride.original_ride.id %}" style="color: #0284c7; font-weight: 700; text-decoration: none; font-size: 0.825rem;">
+                                View Original Ride &rarr;
+                            </a>
+                            {% endif %}
+                        {% elif ride.has_return_ride %}
+                            <div style="display: flex; align-items: center; gap: 0.4rem; color: #166534; font-weight: 700;">
+                                <i class="fa-solid fa-circle-check" style="color: #10b981;"></i>
+                                <span>Return Ride: <strong>{{ ride.return_ride.origin }} &rarr; {{ ride.return_ride.destination }}</strong></span>
+                            </div>
+                            <a href="{% url 'rides:detail' ride.return_ride.id %}" style="background: #ecfdf5; color: #059669; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: 9999px; text-decoration: none; border: 1px solid #a7f3d0; font-size: 0.8rem;">
+                                View Return Ride
+                            </a>
+                        {% else %}
+                            <div style="display: flex; align-items: center; gap: 0.4rem; color: #64748b;">
+                                <i class="fa-solid fa-arrows-rotate" style="color: #94a3b8;"></i>
+                                <span>Return Ride: 
+                                    {% if ride.return_ride_status == 'SCHEDULED_FOR_LATER' %}
+                                        <span style="color: #d97706; font-weight: 700;">Scheduled Later</span>
+                                    {% elif ride.return_ride_status == 'SKIPPED' %}
+                                        <span style="color: #64748b; font-weight: 600;">Skipped</span>
+                                    {% else %}
+                                        <span style="color: #64748b;">Not Created</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            {% if ride.status != 'cancelled' %}
+                                <a href="{% url 'rides:return_ride_prompt' ride.id %}" style="background: #fff7ed; color: #ea580c; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: 9999px; text-decoration: none; border: 1px solid #fed7aa; font-size: 0.8rem;">
+                                    + Create Return Ride
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
                     <!-- BOTTOM STRIP -->
                     <div class="card-bottom-strip">
                         <div class="passenger-status-left">

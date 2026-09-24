@@ -68,6 +68,96 @@
                 </table>
             </div>
         </div>
+
+        <!-- Return Ride Relationship -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fa-solid fa-arrows-rotate"></i> Return Ride Relationship</h3>
+            </div>
+            <div style="padding: 1rem 0;">
+                {% if ride.is_return_ride %}
+                    <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
+                        <span class="badge badge-info" style="margin-bottom: 0.5rem;">Return Ride</span>
+                        <p style="margin: 0 0 0.5rem 0; font-size: 0.95rem;">
+                            This ride is the return trip for Outbound Ride <strong>#{{ ride.original_ride.id }}</strong> ({{ ride.original_ride.origin }} &rarr; {{ ride.original_ride.destination }}).
+                        </p>
+                        {% if ride.original_ride %}
+                            <a href="{% url 'admin_panel:ride_detail' pk=ride.original_ride.id %}" class="btn btn-primary btn-sm">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Original Outbound Ride #{{ ride.original_ride.id }}
+                            </a>
+                        {% endif %}
+                    </div>
+                {% elif return_rides %}
+                    <div style="margin-bottom: 1rem;">
+                        <span class="badge badge-success" style="margin-bottom: 0.5rem;">Return Ride Created</span>
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Return Ride ID</th>
+                                    <th>Route</th>
+                                    <th>Departure</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ret in return_rides %}
+                                <tr>
+                                    <td>#{{ ret.id }}</td>
+                                    <td><strong>{{ ret.origin }} &rarr; {{ ret.destination }}</strong></td>
+                                    <td>{{ ret.departure_time|date:"Y-m-d H:i" }}</td>
+                                    <td><span class="badge badge-secondary">{{ ret.status }}</span></td>
+                                    <td>
+                                        <a href="{% url 'admin_panel:ride_detail' pk=ret.id %}" class="btn btn-secondary btn-sm">View Ride</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>Status:</strong> 
+                                <span class="badge badge-secondary">{{ ride.return_ride_status }}</span>
+                            </div>
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">No linked return ride created.</span>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if reminders %}
+                <div style="margin-top: 1.25rem;">
+                    <h4 style="font-size: 0.9rem; font-weight: 700; color: #475569; margin-bottom: 0.5rem;">Scheduled Reminders</h4>
+                    <table class="admin-table" style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Reminder ID</th>
+                                <th>User</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Triggered</th>
+                                <th>Dismissed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rem in reminders %}
+                            <tr>
+                                <td>#{{ rem.id }}</td>
+                                <td>{{ rem.user.username }}</td>
+                                <td><span class="badge badge-secondary">{{ rem.status }}</span></td>
+                                <td>{{ rem.created_at|date:"Y-m-d H:i" }}</td>
+                                <td>{{ rem.triggered_at|date:"Y-m-d H:i"|default:"—" }}</td>
+                                <td>{{ rem.dismissed_at|date:"Y-m-d H:i"|default:"—" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
     <div>

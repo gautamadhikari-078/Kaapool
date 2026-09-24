@@ -26,6 +26,14 @@
             <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
         </select>
 
+        <select name="return_status" class="select-input">
+            <option value="">All Return Ride States</option>
+            <option value="created" {% if return_status_filter == 'created' %}selected{% endif %}>Created / Connected</option>
+            <option value="scheduled_later" {% if return_status_filter == 'scheduled_later' %}selected{% endif %}>Scheduled Later</option>
+            <option value="skipped" {% if return_status_filter == 'skipped' %}selected{% endif %}>Skipped</option>
+            <option value="not_requested" {% if return_status_filter == 'not_requested' %}selected{% endif %}>Not Requested</option>
+        </select>
+
         <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filter</button>
     </form>
 
@@ -36,6 +44,7 @@
                     <th>Ride ID</th>
                     <th>Driver</th>
                     <th>Origin &rarr; Destination</th>
+                    <th>Return Ride</th>
                     <th>Departure Time</th>
                     <th>Price / Seat</th>
                     <th>Available Seats</th>
@@ -49,6 +58,23 @@
                     <td>#{{ r.id }}</td>
                     <td><strong>{{ r.driver.get_full_name|default:r.driver.username }}</strong></td>
                     <td>{{ r.origin }} &rarr; {{ r.destination }}</td>
+                    <td>
+                        {% if r.is_return_ride %}
+                            <span class="badge badge-info">Return of #{{ r.original_ride.id }}</span>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ r.original_ride.origin }} &rarr; {{ r.original_ride.destination }}</div>
+                        {% elif r.has_return_ride %}
+                            <a href="{% url 'admin_panel:ride_detail' pk=r.return_ride.id %}" style="font-weight: 700; color: #059669; text-decoration: none;">
+                                <span class="badge badge-success">Created</span>
+                                <div style="font-size: 0.75rem;">{{ r.return_ride.origin }} &rarr; {{ r.return_ride.destination }}</div>
+                            </a>
+                        {% elif r.return_ride_status == 'SCHEDULED_FOR_LATER' %}
+                            <span class="badge badge-warning">Scheduled Later</span>
+                        {% elif r.return_ride_status == 'SKIPPED' %}
+                            <span class="badge badge-secondary">Skipped</span>
+                        {% else %}
+                            <span class="badge badge-secondary" style="opacity: 0.6;">Not Requested</span>
+                        {% endif %}
+                    </td>
                     <td>{{ r.departure_time|date:"Y-m-d H:i" }}</td>
                     <td>&#8377;{{ r.price_per_seat }}</td>
                     <td>{{ r.available_seats }} seat(s)</td>

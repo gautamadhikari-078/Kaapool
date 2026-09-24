@@ -7,6 +7,7 @@ class Notification(models.Model):
         ('booking_confirmed', 'Booking Confirmed'),
         ('booking_cancelled', 'Booking Cancelled'),
         ('ride_reminder', 'Ride Reminder'),
+        ('return_ride_reminder', 'Return Ride Reminder'),
         ('new_message', 'New Message'),
         ('ride_update', 'Ride Update'),
         ('payment_update', 'Payment Update'),
@@ -21,6 +22,7 @@ class Notification(models.Model):
     title = models.CharField(max_length=255)
     message = models.TextField()
     notification_type = models.CharField(max_length=50, choices=TYPE_CHOICES, default='system')
+    link = models.CharField(max_length=500, blank=True, default='')
     is_read = models.BooleanField(default=False)
     
     created_at = models.DateTimeField(auto_now_add=True)

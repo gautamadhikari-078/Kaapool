@@ -2,7 +2,9 @@ from django.urls import path
 from .views import (
     RideSearchView, RideCreateView, RideDetailView, MyRidesView, RidePublicationView,
     RouteCalculateAPIView, GeocodeAPIView, ReverseGeocodeAPIView,
-    StartRideView, CompleteRideView, CancelRideView, UpdateLocationAPIView, LiveStatusAPIView
+    StartRideView, CompleteRideView, CancelRideView, UpdateLocationAPIView, LiveStatusAPIView,
+    ReturnRidePromptView, ReturnRideCreateView, ScheduleReturnRideLaterView, SkipReturnRideView,
+    ReturnRideOptionsAPIView, ReturnRideScheduleAPIView, ReturnRideSkipAPIView
 )
 
 app_name = 'rides'
@@ -12,6 +14,17 @@ urlpatterns = [
     path('search/', RideSearchView.as_view(), name='search'),
     path('create/', RideCreateView.as_view(), name='create'),
     path('my-rides/', MyRidesView.as_view(), name='my_rides'),
+
+    # Return Ride Endpoints
+    path('<int:pk>/return-ride-prompt/', ReturnRidePromptView.as_view(), name='return_ride_prompt'),
+    path('<int:pk>/return-ride-create/', ReturnRideCreateView.as_view(), name='return_ride_create'),
+    path('<int:pk>/return-ride-schedule/', ScheduleReturnRideLaterView.as_view(), name='return_ride_schedule'),
+    path('<int:pk>/return-ride-skip/', SkipReturnRideView.as_view(), name='return_ride_skip'),
+
+    # Return Ride REST APIs
+    path('api/<int:pk>/return-ride-options/', ReturnRideOptionsAPIView.as_view(), name='api_return_ride_options'),
+    path('api/<int:pk>/return-ride-schedule/', ReturnRideScheduleAPIView.as_view(), name='api_return_ride_schedule'),
+    path('api/<int:pk>/return-ride-skip/', ReturnRideSkipAPIView.as_view(), name='api_return_ride_skip'),
 
     # ORS Routing & Geocoding APIs
     path('api/route/', RouteCalculateAPIView.as_view(), name='api_route'),

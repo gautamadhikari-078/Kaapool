@@ -52,6 +52,34 @@ class Ride(models.Model):
     last_location_update = models.DateTimeField(null=True, blank=True)
     actual_gps_track = models.JSONField(default=list, blank=True, help_text="Historical driver GPS points [{lat, lng, timestamp}, ...]")
 
+    # Return Ride Integration
+    RETURN_RIDE_STATUS_CHOICES = (
+        ('NOT_REQUESTED', 'Not Requested'),
+        ('SCHEDULED_FOR_LATER', 'Scheduled for Later'),
+        ('PENDING_CREATION', 'Pending Creation'),
+        ('CREATED', 'Created'),
+        ('COMPLETED', 'Completed'),
+        ('CANCELLED', 'Cancelled'),
+        ('SKIPPED', 'Skipped'),
+    )
+
+    original_ride = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='return_rides',
+        db_index=True,
+        help_text="The original ride if this is a return ride"
+    )
+    is_return_ride = models.BooleanField(default=False, db_index=True)
+    return_ride_status = models.CharField(
+        max_length=30,
+        choices=RETURN_RIDE_STATUS_CHOICES,
+        default='NOT_REQUESTED',
+        db_index=True
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -60,6 +88,7 @@ class Ride(models.Model):
         indexes = [
             models.Index(fields=['driver', 'departure_datetime'], name='ride_driver_dep_idx'),
             models.Index(fields=['driver', 'status'], name='ride_driver_status_idx'),
+            models.Index(fields=['original_ride', 'is_return_ride'], name='ride_return_rel_idx'),
         ]
 
     @property
@@ -75,8 +104,64 @@ class Ride(models.Model):
         from django.utils import timezone
         return self.status in ['scheduled', 'active'] and self.departure_datetime <= timezone.now()
 
+    @property
+    def return_ride(self):
+        """Returns the linked return ride if one exists."""
+        return self.return_rides.exclude(status='cancelled').first() or self.return_rides.first()
+
+    @property
+    def has_return_ride(self):
+        """True if an active/valid return ride exists for this original ride."""
+        return self.return_rides.exclude(status='cancelled').exists()
+
+    @property
+    def can_create_return_ride(self):
+        """True if this is an original ride eligible for creating a return ride."""
+        if self.is_return_ride or self.original_ride_id is not None:
+            return False
+        if self.status == 'cancelled':
+            return False
+        return not self.has_return_ride
+
     def __str__(self):
         return f"{self.origin} to {self.destination} ({self.departure_datetime.strftime('%Y-%m-%d %H:%M')})"
+
+
+class ReturnRideReminder(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('TRIGGERED', 'Triggered'),
+        ('OPENED', 'Opened'),
+        ('CREATED', 'Created'),
+        ('SKIPPED', 'Skipped'),
+        ('CANCELLED', 'Cancelled'),
+        ('EXPIRED', 'Expired'),
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='return_ride_reminders'
+    )
+    original_ride = models.ForeignKey(
+        'Ride',
+        on_delete=models.CASCADE,
+        related_name='reminders'
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING', db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    triggered_at = models.DateTimeField(null=True, blank=True)
+    dismissed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'status'], name='ret_remind_user_stat_idx'),
+            models.Index(fields=['original_ride', 'status'], name='ret_remind_ride_stat_idx'),
+        ]
+
+    def __str__(self):
+        return f"Return Ride Reminder: Ride #{self.original_ride_id} for {self.user} [{self.status}]"
 
 
 class Vehicle(models.Model):
@@ -96,4 +181,5 @@ class Vehicle(models.Model):
         if self.license_plate:
             return f"{self.make_model} ({self.license_plate.upper()})"
         return self.make_model
+
 

@@ -21,12 +21,20 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
 from rest_framework import viewsets, permissions
-from .models import Ride
+from .models import Ride, ReturnRideReminder
 from .serializers import RideSerializer
 from .services.routing import (
     get_ors_directions,
     geocode_location,
     reverse_geocode_location
+)
+from .services.return_ride_service import (
+    validate_return_ride_timing,
+    trigger_return_ride_reminder_if_needed,
+    handle_ride_cancelled,
+    schedule_return_ride_later,
+    skip_return_ride,
+    create_return_ride
 )
 
 
@@ -255,6 +263,11 @@ class RideCreateView(LoginRequiredMixin, CreateView):
             logger.error(f"Error triggering ride created email: {e}")
 
         return response
+
+    def get_success_url(self):
+        if getattr(self.object, 'is_return_ride', False):
+            return reverse('rides:my_rides')
+        return reverse('rides:return_ride_prompt', kwargs={'pk': self.object.pk})
 
 
 class RideDetailView(DetailView):
@@ -581,6 +594,7 @@ class CancelRideView(LoginRequiredMixin, View):
         if ride.status not in ['completed', 'cancelled']:
             ride.status = 'cancelled'
             ride.save(update_fields=['status'])
+            handle_ride_cancelled(ride)
             
             # Fetch active passengers before status update
             active_bookings = list(ride.bookings.filter(status__in=['pending', 'confirmed']).select_related('passenger'))
@@ -624,6 +638,7 @@ class CompleteRideView(LoginRequiredMixin, View):
             ride.completed_at = timezone.now()
             ride.save(update_fields=['status', 'completed_at'])
             ride.bookings.filter(status='confirmed').update(status='completed')
+            trigger_return_ride_reminder_if_needed(ride)
             messages.success(request, f"Ride to {ride.destination} has been marked as completed.")
         else:
             messages.info(request, "Ride is already completed.")
@@ -985,4 +1000,361 @@ class APIRideViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(driver=self.request.user)
+
+
+# ==========================================================
+# RETURN RIDE VIEWS & APIS
+# ==========================================================
+
+class ReturnRidePromptView(LoginRequiredMixin, View):
+    """
+    Step 2: Post-ride-creation prompt screen.
+    Displays:
+    - Original ride reference card (From, To, Date, Time)
+    - Option 1: Make Return Ride (Immediate flow)
+    - Option 2: Schedule for Later (Reminder after original ride completed)
+    - Option 3: Skip (Navigate directly to My Rides)
+    """
+    template_name = 'rides/return_ride_prompt.html'
+
+    def get(self, request, pk):
+        ride = get_object_or_404(Ride, pk=pk)
+        if ride.driver != request.user and not request.user.is_staff:
+            messages.error(request, "You do not have permission to access this ride.")
+            return redirect('rides:my_rides')
+
+        if ride.is_return_ride:
+            return redirect('rides:my_rides')
+
+        if ride.has_return_ride:
+            messages.info(request, f"A return ride ({ride.return_ride.origin} → {ride.return_ride.destination}) already exists for this trip.")
+            return redirect('rides:detail', pk=ride.return_ride.id)
+
+        # Mark reminder as OPENED if opened from notification
+        reminder = ride.reminders.filter(status='TRIGGERED').first()
+        if reminder:
+            reminder.status = 'OPENED'
+            reminder.save(update_fields=['status'])
+
+        return render(request, self.template_name, {'original_ride': ride})
+
+    def post(self, request, pk):
+        ride = get_object_or_404(Ride, pk=pk)
+        if ride.driver != request.user and not request.user.is_staff:
+            messages.error(request, "You do not have permission to modify this ride.")
+            return redirect('rides:my_rides')
+
+        action = request.POST.get('action')
+        if action == 'make_now':
+            return redirect('rides:return_ride_create', pk=ride.pk)
+        elif action == 'schedule_later':
+            try:
+                schedule_return_ride_later(ride, request.user)
+                messages.success(request, f"Scheduled for later! We will remind you to create a return ride once your trip to {ride.destination} is completed.")
+            except Exception as e:
+                messages.warning(request, str(e))
+            return redirect('rides:my_rides')
+        elif action == 'skip':
+            skip_return_ride(ride, request.user)
+            return redirect('rides:my_rides')
+        else:
+            return redirect('rides:my_rides')
+
+
+class ReturnRideCreateView(LoginRequiredMixin, View):
+    """
+    Step 3: Return Ride Creation Flow.
+    Pre-fills reversed origin & destination, pre-fills fare, seats, vehicle.
+    Enforces strict departure timing validation (> original ride departure).
+    Prevents duplicate return ride creation.
+    """
+    template_name = 'rides/return_ride_create.html'
+
+    def get(self, request, pk):
+        original_ride = get_object_or_404(Ride, pk=pk)
+        if original_ride.driver != request.user and not request.user.is_staff:
+            messages.error(request, "You do not have permission to create a return ride for this trip.")
+            return redirect('rides:my_rides')
+
+        if original_ride.is_return_ride:
+            messages.warning(request, "Cannot create a return ride for a ride that is already a return ride.")
+            return redirect('rides:my_rides')
+
+        if original_ride.has_return_ride:
+            messages.warning(request, f"A return ride already exists for this trip (#{original_ride.return_ride.id}).")
+            return redirect('rides:detail', pk=original_ride.return_ride.id)
+
+        # Default suggested return departure time: original departure + estimated duration + 2 hours (or departure + 4 hours)
+        suggested_delta = datetime.timedelta(hours=4)
+        if original_ride.estimated_duration_mins:
+            suggested_delta = datetime.timedelta(minutes=original_ride.estimated_duration_mins + 120)
+        suggested_dt = original_ride.departure_datetime + suggested_delta
+
+        context = {
+            'original_ride': original_ride,
+            'default_origin': original_ride.destination,
+            'default_destination': original_ride.origin,
+            'default_pickup_address': original_ride.drop_address or original_ride.destination,
+            'default_drop_address': original_ride.pickup_address or original_ride.origin,
+            'default_date': suggested_dt.strftime('%Y-%m-%d'),
+            'default_time': suggested_dt.strftime('%H:%M'),
+            'min_date': original_ride.departure_datetime.strftime('%Y-%m-%d'),
+            'default_seats': original_ride.available_seats,
+            'default_price': original_ride.price_per_seat,
+            'default_vehicle': original_ride.vehicle_info,
+            'default_notes': original_ride.notes,
+            'mapbox_access_token': getattr(settings, 'MAPBOX_ACCESS_TOKEN', '') or os.getenv('MAPBOX_ACCESS_TOKEN', ''),
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, pk):
+        original_ride = get_object_or_404(Ride, pk=pk)
+        if original_ride.driver != request.user and not request.user.is_staff:
+            messages.error(request, "You do not have permission to create a return ride for this trip.")
+            return redirect('rides:my_rides')
+
+        if original_ride.is_return_ride:
+            messages.error(request, "Cannot create a return ride for a ride that is already a return ride.")
+            return redirect('rides:my_rides')
+
+        if original_ride.has_return_ride:
+            messages.warning(request, f"A return ride already exists for this trip (#{original_ride.return_ride.id}).")
+            return redirect('rides:detail', pk=original_ride.return_ride.id)
+
+        origin = request.POST.get('origin', '').strip() or original_ride.destination
+        destination = request.POST.get('destination', '').strip() or original_ride.origin
+        date_str = request.POST.get('departure_date', '').strip()
+        time_str = request.POST.get('departure_time', '').strip()
+        seats_str = request.POST.get('available_seats', '').strip()
+        price_str = request.POST.get('price_per_seat', '').strip()
+        vehicle_info = request.POST.get('vehicle_info', '').strip() or original_ride.vehicle_info
+        notes = request.POST.get('notes', '').strip()
+
+        # Parse departure datetime
+        departure_datetime = None
+        if date_str and time_str:
+            try:
+                departure_datetime = timezone.make_aware(
+                    datetime.datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+                )
+            except Exception:
+                try:
+                    departure_datetime = datetime.datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+                except Exception:
+                    pass
+
+        errors = []
+        if not departure_datetime:
+            errors.append("Please specify a valid departure date and time for the return ride.")
+        else:
+            try:
+                validate_return_ride_timing(original_ride, departure_datetime)
+            except Exception as ve:
+                errors.append(str(ve))
+
+        try:
+            seats = int(seats_str)
+            if seats <= 0:
+                errors.append("Available seats must be at least 1.")
+        except (ValueError, TypeError):
+            errors.append("Available seats must be a valid number.")
+
+        try:
+            price = float(price_str)
+            if price < 0:
+                errors.append("Price per seat cannot be negative.")
+        except (ValueError, TypeError):
+            errors.append("Price per seat must be a valid amount.")
+
+        if errors:
+            for err in errors:
+                messages.error(request, err)
+            context = {
+                'original_ride': original_ride,
+                'default_origin': origin,
+                'default_destination': destination,
+                'default_pickup_address': request.POST.get('pickup_address', ''),
+                'default_drop_address': request.POST.get('drop_address', ''),
+                'default_date': date_str,
+                'default_time': time_str,
+                'min_date': original_ride.departure_datetime.strftime('%Y-%m-%d'),
+                'default_seats': seats_str,
+                'default_price': price_str,
+                'default_vehicle': vehicle_info,
+                'default_notes': notes,
+                'mapbox_access_token': getattr(settings, 'MAPBOX_ACCESS_TOKEN', '') or os.getenv('MAPBOX_ACCESS_TOKEN', ''),
+            }
+            return render(request, self.template_name, context)
+
+        # Coordinate handling
+        pickup_address = request.POST.get('pickup_address', '').strip() or origin
+        drop_address = request.POST.get('drop_address', '').strip() or destination
+        
+        pickup_lat = request.POST.get('pickup_latitude')
+        pickup_lng = request.POST.get('pickup_longitude')
+        drop_lat = request.POST.get('drop_latitude')
+        drop_lng = request.POST.get('drop_longitude')
+
+        # Fallback to reversed coordinates from original ride if origin/destination match
+        if (not pickup_lat or not pickup_lng) and origin == original_ride.destination:
+            pickup_lat = original_ride.drop_latitude
+            pickup_lng = original_ride.drop_longitude
+            if not pickup_address and original_ride.drop_address:
+                pickup_address = original_ride.drop_address
+
+        if (not drop_lat or not drop_lng) and destination == original_ride.origin:
+            drop_lat = original_ride.pickup_latitude
+            drop_lng = original_ride.pickup_longitude
+            if not drop_address and original_ride.pickup_address:
+                drop_address = original_ride.pickup_address
+
+        # Route geometry
+        route_geom_str = request.POST.get('route_geometry')
+        route_geometry = None
+        if route_geom_str:
+            try:
+                route_geometry = json.loads(route_geom_str)
+            except Exception:
+                pass
+
+        if not route_geometry and original_ride.route_geometry and origin == original_ride.destination and destination == original_ride.origin:
+            try:
+                route_geometry = list(reversed(original_ride.route_geometry))
+            except Exception:
+                pass
+
+        ride_data = {
+            'origin': origin,
+            'destination': destination,
+            'pickup_point': pickup_address,
+            'pickup_address': pickup_address,
+            'drop_address': drop_address,
+            'pickup_latitude': float(pickup_lat) if pickup_lat else None,
+            'pickup_longitude': float(pickup_lng) if pickup_lng else None,
+            'drop_latitude': float(drop_lat) if drop_lat else None,
+            'drop_longitude': float(drop_lng) if drop_lng else None,
+            'route_geometry': route_geometry,
+            'estimated_distance_km': original_ride.estimated_distance_km,
+            'estimated_duration_mins': original_ride.estimated_duration_mins,
+            'departure_datetime': departure_datetime,
+            'available_seats': seats,
+            'price_per_seat': price,
+            'vehicle_info': vehicle_info,
+            'notes': notes,
+        }
+
+        try:
+            return_ride = create_return_ride(original_ride, request.user, ride_data)
+            messages.success(request, f"Return ride ({return_ride.origin} → {return_ride.destination}) created successfully!")
+
+            try:
+                from apps.core.email_service import EmailService
+                EmailService.send_ride_created_email(request.user, return_ride)
+            except Exception as e:
+                logger.error(f"Error triggering return ride created email: {e}")
+
+            return redirect('rides:my_rides')
+        except Exception as ve:
+            messages.error(request, str(ve))
+            return redirect('rides:return_ride_create', pk=original_ride.pk)
+
+
+class ScheduleReturnRideLaterView(LoginRequiredMixin, View):
+    """
+    Direct endpoint for 'Schedule for Later'.
+    """
+    def post(self, request, pk):
+        return self._schedule(request, pk)
+
+    def get(self, request, pk):
+        return self._schedule(request, pk)
+
+    def _schedule(self, request, pk):
+        ride = get_object_or_404(Ride, pk=pk)
+        try:
+            schedule_return_ride_later(ride, request.user)
+            messages.success(request, f"Scheduled for later! We will remind you to create a return ride once your ride to {ride.destination} is completed.")
+        except Exception as ve:
+            messages.warning(request, str(ve))
+        return redirect('rides:my_rides')
+
+
+class SkipReturnRideView(LoginRequiredMixin, View):
+    """
+    Direct endpoint for 'Skip'.
+    """
+    def post(self, request, pk):
+        return self._skip(request, pk)
+
+    def get(self, request, pk):
+        return self._skip(request, pk)
+
+    def _skip(self, request, pk):
+        ride = get_object_or_404(Ride, pk=pk)
+        try:
+            skip_return_ride(ride, request.user)
+        except Exception:
+            pass
+        return redirect('rides:my_rides')
+
+
+# --- REST API Endpoints for Return Ride ---
+
+class ReturnRideOptionsAPIView(LoginRequiredMixin, View):
+    """
+    GET: Returns pre-filled return ride options and timing constraints.
+    """
+    def get(self, request, pk):
+        ride = get_object_or_404(Ride, pk=pk)
+        if ride.driver != request.user and not request.user.is_staff:
+            return JsonResponse({'error': 'Unauthorized'}, status=403)
+
+        return JsonResponse({
+            'original_ride_id': ride.id,
+            'origin': ride.destination,
+            'destination': ride.origin,
+            'pickup_address': ride.drop_address or ride.destination,
+            'drop_address': ride.pickup_address or ride.origin,
+            'earliest_allowed_departure': ride.departure_datetime.isoformat(),
+            'available_seats': ride.available_seats,
+            'price_per_seat': str(ride.price_per_seat),
+            'vehicle_info': ride.vehicle_info,
+            'has_return_ride': ride.has_return_ride,
+            'return_ride_id': ride.return_ride.id if ride.has_return_ride else None,
+            'return_ride_status': ride.return_ride_status,
+        })
+
+
+class ReturnRideScheduleAPIView(LoginRequiredMixin, View):
+    """
+    POST: Schedules return ride reminder for later via API.
+    """
+    def post(self, request, pk):
+        ride = get_object_or_404(Ride, pk=pk)
+        try:
+            reminder = schedule_return_ride_later(ride, request.user)
+            return JsonResponse({
+                'success': True,
+                'return_ride_status': ride.return_ride_status,
+                'reminder_id': reminder.id
+            })
+        except Exception as ve:
+            return JsonResponse({'error': str(ve)}, status=400)
+
+
+class ReturnRideSkipAPIView(LoginRequiredMixin, View):
+    """
+    POST: Skips return ride via API.
+    """
+    def post(self, request, pk):
+        ride = get_object_or_404(Ride, pk=pk)
+        try:
+            skip_return_ride(ride, request.user)
+            return JsonResponse({
+                'success': True,
+                'return_ride_status': ride.return_ride_status
+            })
+        except Exception as ve:
+            return JsonResponse({'error': str(ve)}, status=400)
+
 

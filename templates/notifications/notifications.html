@@ -90,6 +90,11 @@
     color: #f89516;
 }
 
+.notif-icon-circle.return_ride_reminder {
+    background: #fff7ed;
+    color: #f89516;
+}
+
 .notif-icon-circle.new_message {
     background: #ffedd5;
     color: #f89516;
@@ -236,6 +241,8 @@
                         <i class="fa-solid fa-circle-xmark"></i>
                     {% elif notification.notification_type == 'ride_reminder' %}
                         <i class="fa-solid fa-bell"></i>
+                    {% elif notification.notification_type == 'return_ride_reminder' %}
+                        <i class="fa-solid fa-arrows-rotate"></i>
                     {% elif notification.notification_type == 'new_message' %}
                         <i class="fa-solid fa-comment-dots"></i>
                     {% elif notification.notification_type == 'payment_update' %}
@@ -246,12 +253,19 @@
                 </div>
 
                 <!-- CONTENT -->
-                <div class="notif-content-col">
+                <div class="notif-content-col" style="flex: 1;">
                     <div class="notif-title-row">
                         <span class="notif-title">{{ notification.title }}</span>
                         <span class="notif-time">{{ notification.created_at|date:"d M • H:i" }}</span>
                     </div>
                     <p class="notif-message-text">{{ notification.message }}</p>
+                    {% if notification.link %}
+                        <div style="margin-top: 0.65rem;">
+                            <a href="{{ notification.link }}" class="btn-notif-cta" style="padding: 0.45rem 1.15rem; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+                                <i class="fa-solid fa-arrows-rotate"></i> Create Return Ride
+                            </a>
+                        </div>
+                    {% endif %}
                 </div>
 
                 {% if not notification.is_read %}

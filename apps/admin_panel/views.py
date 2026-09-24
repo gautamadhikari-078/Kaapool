@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.http import JsonResponse, HttpResponseRedirect
 from django.urls import reverse
 
-from apps.rides.models import Ride, Vehicle
+from apps.rides.models import Ride, Vehicle, ReturnRideReminder
 from apps.bookings.models import Booking
 from apps.payments.models import Payment
 from apps.notifications.models import Notification
@@ -219,6 +219,14 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
             completed_count=Count('id', filter=Q(status='completed'))
         )
 
+        # Return Ride Overview KPIs
+        total_return_requests = Ride.objects.filter(is_return_ride=False).exclude(return_ride_status='NOT_REQUESTED').count()
+        return_rides_created = Ride.objects.filter(is_return_ride=True).count()
+        return_rides_scheduled = Ride.objects.filter(return_ride_status='SCHEDULED_FOR_LATER').count()
+        return_rides_skipped = Ride.objects.filter(return_ride_status='SKIPPED').count()
+        return_rides_completed = Ride.objects.filter(is_return_ride=True, status='completed').count()
+        return_rides_cancelled = Ride.objects.filter(is_return_ride=True, status='cancelled').count()
+
         # Recent activities
         recent_users = User.objects.order_by('-date_joined')[:5]
         recent_rides = Ride.objects.select_related('driver').order_by('-created_at')[:5]
@@ -239,6 +247,12 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
             'total_bookings': total_bookings,
             'open_complaints': open_complaints,
             'total_payments': payment_stats['total_amount'] or 0,
+            'total_return_requests': total_return_requests,
+            'return_rides_created': return_rides_created,
+            'return_rides_scheduled': return_rides_scheduled,
+            'return_rides_skipped': return_rides_skipped,
+            'return_rides_completed': return_rides_completed,
+            'return_rides_cancelled': return_rides_cancelled,
             'recent_users': recent_users,
             'recent_rides': recent_rides,
             'recent_bookings': recent_bookings,
@@ -461,12 +475,22 @@ class AdminRideListView(AdminRequiredMixin, ListView):
     paginate_by = 15
 
     def get_queryset(self):
-        queryset = Ride.objects.select_related('driver').order_by('-departure_datetime')
+        queryset = Ride.objects.select_related('driver', 'original_ride', 'original_ride__driver').prefetch_related('return_rides').order_by('-departure_datetime')
         status_filter = self.request.GET.get('status', '').strip()
+        return_filter = self.request.GET.get('return_status', '').strip()
         search = self.request.GET.get('search', '').strip()
 
         if status_filter:
             queryset = queryset.filter(status=status_filter)
+        if return_filter:
+            if return_filter == 'created':
+                queryset = queryset.filter(Q(is_return_ride=True) | Q(return_ride_status='CREATED'))
+            elif return_filter == 'scheduled_later':
+                queryset = queryset.filter(return_ride_status='SCHEDULED_FOR_LATER')
+            elif return_filter == 'skipped':
+                queryset = queryset.filter(return_ride_status='SKIPPED')
+            elif return_filter == 'not_requested':
+                queryset = queryset.filter(return_ride_status='NOT_REQUESTED', is_return_ride=False)
         if search:
             queryset = queryset.filter(
                 Q(origin__icontains=search) |
@@ -478,6 +502,7 @@ class AdminRideListView(AdminRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['status_filter'] = self.request.GET.get('status', '')
+        context['return_status_filter'] = self.request.GET.get('return_status', '')
         context['search'] = self.request.GET.get('search', '')
         context['active_section'] = 'rides'
         return context
@@ -491,6 +516,8 @@ class AdminRideDetailView(AdminRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['ride_bookings'] = Booking.objects.filter(ride=self.object).select_related('passenger')
+        context['return_rides'] = self.object.return_rides.all().select_related('driver')
+        context['reminders'] = ReturnRideReminder.objects.filter(original_ride=self.object).select_related('user')
         context['active_section'] = 'rides'
         return context
 
