@@ -108,7 +108,7 @@
 
         <div class="top-rides-grid">
             {% for route in popular_routes %}
-            <a href="{% url 'rides:search' %}?origin={{ route.search_origin|default:route.origin }}&destination={{ route.search_dest|default:route.destination }}"
+            <a href="{% url 'rides:search' %}?origin={{ route.search_origin|default:route.origin }}&destination={{ route.search_dest|default:route.destination }}&date={% now 'Y-m-d' %}"
                 class="route-card">
                 <div class="route-info">
                     <span class="route-cities">{{ route.origin }} <i class="fa-solid fa-arrow-right"></i> {{ route.destination }}</span>

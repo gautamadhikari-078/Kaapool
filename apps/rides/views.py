@@ -53,19 +53,33 @@ class RideSearchView(ListView):
         
         origin = self.request.GET.get('origin', '').strip()
         destination = self.request.GET.get('destination', '').strip()
-        date_str = self.request.GET.get('date', '').strip()
+        raw_date = self.request.GET.get('date', '').strip()
         seats_str = self.request.GET.get('seats', '').strip()
+
+        today_date = timezone.now().date()
+        today_str = today_date.strftime('%Y-%m-%d')
+        date_str = raw_date if raw_date else today_str
 
         if origin:
             queryset = queryset.filter(Q(origin__icontains=origin) | Q(pickup_address__icontains=origin))
         if destination:
             queryset = queryset.filter(Q(destination__icontains=destination) | Q(drop_address__icontains=destination))
+
         if date_str:
             try:
                 search_date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
-                queryset = queryset.filter(departure_datetime__date=search_date)
+                day_queryset = queryset.filter(departure_datetime__date=search_date)
+                if day_queryset.exists():
+                    queryset = day_queryset
+                elif raw_date:
+                    # User explicitly searched for a specific date that has no rides
+                    queryset = day_queryset
+                else:
+                    # Date defaulted to today; if no rides today for this route, show upcoming rides starting today
+                    queryset = queryset.filter(departure_datetime__date__gte=search_date)
             except ValueError:
                 pass
+
         if seats_str and seats_str.isdigit():
             queryset = queryset.filter(available_seats__gte=int(seats_str))
 
@@ -77,8 +91,12 @@ class RideSearchView(ListView):
         
         origin = self.request.GET.get('origin', '').strip()
         destination = self.request.GET.get('destination', '').strip()
-        date_str = self.request.GET.get('date', '').strip()
+        raw_date = self.request.GET.get('date', '').strip()
         seats_str = self.request.GET.get('seats', '1').strip()
+
+        today_date = timezone.now().date()
+        today_str = today_date.strftime('%Y-%m-%d')
+        date_str = raw_date if raw_date else today_str
 
         context['search_origin'] = origin
         context['search_destination'] = destination
