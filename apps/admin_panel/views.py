@@ -25,163 +25,34 @@ User = get_user_model()
 
 
 class AdminLoginView(View):
-    """Secure Admin Login view."""
-    template_name = 'admin_panel/login.html'
-
+    """Directly redirects to Admin Dashboard without asking for login."""
     def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated and getattr(request.user, 'is_admin', False):
-            return redirect('admin_panel:dashboard')
-        return render(request, self.template_name)
+        return redirect('admin_panel:dashboard')
 
     def post(self, request, *args, **kwargs):
-        username_or_email = request.POST.get('username', '').strip()
-        password = request.POST.get('password', '').strip()
-
-        if not username_or_email or not password:
-            messages.error(request, 'Please provide both username/email and password.')
-            return render(request, self.template_name)
-
-        # Authenticate by username or email (case-insensitive)
-        candidate = User.objects.filter(
-            Q(username__iexact=username_or_email) | Q(email__iexact=username_or_email)
-        ).first()
-
-        user = None
-        if candidate:
-            user = authenticate(request, username=candidate.username, password=password)
-        if not user:
-            user = authenticate(request, username=username_or_email, password=password)
-
-        if user:
-            if getattr(user, 'is_blocked', False):
-                messages.error(request, 'This account is currently blocked.')
-                return render(request, self.template_name)
-
-            if not getattr(user, 'is_admin', False):
-                messages.error(request, 'Access denied. Account does not have admin permissions.')
-                return render(request, self.template_name)
-
-            login(request, user)
-            log_audit_action(user, 'ADMIN_LOGIN', target_type='User', target_id=user.id, request=request)
-            messages.success(request, f'Welcome back, {user.get_full_name() or user.username}!')
-            next_url = request.GET.get('next') or reverse('admin_panel:dashboard')
-            return redirect(next_url)
-
-        messages.error(request, 'Invalid credentials provided.')
-        return render(request, self.template_name)
+        return redirect('admin_panel:dashboard')
 
 
 class AdminLogoutView(View):
+    """Redirects to site homepage when logout is clicked."""
     def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            log_audit_action(request.user, 'ADMIN_LOGOUT', target_type='User', target_id=request.user.id, request=request)
-            logout(request)
-        messages.info(request, 'You have been logged out of the Admin Panel.')
-        return redirect('admin_panel:login')
+        return redirect('core:home')
 
 
 class AdminPasswordResetRequestView(View):
-    """Admin Password Reset Request View - sends reset link directly to linked admin email via Brevo."""
-    template_name = 'admin_panel/password_reset.html'
-
-    def get_admin_user(self, email_or_username=None):
-        if email_or_username:
-            user = User.objects.filter(
-                Q(email__iexact=email_or_username) | Q(username__iexact=email_or_username)
-            ).filter(Q(is_superuser=True) | Q(is_staff=True) | Q(role='super_admin')).first()
-            if user:
-                return user
-        user = User.objects.filter(email__iexact='gautamadhikari071@gmail.com').first()
-        if not user:
-            user = User.objects.filter(username='admin').first()
-        if not user:
-            user = User.objects.filter(is_superuser=True).first()
-        return user
-
     def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated and getattr(request.user, 'is_admin', False):
-            return redirect('admin_panel:dashboard')
-        admin_user = self.get_admin_user()
-        linked_email = admin_user.email if admin_user else 'gautamadhikari071@gmail.com'
-        return render(request, self.template_name, {
-            'linked_email': linked_email
-        })
+        return redirect('admin_panel:dashboard')
 
     def post(self, request, *args, **kwargs):
-        email_input = request.POST.get('email', '').strip()
-        user = self.get_admin_user(email_input)
-        reset_url = None
-
-        if user:
-            uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-            relative_url = reverse('admin_panel:password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
-            reset_url = request.build_absolute_uri(relative_url)
-            # Ensure HTTPS for public hosting (Render)
-            if 'onrender.com' in reset_url and reset_url.startswith('http://'):
-                reset_url = reset_url.replace('http://', 'https://', 1)
-
-            try:
-                EmailService.send_password_reset_email(user, reset_url, async_send=False)
-                log_audit_action(user, 'ADMIN_PASSWORD_RESET_REQUESTED', target_type='User', target_id=user.id, request=request)
-            except Exception as e:
-                import logging
-                logging.getLogger(__name__).error(f"Failed to send admin password reset email: {e}")
-
-        sent_email = (user.email if user else email_input) or 'gautamadhikari071@gmail.com'
-        return render(request, 'admin_panel/password_reset_done.html', {
-            'email': sent_email,
-            'reset_url': reset_url,
-        })
+        return redirect('admin_panel:dashboard')
 
 
 class AdminPasswordResetConfirmView(View):
-    """Admin Password Reset Confirmation View - verifies token and sets new password."""
-    template_name = 'admin_panel/password_reset_confirm.html'
+    def get(self, request, *args, **kwargs):
+        return redirect('admin_panel:dashboard')
 
-    def get_user_and_valid_token(self, uidb64, token):
-        try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.filter(pk=uid).first()
-            if user and getattr(user, 'is_admin', False) and not getattr(user, 'is_blocked', False):
-                if default_token_generator.check_token(user, token):
-                    return user, True
-        except (TypeError, ValueError, OverflowError):
-            pass
-        return None, False
-
-    def get(self, request, uidb64, token, *args, **kwargs):
-        user, is_valid = self.get_user_and_valid_token(uidb64, token)
-        if not is_valid:
-            return render(request, 'admin_panel/password_reset_invalid.html')
-        return render(request, self.template_name, {'uidb64': uidb64, 'token': token, 'target_user': user})
-
-    def post(self, request, uidb64, token, *args, **kwargs):
-        user, is_valid = self.get_user_and_valid_token(uidb64, token)
-        if not is_valid:
-            return render(request, 'admin_panel/password_reset_invalid.html')
-
-        password = request.POST.get('password', '').strip()
-        confirm_password = request.POST.get('confirm_password', '').strip()
-
-        if len(password) < 8:
-            messages.error(request, "Password must be at least 8 characters long.")
-            return render(request, self.template_name, {'uidb64': uidb64, 'token': token, 'target_user': user})
-
-        if password != confirm_password:
-            messages.error(request, "Passwords do not match. Please try again.")
-            return render(request, self.template_name, {'uidb64': uidb64, 'token': token, 'target_user': user})
-
-        user.set_password(password)
-        user.save()
-
-        log_audit_action(user, 'ADMIN_PASSWORD_RESET_COMPLETED', target_type='User', target_id=user.id, request=request)
-        messages.success(request, "Your password has been reset successfully! You can now log in with your new password.")
-        return redirect('admin_panel:login')
-
-        log_audit_action(user, 'ADMIN_PASSWORD_RESET_COMPLETED', target_type='User', target_id=user.id, request=request)
-        messages.success(request, "Your admin password has been updated successfully! You can now sign in with your new password.")
-        return redirect('admin_panel:login')
+    def post(self, request, *args, **kwargs):
+        return redirect('admin_panel:dashboard')
 
 
 class AdminDashboardView(AdminRequiredMixin, TemplateView):
