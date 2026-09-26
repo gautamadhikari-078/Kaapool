@@ -619,26 +619,10 @@
                 </a>
             </li>
 
-            <li class="menu-category">System</li>
-
-            <li class="menu-item {% if active_section == 'admins' %}active{% endif %}">
-                <a href="{% url 'admin_panel:admins_list' %}" class="menu-link">
-                    <i class="fa-solid fa-user-shield"></i>
-                    <span>Administrators</span>
-                </a>
-            </li>
-
-            <li class="menu-item {% if active_section == 'settings' %}active{% endif %}">
-                <a href="{% url 'admin_panel:settings' %}" class="menu-link">
-                    <i class="fa-solid fa-gear"></i>
-                    <span>Settings</span>
-                </a>
-            </li>
-
-            <li class="menu-item {% if active_section == 'audit_logs' %}active{% endif %}">
-                <a href="{% url 'admin_panel:audit_logs' %}" class="menu-link">
-                    <i class="fa-solid fa-list-check"></i>
-                    <span>Audit Logs</span>
+            <li class="menu-item {% if active_section == 'conversations' %}active{% endif %}">
+                <a href="{% url 'admin_panel:conversation_list' %}" class="menu-link">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>Conversations</span>
                 </a>
             </li>
         </ul>

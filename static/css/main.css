@@ -605,8 +605,18 @@ main#main-content {
 .top-rides-section {
     background: var(--dark-navy);
     color: #ffffff;
-    padding: 6rem 0;
-    margin-top: 5rem;
+    padding: 3.5rem 0;
+    margin-top: 2rem;
+    margin-bottom: 0;
+}
+
+.top-rides-section .section-container {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.top-rides-section .section-header {
+    margin-bottom: 2rem;
 }
 
 .top-rides-section .sub-tag {
@@ -625,25 +635,27 @@ main#main-content {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 .route-card {
-    background: var(--dark-navy-card);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius-md);
-    padding: 1.25rem 1.5rem;
+    background: #ffffff;
+    border: 1px solid #ffffff;
+    border-radius: 14px;
+    padding: 1.2rem 1.6rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
+    text-decoration: none;
     transition: var(--transition);
 }
 
 .route-card:hover {
-    background: var(--dark-navy-hover);
-    border-color: var(--primary-amber);
-    transform: translateY(-3px);
+    background: #f8fafc;
+    border-color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
 }
 
 .route-info {
@@ -657,50 +669,32 @@ main#main-content {
     flex-wrap: wrap;
     gap: 0.3rem;
     font-family: var(--font-heading);
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 700;
-    color: #ffffff;
-    margin-bottom: 0.3rem;
+    color: #0f172a;
+    margin: 0;
 }
 
 .route-cities i {
-    font-size: 0.85rem;
-    color: var(--primary-amber);
-    margin: 0 0.2rem;
+    font-size: 0.9rem;
+    color: #475569;
+    margin: 0 0.3rem;
     flex-shrink: 0;
 }
 
-.route-freq {
-    display: block;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
-
-.route-price {
+.route-arrow {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    flex-shrink: 0;
-}
-
-.price-tag {
-    background: #2b241e;
-    color: var(--primary-amber);
-    padding: 0.45rem 0.95rem;
-    border-radius: 20px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    white-space: nowrap;
+    justify-content: center;
+    color: #334155;
+    font-size: 1.05rem;
     flex-shrink: 0;
     transition: var(--transition);
 }
 
-.price-tag i {
-    font-size: 0.8rem;
-    flex-shrink: 0;
+.route-card:hover .route-arrow {
+    color: var(--dark-navy);
+    transform: translateX(3px);
 }
 
 .routes-action {

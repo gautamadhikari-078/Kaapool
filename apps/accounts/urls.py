@@ -3,12 +3,13 @@ from .views import (
     CustomLoginView, CustomLogoutView, SignUpView, EmailOTPVerifyView,
     NotificationPreferencesView, UnsubscribeView,
     DashboardView, ProfileView, PersonalDetailsView, EditPersonalDetailsView, RatingsView,
-    AddVehicleView, VehicleDetailView, VehicleEditFeaturesView, VehicleDeleteView,
+    AddVehicleView, VehicleDetailView, VehicleSpecsView, VehicleEditFeaturesView, VehicleDeleteView,
     ProfilePictureChoiceView, ProfilePictureEditView,
     DeleteProfilePictureView, VerifyIdView,
     DocumentSelectView, DocumentUploadView, DocumentViewView,
     SumsubVerifyAPIView, SumsubWebhookView,
-    PasswordResetRequestView, PasswordResetConfirmView
+    PasswordResetRequestView, PasswordResetConfirmView,
+    TravelPreferencesView
 )
 
 app_name = 'accounts'
@@ -27,9 +28,11 @@ urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile'),
     path('profile/personal-details/', PersonalDetailsView.as_view(), name='personal_details'),
     path('profile/personal-details/edit/', EditPersonalDetailsView.as_view(), name='edit_personal_details'),
+    path('profile/travel-preferences/', TravelPreferencesView.as_view(), name='travel_preferences'),
     path('profile/ratings/', RatingsView.as_view(), name='ratings'),
     path('profile/vehicle/add/', AddVehicleView.as_view(), name='add_vehicle'),
     path('profile/vehicle/<int:pk>/', VehicleDetailView.as_view(), name='vehicle_detail'),
+    path('profile/vehicle/<int:pk>/specs/', VehicleSpecsView.as_view(), name='vehicle_specs'),
     path('profile/vehicle/<int:pk>/edit/', VehicleEditFeaturesView.as_view(), name='vehicle_edit'),
     path('profile/vehicle/<int:pk>/delete/', VehicleDeleteView.as_view(), name='vehicle_delete'),
     path('profile/picture/choice/', ProfilePictureChoiceView.as_view(), name='profile_picture_choice'),

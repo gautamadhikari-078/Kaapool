@@ -350,18 +350,19 @@
                     <div class="form-row">
                         <div>
                             <label>Your Full Name</label>
-                            <input type="text" name="name" class="form-input" placeholder="e.g. John Doe" required>
+                            <input type="text" name="name" class="form-input" placeholder="Enter your name" required>
                         </div>
                         <div>
                             <label>Email Address</label>
-                            <input type="email" name="email" class="form-input" placeholder="e.g. john.doe@example.com" required>
+                            <input type="email" id="emailInput" name="email" class="form-input" placeholder="Enter your email ID" required>
+                            <div id="emailAuthFeedback" style="margin-top: 0.35rem; font-size: 0.825rem; font-weight: 600; display: none;"></div>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div>
                             <label>Phone Number</label>
-                            <input type="text" name="phone" class="form-input" placeholder="e.g. +1 (555) 000-1234">
+                            <input type="text" name="phone" class="form-input" placeholder="91XXXXXXXX">
                         </div>
                         <div>
                             <label>Topic / Category</label>
@@ -382,11 +383,19 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Message Content</label>
-                        <textarea name="message" rows="5" class="form-textarea" placeholder="Write your message here..." required></textarea>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                            <label style="margin: 0;">Message Content</label>
+                            <span id="wordCountCounter" style="font-size: 0.8rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 0.15rem 0.6rem; border-radius: 9999px;">
+                                <span id="wordCountVal">0</span> / 500 words
+                            </span>
+                        </div>
+                        <textarea id="messageTextArea" name="message" rows="5" class="form-textarea" placeholder="Write your message here (maximum 500 words)..." required></textarea>
+                        <div id="wordCountWarning" style="display: none; color: #dc2626; font-size: 0.825rem; font-weight: 600; margin-top: 0.35rem;">
+                            <i class="fa-solid fa-circle-exclamation"></i> You have exceeded the maximum limit of 500 words. Please shorten your message before submitting.
+                        </div>
                     </div>
 
-                    <button type="submit" class="btn-submit-contact">
+                    <button type="submit" id="submitContactBtn" class="btn-submit-contact">
                         <i class="fa-solid fa-paper-plane"></i> Send Message
                     </button>
                 </form>
@@ -431,4 +440,139 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const emailInput = document.getElementById('emailInput');
+    const emailFeedback = document.getElementById('emailAuthFeedback');
+    const textarea = document.getElementById('messageTextArea');
+    const wordCountVal = document.getElementById('wordCountVal');
+    const counterBadge = document.getElementById('wordCountCounter');
+    const warning = document.getElementById('wordCountWarning');
+    const submitBtn = document.getElementById('submitContactBtn');
+
+    let isEmailValid = false;
+    let emailDebounceTimer = null;
+
+    // Disposable email domains list (instant client-side check)
+    const disposableDomains = [
+        'yopmail.com', 'yopmail.fr', 'yopmail.net', 'cool.fr.nf', 'jetable.fr.nf',
+        'tempmail.com', 'temp-mail.org', 'temp-mail.ru', 'tempmail.net', 'tempmail.de',
+        'mailinator.com', 'mailinator2.com', 'mailinator.net', 'sogetthis.com',
+        'guerrillamail.com', 'sharklasers.com', 'guerrillamail.net', 'grr.la',
+        '10minutemail.com', '10minutemail.net', '10minutemail.org', 'dispostable.com',
+        'trashmail.com', 'trashmail.net', 'trashmail.me', 'getnada.com', 'dropmail.me',
+        'fakeinbox.com', 'throwawaymail.com', 'crazymailing.com', 'maildrop.cc',
+        'discard.email', 'emailondeck.com', 'tempinbox.com', 'burnermail.io', 'mohmal.com'
+    ];
+
+    function validateEmailRealtime() {
+        if (!emailInput) return;
+        const val = emailInput.value.trim();
+
+        if (!val) {
+            emailFeedback.style.display = 'none';
+            isEmailValid = false;
+            return;
+        }
+
+        const domain = val.split('@')[1] ? val.split('@')[1].toLowerCase() : '';
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+        // Instant disposable domain check
+        if (domain && disposableDomains.some(d => domain === d || domain.endsWith('.' + d))) {
+            emailFeedback.style.display = 'block';
+            emailFeedback.style.color = '#dc2626';
+            emailFeedback.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Temporary emails are not allowed. Please use a valid email address.';
+            isEmailValid = false;
+            updateSubmitState();
+            return;
+        }
+
+        if (!emailRegex.test(val)) {
+            emailFeedback.style.display = 'block';
+            emailFeedback.style.color = '#dc2626';
+            emailFeedback.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Invalid email address format.';
+            isEmailValid = false;
+            updateSubmitState();
+            return;
+        }
+
+        // Show checking state
+        emailFeedback.style.display = 'block';
+        emailFeedback.style.color = '#64748b';
+        emailFeedback.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying email address authenticity...';
+
+        // Debounced API call to server
+        clearTimeout(emailDebounceTimer);
+        emailDebounceTimer = setTimeout(function() {
+            fetch('/api/validate-email/?email=' + encodeURIComponent(val))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.is_valid) {
+                        emailFeedback.style.color = '#166534';
+                        emailFeedback.innerHTML = '<i class="fa-solid fa-circle-check"></i> Email address verified successfully.';
+                        isEmailValid = true;
+                    } else {
+                        emailFeedback.style.color = '#dc2626';
+                        emailFeedback.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ' + (data.reason || 'Invalid or unverified email address.');
+                        isEmailValid = false;
+                    }
+                    updateSubmitState();
+                })
+                .catch(() => {
+                    // Fallback to syntax validity if offline/network pause
+                    emailFeedback.style.color = '#166534';
+                    emailFeedback.innerHTML = '<i class="fa-solid fa-circle-check"></i> Valid email format.';
+                    isEmailValid = true;
+                    updateSubmitState();
+                });
+        }, 350);
+    }
+
+    function countWords(str) {
+        if (!str || !str.trim()) return 0;
+        return str.trim().split(/\s+/).filter(Boolean).length;
+    }
+
+    function updateSubmitState() {
+        if (!textarea) return;
+        const count = countWords(textarea.value);
+        wordCountVal.textContent = count;
+
+        const isWordCountOk = count <= 500;
+
+        if (count > 500) {
+            counterBadge.style.background = '#fee2e2';
+            counterBadge.style.color = '#991b1b';
+            warning.style.display = 'block';
+        } else {
+            counterBadge.style.background = '#f1f5f9';
+            counterBadge.style.color = '#64748b';
+            warning.style.display = 'none';
+        }
+
+        if (!isWordCountOk || !isEmailValid) {
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.6';
+            submitBtn.style.cursor = 'not-allowed';
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+        }
+    }
+
+    if (emailInput) {
+        emailInput.addEventListener('input', validateEmailRealtime);
+        emailInput.addEventListener('blur', validateEmailRealtime);
+        validateEmailRealtime();
+    }
+
+    if (textarea) {
+        textarea.addEventListener('input', updateSubmitState);
+        updateSubmitState();
+    }
+});
+</script>
 {% endblock content %}

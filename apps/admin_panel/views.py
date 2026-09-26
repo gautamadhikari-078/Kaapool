@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.db.models import Q, Count, Sum
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponseRedirect
+from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 
 from apps.rides.models import Ride, Vehicle, ReturnRideReminder
@@ -56,21 +57,51 @@ class AdminPasswordResetConfirmView(View):
 
 
 class AdminDashboardView(AdminRequiredMixin, TemplateView):
-    """Clean, real-time KPI overview dashboard."""
+    """Clean, real-time KPI overview dashboard with analytics & platform update manager."""
     template_name = 'admin_panel/dashboard.html'
+
+    def post(self, request, *args, **kwargs):
+        from apps.admin_panel.models import PlatformUpdate
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        update_type = request.POST.get('update_type', 'UPDATE').strip()
+        action = request.POST.get('action', '').strip()
+
+        if action == 'delete' and request.POST.get('update_id'):
+            up_id = request.POST.get('update_id')
+            PlatformUpdate.objects.filter(id=up_id).delete()
+            messages.success(request, "Website update entry deleted.")
+            return redirect('admin_panel:dashboard')
+
+        if title and description:
+            PlatformUpdate.objects.create(
+                title=title,
+                description=description,
+                update_type=update_type,
+                posted_by=request.user
+            )
+            messages.success(request, f" New website update '{title}' posted successfully.")
+        else:
+            messages.error(request, "Please enter both title and description for the update.")
+
+        return redirect('admin_panel:dashboard')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        from apps.admin_panel.models import PlatformUpdate
         
         # Real backend KPI stats
         total_users = User.objects.count()
         verified_users = User.objects.filter(is_verified_driver=True).count()
         pending_verifications = VerificationRecord.objects.filter(status='IN_PROGRESS').count()
+        unverified_users = max(0, total_users - verified_users)
+        admin_users = User.objects.filter(is_staff=True).count()
         
         total_drivers = User.objects.filter(offered_rides__isnull=False).distinct().count()
         active_drivers = User.objects.filter(offered_rides__status='active').distinct().count()
         
         active_rides = Ride.objects.filter(status='active').count()
+        scheduled_rides = Ride.objects.filter(status='scheduled').count()
         upcoming_rides = Ride.objects.filter(status='active', departure_datetime__gte=timezone.now()).count()
         completed_rides = Ride.objects.filter(status='completed').count()
         cancelled_rides = Ride.objects.filter(status='cancelled').count()
@@ -92,20 +123,19 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
         return_rides_completed = Ride.objects.filter(is_return_ride=True, status='completed').count()
         return_rides_cancelled = Ride.objects.filter(is_return_ride=True, status='cancelled').count()
 
-        # Recent activities
-        recent_users = User.objects.order_by('-date_joined')[:5]
-        recent_rides = Ride.objects.select_related('driver').order_by('-created_at')[:5]
-        recent_bookings = Booking.objects.select_related('passenger', 'ride').order_by('-created_at')[:5]
-        recent_verifications = VerificationRecord.objects.select_related('user').order_by('-updated_at')[:5]
-        recent_audit_logs = AuditLog.objects.select_related('admin').order_by('-created_at')[:6]
+        # Platform Updates
+        platform_updates = PlatformUpdate.objects.select_related('posted_by').order_by('-created_at')[:8]
 
         context.update({
             'total_users': total_users,
             'verified_users': verified_users,
+            'unverified_users': unverified_users,
+            'admin_users': admin_users,
             'pending_verifications': pending_verifications,
             'total_drivers': total_drivers,
             'active_drivers': active_drivers,
             'active_rides': active_rides,
+            'scheduled_rides': scheduled_rides,
             'upcoming_rides': upcoming_rides,
             'completed_rides': completed_rides,
             'cancelled_rides': cancelled_rides,
@@ -118,11 +148,13 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
             'return_rides_skipped': return_rides_skipped,
             'return_rides_completed': return_rides_completed,
             'return_rides_cancelled': return_rides_cancelled,
-            'recent_users': recent_users,
-            'recent_rides': recent_rides,
-            'recent_bookings': recent_bookings,
-            'recent_verifications': recent_verifications,
-            'recent_audit_logs': recent_audit_logs,
+            'platform_updates': platform_updates,
+
+            # JSON Data Arrays for Chart.js
+            'chart_ride_status': json.dumps([scheduled_rides, active_rides, completed_rides, cancelled_rides]),
+            'chart_user_dist': json.dumps([verified_users, unverified_users, admin_users]),
+            'chart_return_rides': json.dumps([return_rides_created, return_rides_scheduled, return_rides_completed, return_rides_cancelled, return_rides_skipped]),
+
             'active_section': 'dashboard'
         })
         return context
@@ -517,15 +549,23 @@ class AdminComplaintUpdateView(PermissionRequiredMixin, View):
         return redirect('admin_panel:complaint_detail', pk=complaint.pk)
 
 
-# --- CONTACT INQUIRY MANAGEMENT ---
+def auto_close_expired_inquiries():
+    """Auto-closes inquiries older than 30 days that have not been responded to."""
+    from apps.admin_panel.models import ContactInquiry
+    from django.utils import timezone
+    from datetime import timedelta
+    cutoff = timezone.now() - timedelta(days=30)
+    ContactInquiry.objects.filter(created_at__lte=cutoff, status='NEW').update(status='CLOSED')
+
 
 class AdminContactInquiryListView(AdminRequiredMixin, ListView):
     template_name = 'admin_panel/contact_inquiries/list.html'
     model = ContactInquiry
     context_object_name = 'inquiries'
-    paginate_by = 15
+    paginate_by = 10
 
     def get_queryset(self):
+        auto_close_expired_inquiries()
         queryset = ContactInquiry.objects.all().order_by('-created_at')
         status_filter = self.request.GET.get('status', '').strip()
         valid_filter = self.request.GET.get('valid', '').strip()
@@ -550,9 +590,81 @@ class AdminContactInquiryListView(AdminRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        inquiries = context.get('inquiries', [])
+        if inquiries:
+            for inq in inquiries:
+                if inq.email:
+                    inq.email_total_count = ContactInquiry.objects.filter(email__iexact=inq.email.strip()).count()
+                else:
+                    inq.email_total_count = 1
         context['status_filter'] = self.request.GET.get('status', '')
         context['valid_filter'] = self.request.GET.get('valid', '')
         context['search'] = self.request.GET.get('search', '')
+        context['active_section'] = 'contact_inquiries'
+        return context
+
+
+class AdminContactInquiryDetailView(AdminRequiredMixin, DetailView):
+    template_name = 'admin_panel/contact_inquiries/detail.html'
+    model = ContactInquiry
+    context_object_name = 'inquiry'
+
+    def get_context_data(self, **kwargs):
+        auto_close_expired_inquiries()
+        context = super().get_context_data(**kwargs)
+        inquiry = self.object
+
+        history = list(inquiry.reply_history or [])
+        if inquiry.admin_notes:
+            dt = inquiry.admin_replied_at or inquiry.created_at
+            if dt and timezone.is_aware(dt):
+                dt = timezone.localtime(dt)
+            entry = {
+                'subject': inquiry.subject,
+                'message': inquiry.message,
+                'reply': inquiry.admin_notes,
+                'replied_at': dt.strftime('%d %b %Y, %I:%M %p') if dt else ''
+            }
+            if not any(h.get('reply') == entry['reply'] and h.get('subject') == entry['subject'] for h in history):
+                history.append(entry)
+
+        # Reverse so most recent replies are at the top
+        history = history[::-1]
+
+        context['replied_history'] = history
+        context['replied_inquiries'] = history
+        context['active_section'] = 'contact_inquiries'
+        return context
+
+
+class AdminContactInquiryHistoryView(AdminRequiredMixin, DetailView):
+    template_name = 'admin_panel/contact_inquiries/history.html'
+    model = ContactInquiry
+    context_object_name = 'inquiry'
+
+    def get_context_data(self, **kwargs):
+        auto_close_expired_inquiries()
+        context = super().get_context_data(**kwargs)
+        inquiry = self.object
+
+        history = list(inquiry.reply_history or [])
+        if inquiry.admin_notes:
+            dt = inquiry.admin_replied_at or inquiry.created_at
+            if dt and timezone.is_aware(dt):
+                dt = timezone.localtime(dt)
+            entry = {
+                'subject': inquiry.subject,
+                'message': inquiry.message,
+                'reply': inquiry.admin_notes,
+                'replied_at': dt.strftime('%d %b %Y, %I:%M %p') if dt else ''
+            }
+            if not any(h.get('reply') == entry['reply'] and h.get('subject') == entry['subject'] for h in history):
+                history.append(entry)
+
+        # Reverse so most recent replies are at the top
+        history = history[::-1]
+
+        context['replied_history'] = history
         context['active_section'] = 'contact_inquiries'
         return context
 
@@ -566,15 +678,32 @@ class AdminContactInquiryReplyView(PermissionRequiredMixin, View):
         from django.utils import timezone
 
         inquiry = get_object_or_404(ContactInquiry, pk=pk)
+
+        # Block reply if closed or older than 30 days
+        if inquiry.status == 'CLOSED' or inquiry.is_expired:
+            if inquiry.status != 'CLOSED':
+                inquiry.status = 'CLOSED'
+                inquiry.save()
+            messages.error(request, "This inquiry is older than 30 days or closed. Direct email replies are disabled for expired/closed inquiries.")
+            return redirect('admin_panel:contact_inquiry_detail', pk=inquiry.pk)
+
+        action_type = request.POST.get('action_type', 'reply')
+
+        if action_type == 'close':
+            inquiry.status = 'CLOSED'
+            inquiry.save()
+            messages.success(request, f"Inquiry #{inquiry.id} marked as Closed.")
+            return redirect('admin_panel:contact_inquiry_detail', pk=inquiry.pk)
+
         reply_message = request.POST.get('reply_message', '').strip()
 
         if not reply_message:
             messages.error(request, "Reply message cannot be empty.")
-            return redirect('admin_panel:contact_inquiry_list')
+            return redirect('admin_panel:contact_inquiry_detail', pk=inquiry.pk)
 
         if not inquiry.is_email_valid:
             messages.error(request, f"Cannot send email to '{inquiry.email}' as it is marked as INVALID_EMAIL.")
-            return redirect('admin_panel:contact_inquiry_list')
+            return redirect('admin_panel:contact_inquiry_detail', pk=inquiry.pk)
 
         try:
             html = EmailService._build_html_template(
@@ -595,16 +724,29 @@ class AdminContactInquiryReplyView(PermissionRequiredMixin, View):
                 html_content=html,
                 notification_type='admin_reply'
             )
-            inquiry.status = 'RESPONDED'
-            inquiry.admin_notes = f"Replied on {timezone.now().strftime('%Y-%m-%d %H:%M')}: {reply_message}"
+            local_now = timezone.localtime(timezone.now())
+            reply_entry = {
+                'subject': inquiry.subject,
+                'message': inquiry.message,
+                'reply': reply_message,
+                'replied_at': local_now.strftime('%d %b %Y, %I:%M %p')
+            }
+            history = list(inquiry.reply_history or [])
+            history.append(reply_entry)
+
+            inquiry.reply_history = history
+            inquiry.status = 'CLOSED'
+            inquiry.admin_notes = reply_message
+            inquiry.admin_replied_at = timezone.now()
             inquiry.admin_replied_at = timezone.now()
             inquiry.save()
 
-            messages.success(request, f"Email reply successfully sent to {inquiry.email}.")
+            messages.success(request, f"Email reply successfully sent to {inquiry.email}. Inquiry marked as Closed.")
         except Exception as e:
             messages.error(request, f"Error sending email reply: {e}")
 
-        return redirect('admin_panel:contact_inquiry_list')
+        return redirect('admin_panel:contact_inquiry_detail', pk=inquiry.pk)
+
 
 
 class AdminContactInquiryDeleteView(PermissionRequiredMixin, View):
@@ -617,6 +759,34 @@ class AdminContactInquiryDeleteView(PermissionRequiredMixin, View):
         inquiry.delete()
         log_audit_action(request.user, 'DELETE_CONTACT_INQUIRY', target_type='ContactInquiry', target_id=pk, details={'email': email_str}, request=request)
         messages.success(request, f"Contact inquiry from '{email_str}' deleted from database.")
+        return redirect('admin_panel:contact_inquiry_list')
+
+
+class AdminContactInquiryBulkDeleteView(PermissionRequiredMixin, View):
+    required_permission = 'complaints.manage'
+
+    def post(self, request, *args, **kwargs):
+        from apps.admin_panel.models import ContactInquiry
+        inquiry_ids = request.POST.getlist('selected_inquiries')
+
+        if not inquiry_ids:
+            messages.error(request, "No contact inquiries were selected for deletion.")
+            return redirect('admin_panel:contact_inquiry_list')
+
+        inquiries = ContactInquiry.objects.filter(id__in=inquiry_ids)
+        deleted_count = inquiries.count()
+        inquiries.delete()
+
+        log_audit_action(
+            request.user,
+            'BULK_DELETE_CONTACT_INQUIRY',
+            target_type='ContactInquiry',
+            target_id=0,
+            details={'deleted_count': deleted_count, 'ids': inquiry_ids},
+            request=request
+        )
+
+        messages.success(request, f"Successfully deleted {deleted_count} selected contact inquiry record(s).")
         return redirect('admin_panel:contact_inquiry_list')
 
 
@@ -1069,4 +1239,60 @@ class AdminVerificationDeleteView(PermissionRequiredMixin, View):
         log_audit_action(request.user, 'DELETE_VERIFICATION', target_type='VerificationRecord', target_id=pk, request=request)
         messages.success(request, f"Verification record #{pk} deleted.")
         return redirect('admin_panel:verification_list')
+
+
+from apps.messaging.models import Conversation, Message
+
+
+class AdminConversationListView(AdminRequiredMixin, ListView):
+    model = Conversation
+    template_name = 'admin_panel/conversations/list.html'
+    context_object_name = 'conversations'
+    paginate_by = 20
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or (getattr(request.user, 'role', 'user') == 'user' and not request.user.is_staff):
+            raise PermissionDenied("Admin access required.")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = Conversation.objects.select_related(
+            'ride', 'booking', 'ride__driver', 'booking__passenger'
+        ).prefetch_related('participants', 'messages').order_by('-last_message_at', '-created_at')
+        search = self.request.GET.get('search', '').strip()
+        if search:
+            qs = qs.filter(
+                Q(id__icontains=search) |
+                Q(ride__origin__icontains=search) |
+                Q(ride__destination__icontains=search) |
+                Q(ride__driver__first_name__icontains=search) |
+                Q(booking__passenger__first_name__icontains=search)
+            )
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['active_section'] = 'conversations'
+        context['search'] = self.request.GET.get('search', '')
+        return context
+
+
+class AdminConversationDetailView(AdminRequiredMixin, DetailView):
+    model = Conversation
+    template_name = 'admin_panel/conversations/detail.html'
+    context_object_name = 'conversation'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or (getattr(request.user, 'role', 'user') == 'user' and not request.user.is_staff):
+            raise PermissionDenied("Admin access required.")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['active_section'] = 'conversations'
+        context['chat_messages'] = Message.objects.filter(
+            conversation=self.object
+        ).select_related('sender').order_by('created_at')
+        context['participants'] = self.object.participants.select_related('user').all()
+        return context
 

@@ -415,7 +415,7 @@ class EmailService:
     def send_new_device_login_alert(cls, user, ip_address: str, user_agent: str, async_send: bool = True) -> bool:
         """Sends security alert email when user logs in from a new device/location."""
         subject = "New login to your Kaapool account"
-        now_str = timezone.now().strftime('%B %d, %Y at %I:%M %p')
+        now_str = timezone.localtime(timezone.now()).strftime('%B %d, %Y at %I:%M %p')
         
         body_content = f"""
         <p>Hi <strong>{user.first_name or user.username}</strong>,</p>

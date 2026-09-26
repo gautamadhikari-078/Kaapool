@@ -225,8 +225,6 @@ class RideCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from django.conf import settings
-        context['mapbox_access_token'] = getattr(settings, 'MAPBOX_ACCESS_TOKEN', '') or os.getenv('MAPBOX_ACCESS_TOKEN', '')
         return context
 
     def form_valid(self, form):
@@ -489,8 +487,10 @@ class MyRidesView(LoginRequiredMixin, View):
         # Search Query
         search_q = request.GET.get('q', '').strip()
 
-        # Sort option
-        sort_opt = request.GET.get('sort', 'latest').strip().lower()
+        # Date Filter option
+        date_filter = request.GET.get('date', '').strip()
+
+        user_tz = timezone.get_current_timezone()
 
         # Apply filtering
         filtered_items = []
@@ -518,14 +518,16 @@ class MyRidesView(LoginRequiredMixin, View):
                 if not q_match:
                     continue
 
+            # 3. Date Filter
+            if date_filter:
+                item_date_str = item['departure_datetime'].astimezone(user_tz).strftime('%Y-%m-%d')
+                if item_date_str != date_filter:
+                    continue
+
             filtered_items.append(item)
 
-        # Apply Sorting
-        if sort_opt == 'soonest':
-            filtered_items.sort(key=lambda x: x['departure_datetime'])
-        else:
-            # default: latest first
-            filtered_items.sort(key=lambda x: x['departure_datetime'], reverse=True)
+        # Default order: latest departure first
+        filtered_items.sort(key=lambda x: x['departure_datetime'], reverse=True)
 
         # Next upcoming ride banner
         upcoming_items = [
@@ -547,7 +549,6 @@ class MyRidesView(LoginRequiredMixin, View):
                 next_ride['days_text'] = f"In {days} days"
 
         # Group filtered items by Month & Year e.g. "October 2026"
-        user_tz = timezone.get_current_timezone()
         grouped_months = {}
         for item in filtered_items:
             dt_local = item['departure_datetime'].astimezone(user_tz)
@@ -576,7 +577,7 @@ class MyRidesView(LoginRequiredMixin, View):
             'cancelled_count': cancelled_count,
             'status_filter': status_filter,
             'search_q': search_q,
-            'sort_opt': sort_opt,
+            'date_filter': date_filter,
             'next_ride': next_ride,
             'grouped_months': grouped_months_list,
             'total_filtered': len(filtered_items),
@@ -978,16 +979,13 @@ def isSameRoute(route1, route2) -> bool:
     return check_directed(coords1, coords2) or check_directed(coords2, coords1)
 
 
-class MapboxRoutesAPIView(View):
+class RoutesAPIView(View):
     """
     GET /api/routes?originLat=...&originLng=...&destLat=...&destLng=...
-    Makes 3 parallel calls to Mapbox Directions API:
-      (1) alternatives=true
-      (2) exclude=toll
-      (3) exclude=motorway
-    Ignores any call that fails or returns no route, as long as at least one route is found.
-    Merges routes, removes duplicates with isSameRoute, sorts by duration, and returns at most 4 routes.
-    Caches the result by rounded origin+destination for 1 hour.
+    Calculates driving routes using OSRM (Open Source Routing Machine).
+    Returns JSON array of route objects:
+      [{ id, distanceKm, durationMin, summary, hasTolls, geometry }, ...]
+    Caches results by rounded coordinates for 1 hour.
     """
     def get(self, request, *args, **kwargs):
         origin_lat_raw = request.GET.get('originLat')
@@ -1006,86 +1004,23 @@ class MapboxRoutesAPIView(View):
         except (ValueError, TypeError):
             return JsonResponse({'error': 'Invalid latitude or longitude format.'}, status=400)
 
-        # Cache key rounded to 4 decimal places (~11m precision) for 1 hour
-        cache_key = f"mapbox_routes_{round(origin_lat, 4)}_{round(origin_lng, 4)}_{round(dest_lat, 4)}_{round(dest_lng, 4)}"
+        cache_key = f"osrm_routes_{round(origin_lat, 4)}_{round(origin_lng, 4)}_{round(dest_lat, 4)}_{round(dest_lng, 4)}"
         cached_routes = cache.get(cache_key)
         if cached_routes is not None:
             return JsonResponse(cached_routes, safe=False)
 
-        from django.conf import settings
-        mapbox_token = getattr(settings, 'MAPBOX_ACCESS_TOKEN', '') or os.getenv('MAPBOX_ACCESS_TOKEN', '')
+        from apps.rides.services.routing import get_osrm_directions
+        routes = get_osrm_directions(origin_lat, origin_lng, dest_lat, dest_lng)
 
-        # Parallel calls: (1) alternatives=true, (2) exclude=toll, (3) exclude=motorway
-        call_params = ['alternatives=true', 'exclude=toll', 'exclude=motorway']
+        if not routes:
+            return JsonResponse({'error': 'Unable to find a route between these locations. Please try again.'}, status=404)
 
-        def fetch_mapbox_route(param_str):
-            url = (
-                f"https://api.mapbox.com/directions/v5/mapbox/driving/"
-                f"{origin_lng},{origin_lat};{dest_lng},{dest_lat}"
-                f"?{param_str}&geometries=geojson&overview=full&access_token={mapbox_token}"
-            )
-            try:
-                req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-                with urllib.request.urlopen(req, timeout=10) as response:
-                    if response.status == 200:
-                        data = json.loads(response.read().decode('utf-8'))
-                        if data.get('code') == 'Ok':
-                            routes = data.get('routes', [])
-                            for r in routes:
-                                if param_str == 'exclude=toll':
-                                    r['_hasTolls'] = False
-                            return routes
-            except Exception as e:
-                logger.warning(f"Mapbox directions call ({param_str}) error: {e}")
-            return []
+        cache.set(cache_key, routes, timeout=3600)
+        return JsonResponse(routes, safe=False)
 
-        all_routes = []
-        with ThreadPoolExecutor(max_workers=3) as executor:
-            future_to_param = {executor.submit(fetch_mapbox_route, p): p for p in call_params}
-            for future in as_completed(future_to_param):
-                param = future_to_param[future]
-                try:
-                    routes = future.result()
-                    if routes:
-                        all_routes.extend(routes)
-                except Exception as e:
-                    logger.warning(f"Mapbox directions call with {param} failed: {e}")
 
-        if not all_routes:
-            return JsonResponse({'error': 'No route found between the specified locations.'}, status=404)
-
-        # Remove duplicate routes using isSameRoute helper
-        unique_routes = []
-        for r in all_routes:
-            if not any(isSameRoute(r, u) for u in unique_routes):
-                unique_routes.append(r)
-
-        # Sort by duration ascending
-        unique_routes.sort(key=lambda r: r.get('duration', 0))
-
-        # Return at most 4 routes formatted cleanly
-        clean_routes = []
-        for idx, route in enumerate(unique_routes[:4]):
-            dist_meters = route.get('distance', 0)
-            dur_seconds = route.get('duration', 0)
-            geometry = route.get('geometry', {})
-            legs = route.get('legs', [])
-            summary = legs[0].get('summary', '') if legs else ''
-            has_tolls = route.get('_hasTolls', True)
-
-            clean_routes.append({
-                'id': f'route_{idx}',
-                'distanceKm': round(dist_meters / 1000),
-                'durationMin': round(dur_seconds / 60),
-                'geometry': geometry,
-                'summary': summary,
-                'hasTolls': has_tolls
-            })
-
-        # Cache the result for 1 hour (3600 seconds)
-        cache.set(cache_key, clean_routes, timeout=3600)
-
-        return JsonResponse(clean_routes, safe=False)
+# Alias for backwards compatibility with any existing import or URL name
+MapboxRoutesAPIView = RoutesAPIView
 
 
 # --- REST API ViewSets ---
@@ -1214,7 +1149,6 @@ class ReturnRideCreateView(LoginRequiredMixin, View):
             'is_return_ride_mode': True,
             'original_ride': original_ride,
             'initial_return_data_json': json.dumps(initial_return_data),
-            'mapbox_access_token': getattr(settings, 'MAPBOX_ACCESS_TOKEN', '') or os.getenv('MAPBOX_ACCESS_TOKEN', ''),
         }
         return render(request, self.template_name, context)
 
@@ -1316,7 +1250,6 @@ class ReturnRideCreateView(LoginRequiredMixin, View):
                 'is_return_ride_mode': True,
                 'original_ride': original_ride,
                 'initial_return_data_json': json.dumps(initial_return_data),
-                'mapbox_access_token': getattr(settings, 'MAPBOX_ACCESS_TOKEN', '') or os.getenv('MAPBOX_ACCESS_TOKEN', ''),
             }
             return render(request, self.template_name, context)
 

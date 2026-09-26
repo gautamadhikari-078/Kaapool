@@ -1,0 +1,64 @@
+{% extends "admin_panel/base.html" %}
+
+{% block title %}Conversations - Kaapool Admin{% endblock %}
+{% block page_heading %}Ride Conversations{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header flex-between" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 class="page-title" style="margin: 0; font-size: 1.5rem;">Conversations & Moderation</h2>
+        <form method="get" class="search-form" style="display: flex; gap: 0.5rem;">
+            <input type="text" name="search" value="{{ search }}" placeholder="Search route, host or passenger..." class="form-input" style="padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid #d6d3d1;">
+            <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem; border-radius: 8px; background: #f89516; color: #fff; border: none; font-weight: 700;">Search</button>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid #e7e5e4; text-align: left;">
+                    <th style="padding: 0.75rem;">Conv ID</th>
+                    <th style="padding: 0.75rem;">Booking #</th>
+                    <th style="padding: 0.75rem;">Ride Route</th>
+                    <th style="padding: 0.75rem;">Host (Driver)</th>
+                    <th style="padding: 0.75rem;">Passenger</th>
+                    <th style="padding: 0.75rem;">Status</th>
+                    <th style="padding: 0.75rem;">Messages</th>
+                    <th style="padding: 0.75rem;">Last Activity</th>
+                    <th style="padding: 0.75rem; text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for conv in conversations %}
+                <tr style="border-bottom: 1px solid #f5f5f4;">
+                    <td style="padding: 0.75rem; font-weight: 700;">#{{ conv.id }}</td>
+                    <td style="padding: 0.75rem;">#{{ conv.booking.id }}</td>
+                    <td style="padding: 0.75rem;">
+                        <span style="font-weight: 600;">{{ conv.ride.origin }} &rarr; {{ conv.ride.destination }}</span>
+                        <br><small style="color: #78716c;">{{ conv.ride.departure_datetime|date:"M d, Y H:i" }}</small>
+                    </td>
+                    <td style="padding: 0.75rem;">{{ conv.ride.driver.get_full_name|default:conv.ride.driver.username }}</td>
+                    <td style="padding: 0.75rem;">{{ conv.booking.passenger.get_full_name|default:conv.booking.passenger.username }}</td>
+                    <td style="padding: 0.75rem;">
+                        <span class="badge" style="padding: 0.25rem 0.6rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; background: {% if conv.status == 'active' %}#dcfce7; color: #166534;{% else %}#f3f4f6; color: #4b5563;{% endif %}">
+                            {{ conv.status|upper }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.75rem; font-weight: 700;">{{ conv.messages.count }}</td>
+                    <td style="padding: 0.75rem; color: #78716c; font-size: 0.9rem;">
+                        {{ conv.last_message_at|date:"M d, H:i"|default:conv.created_at|date:"M d, H:i" }}
+                    </td>
+                    <td style="padding: 0.75rem; text-align: right;">
+                        <a href="{% url 'admin_panel:conversation_detail' conv.id %}" class="btn btn-secondary btn-sm" style="padding: 0.4rem 0.8rem; border-radius: 6px; background: #2563eb; color: #fff; text-decoration: none; font-size: 0.85rem; font-weight: 600;">View Logs</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" style="text-align: center; color: #78716c; padding: 2rem;">No active ride conversations found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

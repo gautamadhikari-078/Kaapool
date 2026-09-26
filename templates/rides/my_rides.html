@@ -5,446 +5,484 @@
 
 {% block extra_css %}
 <style>
-/* ==========================================================
+    /* ==========================================================
    KAAPOOL MY RIDES - REDESIGNED UI
    ========================================================== */
-.my-rides-page-wrapper {
-    background-color: #faf8f5;
-    min-height: 90vh;
-    padding: 2rem 1.5rem 6rem 1.5rem;
-    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
-}
-
-.my-rides-main-container {
-    max-width: 920px;
-    margin: 0 auto;
-}
-
-/* ===================== HERO BANNER ===================== */
-.my-rides-hero-banner {
-    background: linear-gradient(135deg, #fef7ed 0%, #fff5e6 40%, #fff0d9 100%);
-    border-radius: 24px;
-    padding: 2.5rem 2.5rem 2.5rem 3rem;
-    margin-bottom: 2.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2rem;
-    position: relative;
-    overflow: hidden;
-    border: 1.5px solid #fde8c8;
-    box-shadow: 0 4px 24px rgba(248, 149, 22, 0.08);
-}
-
-.hero-banner-left {
-    flex: 1;
-    z-index: 2;
-    min-width: 0;
-}
-
-.hero-tag-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0.4rem 1rem;
-    border-radius: 9999px;
-    background: #ffffff;
-    border: 1.5px solid #f89516;
-    color: #ea580c;
-    font-size: 0.825rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-}
-
-.hero-tag-pill i {
-    color: #f89516;
-    font-size: 0.85rem;
-}
-
-.hero-banner-title {
-    font-size: 2.25rem;
-    font-weight: 900;
-    color: #1c1917;
-    margin: 0 0 0.5rem 0;
-    letter-spacing: -0.8px;
-    line-height: 1.15;
-}
-
-.hero-banner-title span {
-    color: #f89516;
-}
-
-.hero-banner-subtitle {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #78716c;
-    margin: 0;
-    line-height: 1.5;
-}
-
-.hero-banner-right {
-    flex-shrink: 0;
-    z-index: 2;
-    width: 320px;
-    height: 180px;
-    position: relative;
-}
-
-.hero-banner-right img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: center;
-    filter: drop-shadow(0 4px 16px rgba(0,0,0,0.08));
-}
-
-.btn-offer-ride-cta {
-    background: #f89516;
-    color: #ffffff !important;
-    font-weight: 800;
-    font-size: 0.95rem;
-    padding: 0.7rem 1.4rem;
-    border-radius: 9999px;
-    text-decoration: none !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    box-shadow: 0 6px 18px rgba(248, 149, 22, 0.25);
-    transition: all 0.2s ease;
-    margin-top: 1.25rem;
-}
-
-.btn-offer-ride-cta:hover {
-    background: #ea580c;
-    transform: translateY(-1px);
-    box-shadow: 0 8px 22px rgba(248, 149, 22, 0.35);
-}
-
-/* ===================== FILTER PILLS ===================== */
-.filter-pills-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1.75rem;
-    flex-wrap: wrap;
-}
-
-.filter-pill-tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.55rem 1.25rem;
-    border-radius: 9999px;
-    font-size: 0.925rem;
-    font-weight: 700;
-    color: #1c1917;
-    background: #ffffff;
-    border: 1.5px solid #e7e5e4;
-    text-decoration: none !important;
-    transition: all 0.15s ease;
-    cursor: pointer;
-}
-
-.filter-pill-tab:hover {
-    border-color: #d6d3d1;
-    background: #ffffff;
-}
-
-.filter-pill-tab.active {
-    background: #f89516;
-    color: #ffffff;
-    border-color: #f89516;
-}
-
-.filter-pill-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 22px;
-    height: 22px;
-    padding: 0 0.45rem;
-    border-radius: 9999px;
-    font-size: 0.8rem;
-    font-weight: 800;
-    background: #f5f5f4;
-    color: #78716c;
-}
-
-.filter-pill-tab.active .filter-pill-count {
-    background: rgba(255, 255, 255, 0.3);
-    color: #ffffff;
-}
-
-/* ===================== SEARCH & SORT ===================== */
-.search-sort-bar {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2.5rem;
-    align-items: center;
-}
-
-.search-input-box {
-    flex: 1;
-    position: relative;
-}
-
-.search-input-box i {
-    position: absolute;
-    left: 1.2rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #a8a29e;
-    font-size: 0.95rem;
-}
-
-.search-field-pill {
-    width: 100%;
-    padding: 0.8rem 1.25rem 0.8rem 2.8rem;
-    border-radius: 16px;
-    border: 1.5px solid #e7e5e4;
-    background: #ffffff;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #1c1917;
-    outline: none;
-    transition: border-color 0.15s ease;
-}
-
-.search-field-pill:focus {
-    border-color: #f89516;
-}
-
-.sort-select-pill {
-    padding: 0.8rem 1.25rem;
-    border-radius: 16px;
-    border: 1.5px solid #e7e5e4;
-    background: #ffffff;
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #1c1917;
-    outline: none;
-    cursor: pointer;
-}
-
-/* ===================== MONTH GROUPS ===================== */
-.month-group-container {
-    margin-bottom: 2.5rem;
-}
-
-.month-group-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.25rem;
-}
-
-.month-group-title {
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: #1c1917;
-    margin: 0;
-    letter-spacing: -0.4px;
-}
-
-.month-group-count {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #78716c;
-}
-
-/* ===================== RIDE CARDS ===================== */
-.ride-item-card {
-    background: #ffffff;
-    border-radius: 20px;
-    border: 1.5px solid #e7e5e4;
-    padding: 1.5rem 1.75rem;
-    margin-bottom: 1.25rem;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-    position: relative;
-    transition: all 0.2s ease;
-    text-decoration: none !important;
-    display: block;
-}
-
-.ride-item-card:hover {
-    border-color: #f89516;
-    box-shadow: 0 6px 20px rgba(248, 149, 22, 0.08);
-}
-
-.ride-card-top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.25rem;
-}
-
-/* BADGES */
-.badge-tag-pill {
-    font-size: 0.775rem;
-    font-weight: 800;
-    padding: 0.35rem 0.85rem;
-    border-radius: 9999px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-}
-
-.badge-offered {
-    background: #e6f4ea;
-    color: #0f9d58;
-}
-
-.badge-booked {
-    background: #fff3e0;
-    color: #e67e22;
-}
-
-.badge-cancelled {
-    background: #fef2f2;
-    color: #ef4444;
-}
-
-/* ROUTE TIMELINE */
-.route-timeline-box {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-}
-
-.timeline-point-row {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-}
-
-.timeline-circle-open {
-    width: 14px;
-    height: 14px;
-    border: 2.5px solid #1c1917;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.timeline-circle-solid {
-    width: 14px;
-    height: 14px;
-    background: #1c1917;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.timeline-location-title {
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: #1c1917;
-}
-
-.timeline-meta-text {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #78716c;
-    margin-left: 1.7rem;
-    margin-bottom: 0.4rem;
-}
-
-.timeline-line-connector {
-    width: 2px;
-    height: 18px;
-    background: #d6d3d1;
-    margin-left: 6px;
-}
-
-.card-actions-row {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    margin-top: 1rem;
-    padding-top: 0.85rem;
-    border-top: 1px solid #f5f5f4;
-}
-
-.btn-create-return-pill {
-    background: #fff7ed;
-    color: #ea580c !important;
-    font-weight: 800;
-    font-size: 0.825rem;
-    padding: 0.4rem 0.95rem;
-    border-radius: 9999px;
-    border: 1px solid #fed7aa;
-    text-decoration: none !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    transition: all 0.15s ease;
-}
-
-.btn-create-return-pill:hover {
-    background: #f89516;
-    color: #ffffff !important;
-    border-color: #f89516;
-}
-
-/* EMPTY STATE */
-.empty-rides-box {
-    background: #ffffff;
-    border-radius: 20px;
-    border: 1.5px solid #e7e5e4;
-    padding: 4rem 2rem;
-    text-align: center;
-    color: #78716c;
-}
-
-.empty-rides-box i {
-    font-size: 3rem;
-    color: #d6d3d1;
-    margin-bottom: 1rem;
-}
-
-.empty-rides-box h3 {
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: #1c1917;
-    margin: 0 0 0.5rem 0;
-}
-
-.empty-rides-box p {
-    font-size: 0.95rem;
-    margin: 0 0 1.75rem 0;
-}
-
-/* ===================== RESPONSIVE ===================== */
-@media (max-width: 768px) {
-    .my-rides-hero-banner {
-        flex-direction: column;
-        padding: 2rem 1.5rem;
-        text-align: center;
+    .my-rides-page-wrapper {
+        background-color: #faf8f5;
+        min-height: 90vh;
+        padding: 2rem 1.5rem 6rem 1.5rem;
+        font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
     }
-    .hero-banner-left {
+
+    .my-rides-main-container {
+        max-width: 920px;
+        margin: 0 auto;
+    }
+
+    /* ===================== HERO BANNER ===================== */
+    .my-rides-hero-banner {
+        background: linear-gradient(135deg, #fef7ed 0%, #fff5e6 40%, #fff0d9 100%);
+        border-radius: 24px;
+        padding: 2.5rem 2.5rem 2.5rem 3rem;
+        margin-bottom: 2.5rem;
         display: flex;
-        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+        position: relative;
+        overflow: hidden;
+        /* border: 1.5px solid #fde8c8; */
+        box-shadow: 0 4px 24px rgba(248, 149, 22, 0.08);
+    }
+
+    .hero-banner-left {
+        flex: 1;
+        z-index: 2;
+        min-width: 0;
+    }
+
+    .hero-tag-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.4rem 1rem;
+        border-radius: 9999px;
+        background: #ffffff;
+        border: 1.5px solid #f89516;
+        color: #ea580c;
+        font-size: 0.825rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .hero-tag-pill i {
+        color: #f89516;
+        font-size: 0.85rem;
+    }
+
+    .hero-banner-title {
+        font-size: 2.25rem;
+        font-weight: 900;
+        color: #1c1917;
+        margin: 0 0 0.5rem 0;
+        letter-spacing: -0.8px;
+        line-height: 1.15;
+    }
+
+    .hero-banner-title span {
+        color: #f89516;
+    }
+
+    .hero-banner-subtitle {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #78716c;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .hero-banner-right {
+        flex-shrink: 0;
+        z-index: 2;
+        width: 320px;
+        height: 180px;
+        position: relative;
+    }
+
+    .hero-banner-right img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: center;
+        filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.08));
+    }
+
+    .btn-offer-ride-cta {
+        background: #f89516;
+        color: #ffffff !important;
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding: 0.65rem 1.4rem;
+        border-radius: 10px;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 14px rgba(248, 149, 22, 0.25);
+        transition: all 0.2s ease;
+        margin-top: 1.25rem;
+    }
+
+    .btn-offer-ride-cta i {
+        font-size: 0.9rem !important;
+        color: #ffffff !important;
+        margin: 0 !important;
+    }
+
+    .btn-offer-ride-cta:hover {
+        background: #ea580c;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(248, 149, 22, 0.35);
+    }
+
+    /* ===================== FILTER PILLS ===================== */
+    .filter-pills-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.75rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-pill-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 1.25rem;
+        border-radius: 9999px;
+        font-size: 0.925rem;
+        font-weight: 700;
+        color: #1c1917;
+        background: #ffffff;
+        border: 1.5px solid #e7e5e4;
+        text-decoration: none !important;
+        transition: all 0.15s ease;
+        cursor: pointer;
+    }
+
+    .filter-pill-tab:hover {
+        border-color: #d6d3d1;
+        background: #ffffff;
+    }
+
+    .filter-pill-tab.active {
+        background: #f89516;
+        color: #ffffff;
+        border-color: #f89516;
+    }
+
+    .filter-pill-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 0.45rem;
+        border-radius: 9999px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        background: #f5f5f4;
+        color: #78716c;
+    }
+
+    .filter-pill-tab.active .filter-pill-count {
+        background: rgba(255, 255, 255, 0.3);
+        color: #ffffff;
+    }
+
+    /* ===================== SEARCH & SORT ===================== */
+    .search-sort-bar {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2.5rem;
         align-items: center;
     }
-    .hero-banner-right {
-        width: 260px;
-        height: 150px;
+
+    .search-input-box {
+        flex: 1;
+        position: relative;
     }
-    .hero-banner-title {
-        font-size: 1.75rem;
+
+    .search-input-box i {
+        position: absolute;
+        left: 1.2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #a8a29e;
+        font-size: 0.95rem;
     }
-    .search-sort-bar {
-        flex-direction: column;
-    }
-    .sort-select-pill {
+
+    .search-field-pill {
         width: 100%;
+        padding: 0.8rem 1.25rem 0.8rem 2.8rem;
+        border-radius: 16px;
+        border: 1.5px solid #e7e5e4;
+        background: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #1c1917;
+        outline: none;
+        transition: border-color 0.15s ease;
     }
-}
+
+    .search-field-pill:focus {
+        border-color: #f89516;
+    }
+
+    .date-input-box {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .date-input-box i.fa-calendar-days,
+    .date-input-box i.fa-calendar {
+        position: absolute;
+        left: 1.1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #f89516;
+        font-size: 1rem;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .date-field-pill {
+        padding: 0.8rem 1.25rem 0.8rem 2.8rem;
+        border-radius: 16px;
+        border: 1.5px solid #e7e5e4;
+        background: #ffffff;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #1c1917;
+        outline: none;
+        cursor: pointer;
+        transition: border-color 0.15s ease;
+        font-family: inherit;
+    }
+
+    .date-field-pill:focus {
+        border-color: #f89516;
+    }
+
+    /* ===================== MONTH GROUPS ===================== */
+    .month-group-container {
+        margin-bottom: 2.5rem;
+    }
+
+    .month-group-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .month-group-title {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #1c1917;
+        margin: 0;
+        letter-spacing: -0.4px;
+    }
+
+    .month-group-count {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #78716c;
+    }
+
+    /* ===================== RIDE CARDS ===================== */
+    .ride-item-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1.5px solid #e7e5e4;
+        padding: 1.5rem 1.75rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        position: relative;
+        transition: all 0.2s ease;
+        text-decoration: none !important;
+        display: block;
+    }
+
+    .ride-item-card:hover {
+        border-color: #f89516;
+        box-shadow: 0 6px 20px rgba(248, 149, 22, 0.08);
+    }
+
+    .ride-card-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+    }
+
+    /* BADGES */
+    .badge-tag-pill {
+        font-size: 0.775rem;
+        font-weight: 800;
+        padding: 0.35rem 0.85rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .badge-offered {
+        background: #e6f4ea;
+        color: #0f9d58;
+    }
+
+    .badge-booked {
+        background: #fff3e0;
+        color: #e67e22;
+    }
+
+    .badge-cancelled {
+        background: #fef2f2;
+        color: #ef4444;
+    }
+
+    /* ROUTE TIMELINE */
+    .route-timeline-box {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .timeline-point-row {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .timeline-circle-open {
+        width: 14px;
+        height: 14px;
+        border: 2.5px solid #1c1917;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .timeline-circle-solid {
+        width: 14px;
+        height: 14px;
+        background: #1c1917;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .timeline-location-title {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #1c1917;
+    }
+
+    .timeline-meta-text {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #78716c;
+        margin-left: 1.7rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .timeline-line-connector {
+        width: 2px;
+        height: 18px;
+        background: #d6d3d1;
+        margin-left: 6px;
+    }
+
+    .card-actions-row {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin-top: 1rem;
+        padding-top: 0.85rem;
+        border-top: 1px solid #f5f5f4;
+    }
+
+    .btn-create-return-pill {
+        background: #fff7ed;
+        color: #ea580c !important;
+        font-weight: 800;
+        font-size: 0.825rem;
+        padding: 0.4rem 0.95rem;
+        border-radius: 9999px;
+        border: 1px solid #fed7aa;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: all 0.15s ease;
+    }
+
+    .btn-create-return-pill:hover {
+        background: #f89516;
+        color: #ffffff !important;
+        border-color: #f89516;
+    }
+
+    /* EMPTY STATE */
+    .empty-rides-box {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1.5px solid #e7e5e4;
+        padding: 4rem 2rem;
+        text-align: center;
+        color: #78716c;
+    }
+
+    .empty-rides-box>i.empty-icon,
+    .empty-rides-box>i:first-child {
+        font-size: 3rem;
+        color: #d6d3d1;
+        margin-bottom: 1rem;
+        display: inline-block;
+    }
+
+    .empty-rides-box h3 {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #1c1917;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .empty-rides-box p {
+        font-size: 0.95rem;
+        margin: 0 0 1.75rem 0;
+    }
+
+    /* ===================== RESPONSIVE ===================== */
+    @media (max-width: 768px) {
+        .my-rides-hero-banner {
+            flex-direction: column;
+            padding: 2rem 1.5rem;
+            text-align: center;
+        }
+
+        .hero-banner-left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hero-banner-right {
+            width: 260px;
+            height: 150px;
+        }
+
+        .hero-banner-title {
+            font-size: 1.75rem;
+        }
+
+        .search-sort-bar {
+            flex-direction: column;
+        }
+
+        .date-input-box {
+            width: 100%;
+        }
+    }
 </style>
 {% endblock extra_css %}
 
 {% block content %}
 <div class="my-rides-page-wrapper">
     <div class="my-rides-main-container">
-        
+
         <!-- HERO BANNER -->
         <div class="my-rides-hero-banner">
             <div class="hero-banner-left">
@@ -461,119 +499,124 @@
 
         <!-- FILTER PILLS ROW (CONDITIONAL DISPLAY FOR BOOKED AND CREATED) -->
         <div class="filter-pills-row">
-            <a href="?status=all{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_opt %}&sort={{ sort_opt }}{% endif %}" 
-               class="filter-pill-tab {% if status_filter == 'all' %}active{% endif %}">
+            <a href="?status=all{% if search_q %}&q={{ search_q }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}"
+                class="filter-pill-tab {% if status_filter == 'all' %}active{% endif %}">
                 All <span class="filter-pill-count">{{ all_count }}</span>
             </a>
 
             {% if has_booked %}
-            <a href="?status=booked{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_opt %}&sort={{ sort_opt }}{% endif %}" 
-               class="filter-pill-tab {% if status_filter == 'booked' %}active{% endif %}">
+            <a href="?status=booked{% if search_q %}&q={{ search_q }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}"
+                class="filter-pill-tab {% if status_filter == 'booked' %}active{% endif %}">
                 Booked <span class="filter-pill-count">{{ booked_count }}</span>
             </a>
             {% endif %}
 
             {% if has_created %}
-            <a href="?status=created{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_opt %}&sort={{ sort_opt }}{% endif %}" 
-               class="filter-pill-tab {% if status_filter == 'created' %}active{% endif %}">
+            <a href="?status=created{% if search_q %}&q={{ search_q }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}"
+                class="filter-pill-tab {% if status_filter == 'created' %}active{% endif %}">
                 Created <span class="filter-pill-count">{{ created_count }}</span>
             </a>
             {% endif %}
 
-            <a href="?status=past{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_opt %}&sort={{ sort_opt }}{% endif %}" 
-               class="filter-pill-tab {% if status_filter == 'past' %}active{% endif %}">
+            <a href="?status=past{% if search_q %}&q={{ search_q }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}"
+                class="filter-pill-tab {% if status_filter == 'past' %}active{% endif %}">
                 Past <span class="filter-pill-count">{{ past_count }}</span>
             </a>
 
-            <a href="?status=cancelled{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_opt %}&sort={{ sort_opt }}{% endif %}" 
-               class="filter-pill-tab {% if status_filter == 'cancelled' %}active{% endif %}">
+            <a href="?status=cancelled{% if search_q %}&q={{ search_q }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}"
+                class="filter-pill-tab {% if status_filter == 'cancelled' %}active{% endif %}">
                 Cancelled <span class="filter-pill-count">{{ cancelled_count }}</span>
             </a>
         </div>
 
-        <!-- SEARCH AND SORT BAR -->
+        <!-- SEARCH AND DATE FILTER BAR -->
         <form method="get" action="{% url 'rides:my_rides' %}">
             {% if status_filter %}
-                <input type="hidden" name="status" value="{{ status_filter }}">
+            <input type="hidden" name="status" value="{{ status_filter }}">
             {% endif %}
             <div class="search-sort-bar">
                 <div class="search-input-box">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" name="q" value="{{ search_q }}" placeholder="Search city, e.g. Delhi" class="search-field-pill" onchange="this.form.submit()">
+                    <input type="text" name="q" value="{{ search_q }}" placeholder="Search city, e.g. Delhi"
+                        class="search-field-pill" onchange="this.form.submit()">
                 </div>
-                <select name="sort" class="sort-select-pill" onchange="this.form.submit()">
-                    <option value="latest" {% if sort_opt == 'latest' %}selected{% endif %}>Latest first ▾</option>
-                    <option value="soonest" {% if sort_opt == 'soonest' %}selected{% endif %}>Soonest first ▾</option>
-                </select>
+                <div class="date-input-box">
+                    <i class="fa-regular fa-calendar-days"></i>
+                    <input type="date" name="date" value="{{ date_filter }}" class="date-field-pill" onchange="this.form.submit()" title="Filter rides by date">
+                </div>
             </div>
         </form>
 
         <!-- GROUPED RIDES BY MONTH -->
         {% if grouped_months %}
-            {% for group in grouped_months %}
-            <div class="month-group-container">
-                <div class="month-group-header">
-                    <h3 class="month-group-title">{{ group.month_name }}</h3>
-                    <span class="month-group-count">{{ group.items|length }} ride{{ group.items|length|pluralize }} &#9652;</span>
+        {% for group in grouped_months %}
+        <div class="month-group-container">
+            <div class="month-group-header">
+                <h3 class="month-group-title">{{ group.month_name }}</h3>
+                <span class="month-group-count">{{ group.items|length }} ride{{ group.items|length|pluralize }}
+                    &#9652;</span>
+            </div>
+
+            {% for item in group.items %}
+            <a href="{% url 'rides:detail' item.ride_id %}" class="ride-item-card">
+                <div class="ride-card-top-row">
+                    <span class="badge-tag-pill {{ item.badge_class }}">
+                        {{ item.badge_text }}
+                    </span>
+                    {% if item.status == 'cancelled' %}
+                    <span class="badge-tag-pill badge-cancelled">Cancelled</span>
+                    {% endif %}
                 </div>
 
-                {% for item in group.items %}
-                <a href="{% url 'rides:detail' item.ride_id %}" class="ride-item-card">
-                    <div class="ride-card-top-row">
-                        <span class="badge-tag-pill {{ item.badge_class }}">
-                            {{ item.badge_text }}
-                        </span>
-                        {% if item.status == 'cancelled' %}
-                            <span class="badge-tag-pill badge-cancelled">Cancelled</span>
+                <div class="route-timeline-box">
+                    <div class="timeline-point-row">
+                        <div class="timeline-circle-open"></div>
+                        <div class="timeline-location-title">{{ item.origin }}</div>
+                    </div>
+                    <div class="timeline-meta-text">
+                        {{ item.departure_datetime|date:"j M · g:i A" }}
+                    </div>
+
+                    <div class="timeline-line-connector"></div>
+
+                    <div class="timeline-point-row" style="margin-top: 0.2rem;">
+                        <div class="timeline-circle-solid"></div>
+                        <div class="timeline-location-title">{{ item.destination }}</div>
+                    </div>
+                    <div class="timeline-meta-text" style="margin-bottom: 0;">
+                        {% if item.is_created %}
+                        {{ item.available_seats }} seat{{ item.available_seats|pluralize }} left &nbsp;&middot;&nbsp;
+                        &#8377;{{ item.price_per_seat|floatformat:0 }} / seat
+                        {% else %}
+                        {{ item.seats_booked }} seat{{ item.seats_booked|pluralize }} &nbsp;&middot;&nbsp; &#8377;{{
+                        item.price_per_seat|floatformat:0 }} / seat &nbsp;&middot;&nbsp; Driver {{ item.driver_name }}
                         {% endif %}
                     </div>
+                </div>
 
-                    <div class="route-timeline-box">
-                        <div class="timeline-point-row">
-                            <div class="timeline-circle-open"></div>
-                            <div class="timeline-location-title">{{ item.origin }}</div>
-                        </div>
-                        <div class="timeline-meta-text">
-                            {{ item.departure_datetime|date:"j M · g:i A" }}
-                        </div>
-
-                        <div class="timeline-line-connector"></div>
-
-                        <div class="timeline-point-row" style="margin-top: 0.2rem;">
-                            <div class="timeline-circle-solid"></div>
-                            <div class="timeline-location-title">{{ item.destination }}</div>
-                        </div>
-                        <div class="timeline-meta-text" style="margin-bottom: 0;">
-                            {% if item.is_created %}
-                                {{ item.available_seats }} seat{{ item.available_seats|pluralize }} left &nbsp;&middot;&nbsp; &#8377;{{ item.price_per_seat|floatformat:0 }} / seat
-                            {% else %}
-                                {{ item.seats_booked }} seat{{ item.seats_booked|pluralize }} &nbsp;&middot;&nbsp; &#8377;{{ item.price_per_seat|floatformat:0 }} / seat &nbsp;&middot;&nbsp; Driver {{ item.driver_name }}
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    {% if item.is_created and item.can_create_return_ride %}
-                    <div class="card-actions-row">
-                        <span class="btn-create-return-pill" onclick="event.stopPropagation(); window.location.href='{% url 'rides:return_ride_offer' item.ride_id %}'">
-                            + Create Return Ride
-                        </span>
-                    </div>
-                    {% endif %}
-                </a>
-                {% endfor %}
-            </div>
+                {% if item.is_created and item.can_create_return_ride %}
+                <div class="card-actions-row">
+                    <span class="btn-create-return-pill"
+                        onclick="event.stopPropagation(); window.location.href='{% url 'rides:return_ride_offer' item.ride_id %}'">
+                        + Create Return Ride
+                    </span>
+                </div>
+                {% endif %}
+            </a>
             {% endfor %}
+        </div>
+        {% endfor %}
 
         {% else %}
-            <!-- EMPTY STATE -->
-            <div class="empty-rides-box">
-                <i class="fa-solid fa-car"></i>
-                <h3>No rides found</h3>
-                <p>You haven't created or booked any rides matching this criteria yet.</p>
-                <a href="{% url 'rides:create' %}" class="btn-offer-ride-cta">
-                    <i class="fa-solid fa-plus"></i> Offer a ride now
-                </a>
-            </div>
+        <!-- EMPTY STATE -->
+        <div class="empty-rides-box">
+            <i class="fa-solid fa-car empty-icon"></i>
+            <h3>No rides found</h3>
+            <p>You haven't created or booked any rides matching this criteria yet.</p>
+            <a href="{% url 'rides:create' %}" class="btn-offer-ride-cta">
+                <i class="fa-solid fa-plus"></i> Offer a ride now
+            </a>
+        </div>
         {% endif %}
 
     </div>

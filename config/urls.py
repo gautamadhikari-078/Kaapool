@@ -9,7 +9,7 @@ from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 
 from apps.accounts.views import APIUserProfileView, APIRegisterView
-from apps.rides.views import APIRideViewSet, MapboxRoutesAPIView
+from apps.rides.views import APIRideViewSet, RoutesAPIView
 from apps.bookings.views import APIBookingViewSet
 from apps.payments.views import APIPaymentViewSet
 from apps.notifications.views import APINotificationViewSet
@@ -27,9 +27,9 @@ urlpatterns = [
     path('django-admin/', admin.site.urls),
     path('admin/', include('apps.admin_panel.urls', namespace='admin_panel')),
 
-    # Mapbox Routes API Endpoint
-    path('api/routes', MapboxRoutesAPIView.as_view(), name='api_mapbox_routes'),
-    path('api/routes/', MapboxRoutesAPIView.as_view(), name='api_mapbox_routes_slash'),
+    # Routes API Endpoint (OSRM / OpenStreetMap)
+    path('api/routes', RoutesAPIView.as_view(), name='api_mapbox_routes'),
+    path('api/routes/', RoutesAPIView.as_view(), name='api_mapbox_routes_slash'),
 
     # Web Routes
     path('', include('apps.core.urls', namespace='core')),

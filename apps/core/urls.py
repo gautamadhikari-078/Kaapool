@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import (
     HomeView, AboutView, HowItWorksView, SafetyView, ContactView,
-    PublicFAQView, PublicBlogListView, PublicBlogDetailView
+    PublicFAQView, PublicBlogListView, PublicBlogDetailView,
+    ValidateEmailAPIView
 )
 
 app_name = 'core'
@@ -15,4 +16,5 @@ urlpatterns = [
     path('faq/', PublicFAQView.as_view(), name='faq'),
     path('blogs/', PublicBlogListView.as_view(), name='blog_list'),
     path('blogs/<slug:slug>/', PublicBlogDetailView.as_view(), name='blog_detail'),
+    path('api/validate-email/', ValidateEmailAPIView.as_view(), name='api_validate_email'),
 ]

@@ -694,20 +694,60 @@
             <!-- SECTION: ABOUT YOU -->
             <div class="profile-section-block">
                 <div class="profile-section-title">About you</div>
-                
-                <div class="profile-row-item" onclick="openProfileModal('miniBioModal')">
-                    <div class="icon-blue-plus">
-                        <i class="fa-solid fa-plus"></i>
-                    </div>
-                    <span>{% if user.bio %}{{ user.bio }}{% else %}Add a mini bio{% endif %}</span>
-                </div>
 
-                <div class="profile-row-item" onclick="openProfileModal('commModal')">
+                {% if user.travel_preferences %}
+                <div style="margin-bottom: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; padding-left: 0.25rem;">
+                    {% if user.travel_preferences.chattiness %}
+                        <div style="display: flex; align-items: center; gap: 0.85rem; font-size: 0.95rem; font-weight: 600; color: #334155;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: #fff7ed; color: #b45309; border: 1px solid #fed7aa; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0;">
+                                <i class="fa-solid fa-comments"></i>
+                            </div>
+                            <span>{{ user.travel_preferences.chattiness }}</span>
+                        </div>
+                    {% endif %}
+                    {% if user.travel_preferences.music %}
+                        <div style="display: flex; align-items: center; gap: 0.85rem; font-size: 0.95rem; font-weight: 600; color: #334155;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: #fff7ed; color: #b45309; border: 1px solid #fed7aa; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0;">
+                                <i class="fa-solid fa-music"></i>
+                            </div>
+                            <span>{{ user.travel_preferences.music }}</span>
+                        </div>
+                    {% endif %}
+                    {% if user.travel_preferences.smoking %}
+                        <div style="display: flex; align-items: center; gap: 0.85rem; font-size: 0.95rem; font-weight: 600; color: #334155;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: #fff7ed; color: #b45309; border: 1px solid #fed7aa; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0;">
+                                <i class="fa-solid fa-smoking"></i>
+                            </div>
+                            <span>{{ user.travel_preferences.smoking }}</span>
+                        </div>
+                    {% endif %}
+                    {% if user.travel_preferences.pets %}
+                        <div style="display: flex; align-items: center; gap: 0.85rem; font-size: 0.95rem; font-weight: 600; color: #334155;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: #fff7ed; color: #b45309; border: 1px solid #fed7aa; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0;">
+                                <i class="fa-solid fa-paw"></i>
+                            </div>
+                            <span>{{ user.travel_preferences.pets }}</span>
+                        </div>
+                    {% endif %}
+                    {% if user.travel_preferences.custom_preferences %}
+                        {% for tag in user.travel_preferences.custom_preferences %}
+                        <div style="display: flex; align-items: center; gap: 0.85rem; font-size: 0.95rem; font-weight: 600; color: #334155;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: #fff7ed; color: #b45309; border: 1px solid #fed7aa; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0;">
+                                <i class="fa-solid fa-tag"></i>
+                            </div>
+                            <span>{{ tag }}</span>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <a href="{% url 'accounts:travel_preferences' %}" class="profile-row-item" style="text-decoration: none;">
                     <div class="icon-blue-plus">
-                        <i class="fa-solid fa-plus"></i>
+                        <i class="fa-solid fa-sliders"></i>
                     </div>
                     <span>Edit travel preferences</span>
-                </div>
+                </a>
             </div>
 
             <!-- SECTION: VEHICLES -->

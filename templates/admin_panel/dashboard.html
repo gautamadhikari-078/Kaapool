@@ -3,29 +3,173 @@
 {% block title %}Dashboard - Super Admin{% endblock %}
 {% block page_heading %}Super Admin Overview{% endblock %}
 
+{% block extra_css %}
+<!-- Include Chart.js CDN for visual analytics graphs -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.system-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+    padding: 0.45rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.status-dot-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* CHARTS GRID */
+.charts-grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 992px) {
+    .charts-grid-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.chart-card-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0;
+}
+
+.chart-canvas-container {
+    position: relative;
+    height: 250px;
+    width: 100%;
+}
+
+/* UPDATES & ANNOUNCEMENTS SECTION */
+.update-feed-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 0.85rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    position: relative;
+}
+
+.update-feed-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+}
+
+.update-type-chip {
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+}
+
+.type-UPDATE { background: #fff7ed; color: #b45309; border: 1px solid #fed7aa; }
+.type-MAINTENANCE { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.type-ALERT { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.type-FEATURE { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+.update-title-text {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.25rem;
+}
+
+.update-desc-text {
+    font-size: 0.9rem;
+    color: #475569;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+}
+
+.update-meta-text {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+</style>
+{% endblock extra_css %}
+
 {% block content %}
-<div class="page-header">
+<div class="dashboard-header">
     <div>
-        <h2 class="page-title">Dashboard Overview</h2>
-        <p class="page-subtitle">Real-time stats from Kaapool database and live activities.</p>
+        <h2 class="page-title">Super Admin Analytics</h2>
+        <p class="page-subtitle">Real-time statistics, visual data distribution, and website updates.</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.85rem;">
+        <div class="system-status-pill">
+            <span class="status-dot-pulse"></span> System Operational
+        </div>
+        <a href="{% url 'core:home' %}" target="_blank" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-globe"></i> View Site
+        </a>
     </div>
 </div>
 
-<!-- KPI Metrics Grid -->
+<!-- 1. HIGH IMPACT KPI METRICS GRID -->
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-icon orange"><i class="fa-solid fa-users"></i></div>
         <div class="stat-info">
             <span class="stat-value">{{ total_users }}</span>
-            <span class="stat-label">Total Users</span>
-        </div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-icon green"><i class="fa-solid fa-user-check"></i></div>
-        <div class="stat-info">
-            <span class="stat-value">{{ verified_users }}</span>
-            <span class="stat-label">Verified Users</span>
+            <span class="stat-label">Total Users ({{ verified_users }} Verified)</span>
         </div>
     </div>
 
@@ -33,7 +177,7 @@
         <div class="stat-icon blue"><i class="fa-solid fa-id-badge"></i></div>
         <div class="stat-info">
             <span class="stat-value">{{ active_drivers }}</span>
-            <span class="stat-label">Active Drivers</span>
+            <span class="stat-label">Active Drivers ({{ total_drivers }} Total)</span>
         </div>
     </div>
 
@@ -41,7 +185,7 @@
         <div class="stat-icon purple"><i class="fa-solid fa-car-side"></i></div>
         <div class="stat-info">
             <span class="stat-value">{{ active_rides }}</span>
-            <span class="stat-label">Active Rides</span>
+            <span class="stat-label">Active Rides ({{ completed_rides }} Completed)</span>
         </div>
     </div>
 
@@ -50,6 +194,14 @@
         <div class="stat-info">
             <span class="stat-value">{{ total_bookings }}</span>
             <span class="stat-label">Total Bookings</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+        <div class="stat-info">
+            <span class="stat-value">₹{{ total_payments|floatformat:0 }}</span>
+            <span class="stat-label">Gross Payments</span>
         </div>
     </div>
 
@@ -96,165 +248,126 @@
     </div>
 </div>
 
-<!-- Two-Column Grid for Recent Activities -->
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+<!-- 2. ANALYTICS & VISUAL CHARTS GRID -->
+<div class="charts-grid-container">
     
-    <!-- Recent Users -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fa-solid fa-user-plus" style="color: var(--brand-orange); margin-right: 0.5rem;"></i> Recent Users</h3>
-            <a href="{% url 'admin_panel:user_list' %}" class="btn btn-secondary btn-sm">View All</a>
+    <!-- CHART 1: RIDE STATUS BREAKDOWN (DONUT CHART) -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <i class="fa-solid fa-chart-pie" style="color: #f89516;"></i> Ride Status Breakdown
+            </h3>
+            <span style="font-size: 0.8rem; font-weight: 700; color: #64748b;">Live Overview</span>
         </div>
-        <div class="table-responsive">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>Joined</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in recent_users %}
-                    <tr>
-                        <td>
-                            <strong>{{ user.get_full_name|default:user.username }}</strong>
-                        </td>
-                        <td>{{ user.email|default:"N/A" }}</td>
-                        <td>
-                            {% if user.is_blocked %}
-                                <span class="badge badge-danger">Blocked</span>
-                            {% elif user.is_verified_driver %}
-                                <span class="badge badge-success">Verified Driver</span>
-                            {% else %}
-                                <span class="badge badge-secondary">Member</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ user.date_joined|date:"M d, Y" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No users registered yet.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="chart-canvas-container">
+            <canvas id="rideStatusChart"></canvas>
         </div>
     </div>
 
-    <!-- Recent Rides -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fa-solid fa-route" style="color: #0284c7; margin-right: 0.5rem;"></i> Recent Active Rides</h3>
-            <a href="{% url 'admin_panel:ride_list' %}" class="btn btn-secondary btn-sm">View All</a>
+    <!-- CHART 2: USER VERIFICATION & ROLES (DONUT CHART) -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <i class="fa-solid fa-users-gear" style="color: #0284c7;"></i> User Roles & Verification
+            </h3>
+            <span style="font-size: 0.8rem; font-weight: 700; color: #64748b;">User Base</span>
         </div>
-        <div class="table-responsive">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Driver</th>
-                        <th>Route</th>
-                        <th>Seats</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ride in recent_rides %}
-                    <tr>
-                        <td>{{ ride.driver.get_full_name|default:ride.driver.username }}</td>
-                        <td>{{ ride.origin }} &rarr; {{ ride.destination }}</td>
-                        <td>{{ ride.available_seats }} seat(s)</td>
-                        <td>
-                            {% if ride.status == 'active' %}
-                                <span class="badge badge-success">Active</span>
-                            {% elif ride.status == 'completed' %}
-                                <span class="badge badge-info">Completed</span>
-                            {% else %}
-                                <span class="badge badge-danger">{{ ride.status }}</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No active rides available.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="chart-canvas-container">
+            <canvas id="userDistChart"></canvas>
         </div>
     </div>
 
 </div>
 
-<!-- Recent Verifications & Audit Log -->
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-    
-    <!-- Verifications -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fa-solid fa-id-card" style="color: #16a34a; margin-right: 0.5rem;"></i> Identity Verification Feed</h3>
-            <a href="{% url 'admin_panel:verification_list' %}" class="btn btn-secondary btn-sm">View Verifications</a>
-        </div>
-        <div class="table-responsive">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ver in recent_verifications %}
-                    <tr>
-                        <td>{{ ver.user.get_full_name|default:ver.user.username }}</td>
-                        <td>{{ ver.verification_type|upper }}</td>
-                        <td>
-                            {% if ver.status == 'APPROVED' %}
-                                <span class="badge badge-success">Approved</span>
-                            {% elif ver.status == 'DECLINED' %}
-                                <span class="badge badge-danger">Declined</span>
-                            {% else %}
-                                <span class="badge badge-warning">{{ ver.status }}</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ ver.updated_at|date:"M d, H:i" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No verification logs yet.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<!-- 3. WEBSITE UPDATES & SYSTEM ACTIVITY -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="card-title">
+            <i class="fa-solid fa-bullhorn" style="color: var(--brand-orange); margin-right: 0.5rem;"></i> Latest Website Updates & System Activity
+        </h3>
+        <span style="font-size: 0.8rem; font-weight: 700; color: #64748b;">Platform Activity Log</span>
     </div>
-
-    <!-- Audit Log Feed -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fa-solid fa-list-check" style="color: #9333ea; margin-right: 0.5rem;"></i> Recent Admin Audit Activity</h3>
-            <a href="{% url 'admin_panel:audit_logs' %}" class="btn btn-secondary btn-sm">Audit Trail</a>
+    <div style="padding: 1.25rem;">
+        {% for update in platform_updates %}
+        <div class="update-feed-item">
+            <div class="update-feed-header">
+                <span class="update-type-chip type-{{ update.update_type }}">
+                    {{ update.get_update_type_display }}
+                </span>
+                <form method="post" style="margin: 0; display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="update_id" value="{{ update.id }}">
+                    <button type="submit" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.85rem;" title="Delete entry" onclick="return confirm('Delete this update record?');">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </form>
+            </div>
+            <div class="update-title-text">{{ update.title }}</div>
+            <div class="update-desc-text">{{ update.description }}</div>
+            <div class="update-meta-text">
+                Posted by <strong>{{ update.posted_by.username|default:"Admin" }}</strong> &bull; {{ update.created_at|date:"M d, Y H:i" }}
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Admin</th>
-                        <th>Action</th>
-                        <th>Time</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for log in recent_audit_logs %}
-                    <tr>
-                        <td><strong>{{ log.admin.username|default:"System" }}</strong></td>
-                        <td><code>{{ log.action }}</code></td>
-                        <td>{{ log.created_at|date:"M d, H:i" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No admin activity recorded.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        {% empty %}
+        <div style="text-align: center; padding: 2.5rem 1rem; color: #64748b;">
+            <i class="fa-solid fa-folder-open" style="font-size: 2.2rem; color: #cbd5e1; margin-bottom: 0.75rem;"></i>
+            <div style="font-weight: 700; font-size: 1.05rem;">No Website Updates Recorded</div>
         </div>
+        {% endfor %}
     </div>
-
 </div>
-{% endblock %}
+
+<!-- CHART.JS INITIALIZATION SCRIPT -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. RIDE STATUS DONUT CHART
+    const rideStatusData = {{ chart_ride_status|safe }};
+    const ctx1 = document.getElementById('rideStatusChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+            labels: ['Scheduled', 'Active', 'Completed', 'Cancelled'],
+            datasets: [{
+                data: rideStatusData,
+                backgroundColor: ['#f89516', '#0284c7', '#16a34a', '#ef4444'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { family: 'Plus Jakarta Sans', weight: '700' } } }
+            },
+            cutout: '68%'
+        }
+    });
+
+    // 2. USER DISTRIBUTION DONUT CHART
+    const userDistData = {{ chart_user_dist|safe }};
+    const ctx2 = document.getElementById('userDistChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: ['Verified Drivers', 'Regular Members', 'Admins'],
+            datasets: [{
+                data: userDistData,
+                backgroundColor: ['#16a34a', '#f89516', '#9333ea'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { family: 'Plus Jakarta Sans', weight: '700' } } }
+            },
+            cutout: '68%'
+        }
+    });
+});
+</script>
+{% endblock content %}

@@ -1,0 +1,434 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Travel preferences | KaaPool{% endblock title %}
+
+{% block extra_css %}
+<style>
+.pref-page-wrapper {
+    background-color: #fdfbf7;
+    min-height: 90vh;
+    padding: 3rem 1.5rem 6rem 1.5rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+}
+
+.pref-main-container {
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+/* TOP BACK / CLOSE HEADER */
+.pref-header-box {
+    margin-bottom: 2.25rem;
+}
+
+.pref-title-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.btn-pref-back-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1.5px solid #e7e5e4;
+    color: #1c1917;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    text-decoration: none !important;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    cursor: pointer;
+}
+
+.btn-pref-back-circle:hover {
+    background: #f5f5f4;
+    border-color: #d6d3d1;
+    transform: translateX(-3px);
+}
+
+.pref-title-heading {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #1c1917;
+    margin: 0;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+
+.pref-subtitle-text {
+    font-size: 0.95rem;
+    color: #78716c;
+    margin: 0;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+/* CATEGORY CARD BLOCKS */
+.pref-category-card {
+    background: #ffffff;
+    border: 1.5px solid #e7e5e4;
+    border-radius: 18px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    transition: border-color 0.2s ease;
+}
+
+.pref-category-card:focus-within, .pref-category-card:hover {
+    border-color: #f89516;
+}
+
+.pref-category-header {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+}
+
+.pref-category-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #fff7ed;
+    color: #b45309;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+}
+
+.pref-category-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #1c1917;
+}
+
+/* OPTION RADIO CHIPS */
+.pref-options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.pref-option-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.1rem;
+    background: #fdfbf7;
+    border: 1.5px solid #f5f5f4;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.925rem;
+    font-weight: 600;
+    color: #44403c;
+    transition: all 0.15s ease;
+}
+
+.pref-option-label:hover {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #b45309;
+}
+
+.pref-option-input {
+    display: none;
+}
+
+.pref-option-input:checked + .pref-option-content {
+    color: #b45309;
+    font-weight: 700;
+}
+
+.pref-option-label.active {
+    background: #fff7ed;
+    border-color: #f89516;
+    color: #b45309;
+}
+
+.pref-check-icon {
+    color: #f89516;
+    font-size: 1.1rem;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.pref-option-label.active .pref-check-icon {
+    opacity: 1;
+}
+
+/* CUSTOM PREFERENCES SECTION */
+.custom-pref-block {
+    background: #ffffff;
+    border: 1.5px dashed #f89516;
+    border-radius: 18px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    background-color: #fffcf8;
+}
+
+.custom-input-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.85rem;
+}
+
+.custom-pref-input {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    border: 1.5px solid #e7e5e4;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1c1917;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.custom-pref-input:focus {
+    border-color: #b45309;
+    box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.12);
+}
+
+.btn-add-custom {
+    background: #b45309;
+    color: #ffffff;
+    border: none;
+    padding: 0.8rem 1.4rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.925rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    white-space: nowrap;
+}
+
+.btn-add-custom:hover {
+    background: #92400e;
+}
+
+.custom-tags-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+.custom-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #b45309;
+    padding: 0.45rem 0.85rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.btn-tag-remove {
+    background: none;
+    border: none;
+    color: #ea580c;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    transition: color 0.15s;
+}
+
+.btn-tag-remove:hover {
+    color: #dc2626;
+}
+
+/* SAVE BUTTON FOOTER */
+.btn-save-pref {
+    width: 100%;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #f89516 0%, #b45309 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(180, 83, 9, 0.28);
+    transition: all 0.2s ease;
+}
+
+.btn-save-pref:hover {
+    box-shadow: 0 6px 20px rgba(180, 83, 9, 0.4);
+    transform: translateY(-2px);
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="pref-page-wrapper">
+    <div class="pref-main-container">
+
+        <!-- PAGE HEADER -->
+        <div class="pref-header-box">
+            <div class="pref-title-row">
+                <a href="{% url 'accounts:profile' %}" class="btn-pref-back-circle" title="Back to Profile">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <h1 class="pref-title-heading">Travel preferences</h1>
+            </div>
+            <p class="pref-subtitle-text">Select your travel preferences or customise them to let co-riders know your trip style.</p>
+        </div>
+
+        <form method="post" action="{% url 'accounts:travel_preferences' %}" id="travelPrefForm">
+            {% csrf_token %}
+
+            <!-- 1. CHATTINESS -->
+            <div class="pref-category-card">
+                <div class="pref-category-header">
+                    <div class="pref-category-icon">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                    <div class="pref-category-title">Chattiness</div>
+                </div>
+
+                <div class="pref-options-grid">
+                    {% for opt in options.chattiness %}
+                    <label class="pref-option-label {% if user_prefs.chattiness == opt %}active{% endif %}">
+                        <input type="radio" name="chattiness" value="{{ opt }}" class="pref-option-input" {% if user_prefs.chattiness == opt %}checked{% endif %} onchange="updateRadioSelection(this)">
+                        <span class="pref-option-content">{{ opt }}</span>
+                        <i class="fa-solid fa-circle-check pref-check-icon"></i>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 2. MUSIC -->
+            <div class="pref-category-card">
+                <div class="pref-category-header">
+                    <div class="pref-category-icon">
+                        <i class="fa-solid fa-music"></i>
+                    </div>
+                    <div class="pref-category-title">Music</div>
+                </div>
+
+                <div class="pref-options-grid">
+                    {% for opt in options.music %}
+                    <label class="pref-option-label {% if user_prefs.music == opt %}active{% endif %}">
+                        <input type="radio" name="music" value="{{ opt }}" class="pref-option-input" {% if user_prefs.music == opt %}checked{% endif %} onchange="updateRadioSelection(this)">
+                        <span class="pref-option-content">{{ opt }}</span>
+                        <i class="fa-solid fa-circle-check pref-check-icon"></i>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 3. SMOKING -->
+            <div class="pref-category-card">
+                <div class="pref-category-header">
+                    <div class="pref-category-icon">
+                        <i class="fa-solid fa-smoking"></i>
+                    </div>
+                    <div class="pref-category-title">Smoking</div>
+                </div>
+
+                <div class="pref-options-grid">
+                    {% for opt in options.smoking %}
+                    <label class="pref-option-label {% if user_prefs.smoking == opt %}active{% endif %}">
+                        <input type="radio" name="smoking" value="{{ opt }}" class="pref-option-input" {% if user_prefs.smoking == opt %}checked{% endif %} onchange="updateRadioSelection(this)">
+                        <span class="pref-option-content">{{ opt }}</span>
+                        <i class="fa-solid fa-circle-check pref-check-icon"></i>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 4. PETS -->
+            <div class="pref-category-card">
+                <div class="pref-category-header">
+                    <div class="pref-category-icon">
+                        <i class="fa-solid fa-paw"></i>
+                    </div>
+                    <div class="pref-category-title">Pets</div>
+                </div>
+
+                <div class="pref-options-grid">
+                    {% for opt in options.pets %}
+                    <label class="pref-option-label {% if user_prefs.pets == opt %}active{% endif %}">
+                        <input type="radio" name="pets" value="{{ opt }}" class="pref-option-input" {% if user_prefs.pets == opt %}checked{% endif %} onchange="updateRadioSelection(this)">
+                        <span class="pref-option-content">{{ opt }}</span>
+                        <i class="fa-solid fa-circle-check pref-check-icon"></i>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 5. CUSTOM PREFERENCES -->
+            <div class="custom-pref-block">
+                <div class="pref-category-header" style="margin-bottom: 0.35rem;">
+                    <div class="pref-category-icon">
+                        <i class="fa-solid fa-sliders"></i>
+                    </div>
+                    <div class="pref-category-title">Custom Preferences</div>
+                </div>
+                <p class="pref-subtitle-text" style="font-size: 0.875rem;">Add any custom travel rules or requirements (e.g. "Luggage space needed", "AC moderate").</p>
+
+                <div class="custom-input-row">
+                    <input type="text" name="new_custom_preference" id="newCustomInput" class="custom-pref-input" placeholder="Type custom preference...">
+                    <button type="submit" name="action" value="add_custom" class="btn-add-custom">
+                        <i class="fa-solid fa-plus"></i> Add Tag
+                    </button>
+                </div>
+
+                {% if user_prefs.custom_preferences %}
+                <div class="custom-tags-wrapper">
+                    {% for tag in user_prefs.custom_preferences %}
+                    <div class="custom-tag-chip">
+                        <span>{{ tag }}</span>
+                        <button type="submit" name="delete_custom_preference" value="{{ tag }}" formnovalidate class="btn-tag-remove" title="Remove preference">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- SAVE BUTTON -->
+            <button type="submit" name="action" value="save_all" class="btn-save-pref">
+                <i class="fa-solid fa-floppy-disk"></i> Save Preferences
+            </button>
+
+        </form>
+
+    </div>
+</div>
+
+<script>
+function updateRadioSelection(radioInput) {
+    // Remove active class from all sibling labels
+    const name = radioInput.name;
+    const allLabels = document.querySelectorAll(`input[name="${name}"]`);
+    allLabels.forEach(inp => {
+        const label = inp.closest('.pref-option-label');
+        if (label) label.classList.remove('active');
+    });
+
+    // Add active class to checked label
+    if (radioInput.checked) {
+        const label = radioInput.closest('.pref-option-label');
+        if (label) label.classList.add('active');
+    }
+}
+</script>
+{% endblock content %}

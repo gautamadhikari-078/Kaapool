@@ -60,6 +60,7 @@ class User(AbstractUser):
     # Marketing & Preference Flags
     marketing_consent = models.BooleanField(default=True)
     unsubscribed_at = models.DateTimeField(blank=True, null=True)
+    travel_preferences = models.JSONField(default=dict, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

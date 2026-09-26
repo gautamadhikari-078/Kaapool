@@ -299,6 +299,23 @@ class VehicleDetailView(LoginRequiredMixin, View):
         return render(request, 'accounts/vehicle_detail.html', {'vehicle': vehicle, 'user': request.user})
 
 
+class VehicleSpecsView(LoginRequiredMixin, View):
+    def get(self, request, pk, *args, **kwargs):
+        from apps.rides.models import Vehicle
+        vehicle = get_object_or_404(Vehicle, pk=pk, user=request.user)
+        
+        features_list = []
+        if vehicle.features:
+            features_list = [f.strip() for f in vehicle.features.split(',') if f.strip()]
+
+        context = {
+            'vehicle': vehicle,
+            'features_list': features_list,
+            'user': request.user
+        }
+        return render(request, 'accounts/vehicle_specs.html', context)
+
+
 class VehicleEditFeaturesView(LoginRequiredMixin, View):
     def get(self, request, pk, *args, **kwargs):
         from apps.rides.models import Vehicle
@@ -801,6 +818,94 @@ class PasswordResetConfirmView(View):
         user_display = user.get_full_name() or user.username
         messages.success(request, f" Welcome back, {user_display}! Your password has been updated successfully and you are now logged in.")
         return redirect('accounts:profile')
+
+
+class TravelPreferencesView(LoginRequiredMixin, View):
+    template_name = 'accounts/travel_preferences.html'
+
+    DEFAULT_OPTIONS = {
+        'chattiness': [
+            "I'm chatty when I feel comfortable",
+            "I'm quiet, I prefer a peaceful ride",
+            "I love chatting all the way!",
+            "Depends on my mood",
+        ],
+        'music': [
+            "I'll jam depending on the mood",
+            "Silence is golden",
+            "Music on all the time",
+            "Headphones only",
+        ],
+        'smoking': [
+            "No smoking please",
+            "Smoking allowed",
+            "Smoking breaks allowed outside",
+        ],
+        'pets': [
+            "I'll travel with pets depending on the animal",
+            "No pets allowed",
+            "Pet friendly ride!",
+        ]
+    }
+
+    def get(self, request):
+        user_prefs = request.user.travel_preferences or {}
+        context = {
+            'options': self.DEFAULT_OPTIONS,
+            'user_prefs': user_prefs,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        user = request.user
+        prefs = user.travel_preferences or {}
+        if not isinstance(prefs, dict):
+            prefs = {}
+
+        action = request.POST.get('action', '').strip()
+
+        # Standard selections
+        chattiness = request.POST.get('chattiness', '').strip()
+        music = request.POST.get('music', '').strip()
+        smoking = request.POST.get('smoking', '').strip()
+        pets = request.POST.get('pets', '').strip()
+
+        if chattiness:
+            prefs['chattiness'] = chattiness
+        if music:
+            prefs['music'] = music
+        if smoking:
+            prefs['smoking'] = smoking
+        if pets:
+            prefs['pets'] = pets
+
+        custom_list = prefs.get('custom_preferences', [])
+        if not isinstance(custom_list, list):
+            custom_list = []
+
+        new_custom = request.POST.get('new_custom_preference', '').strip()
+        if new_custom and new_custom not in custom_list:
+            custom_list.append(new_custom)
+
+        delete_custom = request.POST.get('delete_custom_preference', '').strip()
+        if delete_custom and delete_custom in custom_list:
+            custom_list.remove(delete_custom)
+
+        prefs['custom_preferences'] = custom_list
+        user.travel_preferences = prefs
+        user.save()
+
+        if action == 'add_custom' or action == 'delete_custom':
+            # Stay on the same page when adding/deleting custom tags
+            context = {
+                'options': self.DEFAULT_OPTIONS,
+                'user_prefs': prefs,
+            }
+            return render(request, self.template_name, context)
+
+        messages.success(request, "Travel preferences saved successfully.")
+        return redirect('accounts:profile')
+
 
 
 

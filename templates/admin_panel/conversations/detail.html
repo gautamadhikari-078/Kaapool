@@ -1,0 +1,53 @@
+{% extends "admin_panel/base.html" %}
+
+{% block title %}Conversation #{{ conversation.id }} - Kaapool Admin{% endblock %}
+{% block page_heading %}Conversation History #{{ conversation.id }}{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 2rem; padding: 1.5rem; background: #fff; border-radius: 12px; border: 1px solid #e7e5e4;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e7e5e4; padding-bottom: 1rem; margin-bottom: 1rem;">
+        <div>
+            <h2 style="margin: 0; font-size: 1.4rem;">Ride Route: {{ conversation.ride.origin }} &rarr; {{ conversation.ride.destination }}</h2>
+            <p style="margin: 0.25rem 0 0 0; color: #78716c; font-size: 0.95rem;">
+                Departure: {{ conversation.ride.departure_datetime|date:"F d, Y - H:i" }} | Booking #{{ conversation.booking.id }} ({{ conversation.booking.status|title }})
+            </p>
+        </div>
+        <div>
+            <span style="padding: 0.4rem 0.8rem; border-radius: 9999px; font-weight: 700; font-size: 0.85rem; background: {% if conversation.status == 'active' %}#dcfce7; color: #166534;{% else %}#fee2e2; color: #991b1b;{% endif %}">
+                STATUS: {{ conversation.status|upper }}
+            </span>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 2rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <div>
+            <strong>Host / Driver:</strong> {{ conversation.ride.driver.get_full_name|default:conversation.ride.driver.username }} ({{ conversation.ride.driver.email }})
+        </div>
+        <div>
+            <strong>Passenger / Booker:</strong> {{ conversation.booking.passenger.get_full_name|default:conversation.booking.passenger.username }} ({{ conversation.booking.passenger.email }})
+        </div>
+    </div>
+</div>
+
+<div class="card" style="padding: 1.5rem; background: #fff; border-radius: 12px; border: 1px solid #e7e5e4;">
+    <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.2rem;">Message Transcript ({{ chat_messages.count }} messages)</h3>
+    <div style="display: flex; flex-direction: column; gap: 1rem; max-height: 500px; overflow-y: auto; padding-right: 0.5rem;">
+        {% for msg in chat_messages %}
+        <div style="padding: 1rem; border-radius: 10px; background: {% if msg.sender == conversation.ride.driver %}#f0fdf4; border: 1px solid #bbf7d0;{% else %}#eff6ff; border: 1px solid #bfdbfe;{% endif %}">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                <span style="font-weight: 700; font-size: 0.95rem;">
+                    {{ msg.sender.get_full_name|default:msg.sender.username }} 
+                    <small style="color: #64748b; font-weight: 400;">({% if msg.sender == conversation.ride.driver %}Driver{% else %}Passenger{% endif %})</small>
+                </span>
+                <span style="color: #94a3b8; font-size: 0.85rem;">{{ msg.created_at|date:"M d, Y H:i:s" }}</span>
+            </div>
+            <div style="color: #1e293b; font-size: 0.95rem; word-break: break-word;">
+                {{ msg.message_text }}
+            </div>
+        </div>
+        {% empty %}
+        <p style="color: #78716c; text-align: center; margin: 2rem 0;">No messages exchanged yet in this conversation.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

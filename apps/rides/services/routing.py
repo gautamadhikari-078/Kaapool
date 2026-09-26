@@ -250,3 +250,51 @@ def calculate_haversine_distance(coord1, coord2):
     a = math.sin(dlat / 2.0) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlng / 2.0) ** 2
     c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
     return R * c
+
+
+def get_osrm_directions(origin_lat, origin_lng, dest_lat, dest_lng, alternatives=True):
+    """
+    Calculates driving route using OSRM (Open Source Routing Machine) API over OpenStreetMap data.
+    OSRM URL format: https://router.project-osrm.org/route/v1/driving/{orig_lng},{orig_lat};{dest_lng},{dest_lat}?overview=full&geometries=geojson&alternatives=true
+    Returns normalized route list: [{ id, distanceKm, durationMin, summary, hasTolls, geometry }, ...]
+    """
+    coord_str = f"{origin_lng},{origin_lat};{dest_lng},{dest_lat}"
+    alt_param = "true" if alternatives else "false"
+    url = f"https://router.project-osrm.org/route/v1/driving/{coord_str}?overview=full&geometries=geojson&alternatives={alt_param}&steps=true"
+
+    headers = {"User-Agent": "Kaapool-Carpool-App/1.0 (contact@kaapool.com)"}
+    req = urllib.request.Request(url, headers=headers)
+
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode('utf-8'))
+                if data.get('code') == 'Ok':
+                    osrm_routes = data.get('routes', [])
+                    results = []
+                    for idx, r in enumerate(osrm_routes[:4]):
+                        dist_m = r.get('distance', 0.0)
+                        dur_s = r.get('duration', 0.0)
+                        geom = r.get('geometry', {})
+
+                        dist_km = round(dist_m / 1000.0, 1)
+                        dur_mins = max(1, round(dur_s / 60.0))
+
+                        legs = r.get('legs', [])
+                        summary = legs[0].get('summary', '') if legs else ''
+                        if not summary:
+                            summary = f"Route {idx + 1}"
+
+                        results.append({
+                            'id': idx,
+                            'distanceKm': dist_km,
+                            'durationMin': dur_mins,
+                            'summary': summary,
+                            'hasTolls': False,
+                            'geometry': geom
+                        })
+                    return results
+    except Exception as e:
+        logger.error(f"OSRM directions call error: {e}")
+    return []
+

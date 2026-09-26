@@ -81,64 +81,79 @@ class HomeView(TemplateView):
         from django.utils import timezone
         now = timezone.now()
 
-        dynamic_routes = []
-        # Only show upcoming rides (departure >= now), exclude cancelled/completed/expired
-        upcoming_rides = Ride.objects.filter(
+        # Fetch upcoming active/scheduled rides
+        upcoming_rides = list(Ride.objects.filter(
             departure_datetime__gte=now,
             status__in=['scheduled', 'active']
-        ).order_by('departure_datetime')
+        ))
 
-        if upcoming_rides.exists():
-            grouped_routes = {}
+        # 3 Fixed Popular Route Cards as requested
+        card_definitions = [
+            {
+                'title_origin': 'Jaipur',
+                'title_dest': 'Delhi',
+                'search_origin': 'Jaipur',
+                'search_dest': 'Delhi',
+                'default_price': 450,
+                'match_fn': lambda o, d: (
+                    ('jaipur' in o and 'delhi' in d) or ('delhi' in o and 'jaipur' in d)
+                )
+            },
+            {
+                'title_origin': 'Delhi',
+                'title_dest': 'Noida',
+                'search_origin': 'Delhi',
+                'search_dest': 'Noida',
+                'default_price': 150,
+                'match_fn': lambda o, d: (
+                    ('delhi' in o and 'noida' in d) or ('noida' in o and 'delhi' in d)
+                )
+            },
+            {
+                'title_origin': 'Uttarakhand',
+                'title_dest': 'Delhi',
+                'search_origin': 'Uttarakhand',
+                'search_dest': 'Delhi',
+                'default_price': 550,
+                'match_fn': lambda o, d: (
+                    (any(k in o for k in ['uttarakhand', 'dehradun', 'haridwar', 'rishikesh']) and 'delhi' in d) or
+                    ('delhi' in o and any(k in d for k in ['uttarakhand', 'dehradun', 'haridwar', 'rishikesh']))
+                )
+            },
+        ]
+
+        popular_routes = []
+        for card_def in card_definitions:
+            matching_rides = []
             for ride in upcoming_rides:
-                orig_city = clean_city_name(ride.origin, ride.pickup_address)
-                dest_city = clean_city_name(ride.destination, ride.drop_address)
+                orig_str = f"{ride.origin or ''} {ride.pickup_address or ''}".lower()
+                dest_str = f"{ride.destination or ''} {ride.drop_address or ''}".lower()
+                if card_def['match_fn'](orig_str, dest_str):
+                    matching_rides.append(ride)
 
-                if orig_city == dest_city:
-                    orig_disp = get_display_name(ride.origin, ride.pickup_address, orig_city)
-                    dest_disp = get_display_name(ride.destination, ride.drop_address, dest_city)
-                    if orig_disp != dest_disp:
-                        origin_text = f"{orig_disp} ({orig_city})"
-                        dest_text = f"{dest_disp}"
-                    else:
-                        origin_text = orig_city
-                        dest_text = dest_city
-                else:
-                    origin_text = orig_city
-                    dest_text = dest_city
+            if matching_rides:
+                count = len(matching_rides)
+                prices = [float(r.price_per_seat) for r in matching_rides if r.price_per_seat is not None]
+                min_price = min(prices) if prices else card_def['default_price']
+                freq_text = f"{count} ride{'s' if count != 1 else ''} available"
+            else:
+                min_price = card_def['default_price']
+                freq_text = "Available daily"
 
-                pair_key = (origin_text, dest_text)
-                price = float(ride.price_per_seat)
+            if isinstance(min_price, float) and min_price.is_integer():
+                min_price = int(min_price)
 
-                if pair_key not in grouped_routes:
-                    grouped_routes[pair_key] = {
-                        'origin': origin_text,
-                        'destination': dest_text,
-                        'search_origin': orig_city,
-                        'search_dest': dest_city,
-                        'min_price': price,
-                        'count': 1
-                    }
-                else:
-                    grouped_routes[pair_key]['count'] += 1
-                    if price < grouped_routes[pair_key]['min_price']:
-                        grouped_routes[pair_key]['min_price'] = price
+            popular_routes.append({
+                'origin': card_def['title_origin'],
+                'destination': card_def['title_dest'],
+                'search_origin': card_def['search_origin'],
+                'search_dest': card_def['search_dest'],
+                'min_price': min_price,
+                'freq_text': freq_text,
+                'is_bidirectional': True,
+            })
 
-            # Sort by ride count (most popular first)
-            sorted_routes = sorted(grouped_routes.values(), key=lambda x: x['count'], reverse=True)
-
-            for data in sorted_routes[:6]:
-                count = data['count']
-                dynamic_routes.append({
-                    'origin': data['origin'],
-                    'destination': data['destination'],
-                    'search_origin': data['search_origin'],
-                    'search_dest': data['search_dest'],
-                    'min_price': int(data['min_price']) if data['min_price'] == int(data['min_price']) else data['min_price'],
-                    'freq_text': f"{count} ride{'s' if count != 1 else ''} available"
-                })
-
-        context['popular_routes'] = dynamic_routes
+        context['popular_routes'] = popular_routes
         context['faqs'] = FAQ.objects.filter(is_published=True)[:6]
 
         try:
@@ -208,27 +223,88 @@ class ContactView(View):
             messages.error(request, "Please enter your message before sending.")
             return redirect('core:contact')
 
-        # Email Syntax & Format Validation
-        from django.core.validators import validate_email
-        from django.core.exceptions import ValidationError
-        is_valid_email = True
-        if email:
-            try:
-                validate_email(email)
-            except ValidationError:
-                is_valid_email = False
+        word_count = len([w for w in message_text.split() if w])
+        if word_count > 500:
+            messages.error(request, f"Message limit exceeded! Your message contains {word_count} words. Maximum allowed is 500 words.")
+            return redirect('core:contact')
+
+        # Comprehensive Email Authenticity & Disposable Email Validation
+        from apps.core.email_validator import validate_email_authenticity
+        email_check = validate_email_authenticity(email)
+
+        if not email_check['is_valid']:
+            messages.error(request, email_check['reason'])
+            return redirect('core:contact')
+
+        is_valid_email = email_check['is_valid']
 
         from apps.admin_panel.models import ContactInquiry
-        inquiry = ContactInquiry.objects.create(
-            name=name or "Website Visitor",
-            email=email or "Not Provided",
-            phone=phone or "",
-            category=category,
-            subject=subject,
-            message=message_text,
-            is_email_valid=is_valid_email,
-            status='NEW' if is_valid_email else 'INVALID_EMAIL'
-        )
+        from django.utils import timezone
+
+        existing_inquiries = list(ContactInquiry.objects.filter(email__iexact=email.strip()).order_by('-created_at')) if email else []
+
+        if existing_inquiries:
+            inquiry = existing_inquiries[0]
+            combined_history = list(inquiry.reply_history or [])
+            for inq in existing_inquiries:
+                if inq.reply_history:
+                    for item in inq.reply_history:
+                        if not any(h.get('reply') == item.get('reply') and h.get('subject') == item.get('subject') for h in combined_history):
+                            combined_history.append(item)
+                if inq.admin_notes:
+                    dt = inq.admin_replied_at or inq.created_at
+                    if dt and timezone.is_aware(dt):
+                        dt = timezone.localtime(dt)
+                    entry = {
+                        'subject': inq.subject,
+                        'message': inq.message,
+                        'reply': inq.admin_notes,
+                        'replied_at': dt.strftime('%d %b %Y, %I:%M %p') if dt else ''
+                    }
+                    if not any(h.get('reply') == entry['reply'] and h.get('subject') == entry['subject'] for h in combined_history):
+                        combined_history.append(entry)
+
+            if len(existing_inquiries) > 1:
+                dup_ids = [inq.id for inq in existing_inquiries[1:]]
+                ContactInquiry.objects.filter(id__in=dup_ids).delete()
+
+            inquiry.name = name or inquiry.name
+            inquiry.phone = phone or inquiry.phone
+            inquiry.category = category
+            inquiry.subject = subject
+            inquiry.message = message_text
+            inquiry.is_email_valid = is_valid_email
+            inquiry.status = 'NEW' if is_valid_email else 'INVALID_EMAIL'
+            inquiry.admin_notes = ''
+            inquiry.admin_replied_at = None
+            inquiry.reply_history = combined_history
+            inquiry.save()
+
+            ContactInquiry.objects.filter(pk=inquiry.pk).update(
+                name=inquiry.name,
+                phone=inquiry.phone,
+                category=category,
+                subject=subject,
+                message=message_text,
+                is_email_valid=is_valid_email,
+                status=inquiry.status,
+                admin_notes='',
+                admin_replied_at=None,
+                reply_history=combined_history,
+                created_at=timezone.now()
+            )
+        else:
+            inquiry = ContactInquiry.objects.create(
+                name=name or "Website Visitor",
+                email=email or "Not Provided",
+                phone=phone or "",
+                category=category,
+                subject=subject,
+                message=message_text,
+                is_email_valid=is_valid_email,
+                status='NEW' if is_valid_email else 'INVALID_EMAIL',
+                reply_history=[]
+            )
 
         # Trigger emails ONLY if email is valid
         if is_valid_email and email:
@@ -262,6 +338,16 @@ class ContactView(View):
             messages.warning(request, f"Your message was received, but the email address '{email}' appears invalid. No confirmation email was sent.")
 
         return redirect('core:contact')
+
+
+class ValidateEmailAPIView(View):
+    """API view for real-time live email authentication and disposable check."""
+    def get(self, request, *args, **kwargs):
+        from django.http import JsonResponse
+        from apps.core.email_validator import validate_email_authenticity
+        email = request.GET.get('email', '').strip()
+        res = validate_email_authenticity(email)
+        return JsonResponse(res)
 
 
 

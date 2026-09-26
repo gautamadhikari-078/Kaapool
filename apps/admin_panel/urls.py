@@ -9,7 +9,8 @@ from apps.admin_panel.views import (
     AdminBookingListView, AdminBookingDetailView, AdminBookingCreateView, AdminBookingEditView, AdminBookingDeleteView,
     AdminPaymentListView, AdminPaymentCreateView, AdminPaymentEditView, AdminPaymentDeleteView,
     AdminComplaintListView, AdminComplaintDetailView, AdminComplaintUpdateView, AdminComplaintCreateView, AdminComplaintDeleteView,
-    AdminContactInquiryListView, AdminContactInquiryReplyView, AdminContactInquiryDeleteView,
+    AdminContactInquiryListView, AdminContactInquiryDetailView, AdminContactInquiryHistoryView, AdminContactInquiryReplyView, AdminContactInquiryDeleteView, AdminContactInquiryBulkDeleteView,
+    AdminConversationListView, AdminConversationDetailView,
     AdminAdminsView, AdminSettingsView, AdminAuditLogView
 )
 from apps.admin_panel.api_views import (
@@ -82,8 +83,15 @@ urlpatterns = [
     path('complaints/<int:pk>/update/', AdminComplaintUpdateView.as_view(), name='complaint_update'),
 
     path('contact-inquiries/', AdminContactInquiryListView.as_view(), name='contact_inquiry_list'),
+    path('contact-inquiries/bulk-delete/', AdminContactInquiryBulkDeleteView.as_view(), name='contact_inquiry_bulk_delete'),
+    path('contact-inquiries/<int:pk>/', AdminContactInquiryDetailView.as_view(), name='contact_inquiry_detail'),
+    path('contact-inquiries/<int:pk>/history/', AdminContactInquiryHistoryView.as_view(), name='contact_inquiry_history'),
     path('contact-inquiries/<int:pk>/reply/', AdminContactInquiryReplyView.as_view(), name='contact_inquiry_reply'),
     path('contact-inquiries/<int:pk>/delete/', AdminContactInquiryDeleteView.as_view(), name='contact_inquiry_delete'),
+
+    # Admin Conversations
+    path('conversations/', AdminConversationListView.as_view(), name='conversation_list'),
+    path('conversations/<int:pk>/', AdminConversationDetailView.as_view(), name='conversation_detail'),
 
     # Admin Settings & Audit Logs
     path('admins/', AdminAdminsView.as_view(), name='admins_list'),

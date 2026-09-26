@@ -4,8 +4,7 @@
 {% block title %}Offer a Ride - Kaapool{% endblock title %}
 
 {% block extra_css %}
-<!-- Mapbox GL CSS & Leaflet Map CSS -->
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
+<!-- Leaflet Map CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <style>
@@ -1087,13 +1086,10 @@
     </div>
 </div>
 
-<!-- MAPBOX GL & LEAFLET MAP SCRIPTS -->
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
+<!-- LEAFLET MAP SCRIPTS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-    const MAPBOX_ACCESS_TOKEN = '{{ mapbox_access_token|default:"" }}';
-
     // RIDE DRAFT STATE
     const rideDraft = {
         origin: null,      // { id, name, address, lat, lng }
@@ -1101,26 +1097,34 @@
         route: null        // { distanceKm, durationMin, geometry }
     };
 
-    let mapboxPickupSessionToken = generateUUID();
-    let mapboxDropSessionToken = generateUUID();
-
     let isPickupConfirmed = false;
     let isDropConfirmed = false;
 
     let pickupDebounceTimer = null;
     let dropDebounceTimer = null;
 
-    // SCREEN 3 ROUTE SELECTION STATE
+    // SCREEN 3 ROUTE SELECTION STATE (LEAFLET MAP)
     let currentRoutes = [];
     let selectedRouteIndex = 0;
-    let mapboxGlMap = null;
+    let leafletMap = null;
     let originMarker = null;
     let destMarker = null;
+    let routeLayersGroup = null;
 
     let currentStep = 1;
     const totalSteps = 8;
     let selectedDate = new Date();
     let map;
+
+    // HELPER: Format distance (e.g., 850 m or 12.4 km)
+    function formatDistance(km) {
+        if (km == null || isNaN(km)) return '0 km';
+        const numKm = parseFloat(km);
+        if (numKm < 1) {
+            return `${Math.round(numKm * 1000)} m`;
+        }
+        return `${numKm.toFixed(1)} km`;
+    }
 
     // HELPER: Format duration (e.g., 937 -> "15 hr 37 min", 41 -> "41 min")
     function formatDuration(minutes) {
@@ -1143,7 +1147,7 @@
             return true;
         }
 
-        // 2. Compare coordinates (lat and lng each differ by less than 0.0005)
+        // 2. Compare coordinates (lat and lng each differ by less than 0.0005 ~ 50m)
         const latA = parseFloat(a.lat);
         const lngA = parseFloat(a.lng);
         const latB = parseFloat(b.lat);
@@ -1156,13 +1160,6 @@
         }
 
         return false;
-    }
-
-    function generateUUID() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
     }
 
     function escapeHtml(str) {
@@ -1284,8 +1281,8 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         initMap();
-        initPickupMapboxSearch();
-        initDropoffMapboxSearch();
+        initPickupSearch();
+        initDropoffSearch();
         if (typeof applyInitialReturnRideData === 'function') {
             applyInitialReturnRideData();
         }
@@ -1298,9 +1295,9 @@
     });
 
     // ==========================================
-    // PICKUP LOCATION SEARCH
+    // PICKUP LOCATION SEARCH (NOMINATIM + OSM)
     // ==========================================
-    function initPickupMapboxSearch() {
+    function initPickupSearch() {
         const pickupInput = document.getElementById('pickup_search_input');
         const clearBtn = document.getElementById('clear-pickup-icon');
         const sugList = document.getElementById('pickup-sug-list');
@@ -1328,7 +1325,7 @@
 
             pickupDebounceTimer = setTimeout(() => {
                 fetchPickupSuggestions(query);
-            }, 250);
+            }, 300);
         });
 
         if (clearBtn) {
@@ -1345,7 +1342,7 @@
         pickupInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                const firstCard = sugList.querySelector('.mapbox-pickup-card');
+                const firstCard = sugList.querySelector('.pickup-sug-card');
                 if (firstCard) {
                     firstCard.click();
                 }
@@ -1408,18 +1405,19 @@
                 const lng = position.coords.longitude;
 
                 try {
-                    const res = await fetch(`https://api.mapbox.com/search/searchbox/v1/reverse?latitude=${lat}&longitude=${lng}&access_token=${MAPBOX_ACCESS_TOKEN}`);
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+                        headers: { 'Accept-Language': 'en' }
+                    });
                     const data = await res.json();
                     
                     let name = 'Current Location';
                     let address = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
                     let placeId = 'gps_' + Date.now();
 
-                    if (data && data.features && data.features.length > 0) {
-                        const feat = data.features[0];
-                        name = feat.properties.name || feat.properties.full_address || name;
-                        address = feat.properties.full_address || feat.properties.place_formatted || address;
-                        placeId = feat.properties.mapbox_id || placeId;
+                    if (data && (data.display_name || data.name)) {
+                        address = data.display_name || address;
+                        name = data.name || (data.display_name ? data.display_name.split(',')[0] : 'Current Location');
+                        placeId = data.place_id ? String(data.place_id) : placeId;
                     }
 
                     savePickupLocation(placeId, name, address, lat, lng);
@@ -1445,35 +1443,51 @@
         const sugList = document.getElementById('pickup-sug-list');
         if (!sugList) return;
 
+        // Show loading state
+        sugList.innerHTML = `
+            <div class="blabla-suggestion-card" style="cursor: default;">
+                <div class="blabla-sug-left">
+                    <div class="blabla-sug-icon"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+                    <div>
+                        <div class="blabla-sug-title">Searching...</div>
+                        <div class="blabla-sug-address">Looking up "${escapeHtml(query)}"</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
         let suggestions = [];
 
-        // 1. Try Mapbox Search Box Suggest API if token is present
-        if (MAPBOX_ACCESS_TOKEN) {
-            try {
-                const url = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${encodeURIComponent(query)}&access_token=${MAPBOX_ACCESS_TOKEN}&session_token=${mapboxPickupSessionToken}&language=en`;
-                const res = await fetch(url);
-                if (res.ok) {
-                    const data = await res.json();
-                    suggestions = data.suggestions || [];
-                }
-            } catch (err) {
-                console.warn('Mapbox Search Box Suggest API Error:', err);
+        // 1. Try Nominatim Geocoding API directly
+        try {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5`;
+            const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+            if (res.ok) {
+                const data = await res.json();
+                suggestions = (data || []).map((item, idx) => ({
+                    id: item.place_id ? String(item.place_id) : `nom_pickup_${idx}_${Date.now()}`,
+                    name: item.name || (item.display_name ? item.display_name.split(',')[0] : query),
+                    address: item.display_name || item.name || query,
+                    lat: parseFloat(item.lat),
+                    lng: parseFloat(item.lon)
+                }));
             }
+        } catch (err) {
+            console.warn('Nominatim Direct Search Error:', err);
         }
 
-        // 2. Fallback to internal geocoding API if Mapbox returned no results or no token
+        // 2. Fallback to internal geocoding API if Nominatim returned no results or failed
         if (suggestions.length === 0) {
             try {
                 const fallbackRes = await fetch(`/rides/api/geocode/?q=${encodeURIComponent(query)}`);
                 if (fallbackRes.ok) {
                     const fallbackData = await fallbackRes.json();
                     suggestions = (fallbackData || []).map((item, idx) => ({
-                        mapbox_id: `fallback_pickup_${idx}_${Date.now()}`,
+                        id: item.place_id ? String(item.place_id) : `fallback_pickup_${idx}_${Date.now()}`,
                         name: item.name || (item.display_name ? item.display_name.split(',')[0] : query),
-                        full_address: item.display_name || item.name || query,
-                        lat: item.lat,
-                        lng: item.lng,
-                        is_fallback: true
+                        address: item.display_name || item.name || query,
+                        lat: parseFloat(item.lat),
+                        lng: parseFloat(item.lon || item.lng)
                     }));
                 }
             } catch (fallbackErr) {
@@ -1510,18 +1524,18 @@
             `;
         } else {
             suggestions.forEach(item => {
-                const mapboxId = item.mapbox_id;
+                const id = item.id;
                 const name = item.name || '';
-                const address = item.full_address || item.place_formatted || item.address || '';
-                const latAttr = (item.lat !== undefined && item.lat !== null) ? `data-lat="${item.lat}"` : '';
-                const lngAttr = (item.lng !== undefined && item.lng !== null) ? `data-lng="${item.lng}"` : '';
+                const address = item.address || '';
+                const lat = item.lat;
+                const lng = item.lng;
                 
                 html += `
-                    <div class="blabla-suggestion-card mapbox-pickup-card" 
-                         data-mapbox-id="${escapeHtml(mapboxId)}" 
+                    <div class="blabla-suggestion-card pickup-sug-card" 
+                         data-id="${escapeHtml(id)}" 
                          data-name="${escapeHtml(name)}" 
                          data-address="${escapeHtml(address)}"
-                         ${latAttr} ${lngAttr}>
+                         data-lat="${lat}" data-lng="${lng}">
                         <div class="blabla-sug-left">
                             <div class="blabla-sug-icon">
                                 <i class="fa-solid fa-location-dot"></i>
@@ -1542,78 +1556,47 @@
         const gpsCard = document.getElementById('pickup-use-current-location');
         if (gpsCard) gpsCard.addEventListener('click', handleUseCurrentLocationPickup);
 
-        document.querySelectorAll('.mapbox-pickup-card').forEach(card => {
+        document.querySelectorAll('.pickup-sug-card').forEach(card => {
             card.addEventListener('click', function() {
-                const mapboxId = card.getAttribute('data-mapbox-id');
-                const fallbackName = card.getAttribute('data-name');
-                const fallbackAddress = card.getAttribute('data-address');
-                const lat = card.getAttribute('data-lat');
-                const lng = card.getAttribute('data-lng');
-                selectPickupSuggestion(mapboxId, fallbackName, fallbackAddress, lat, lng);
+                const id = card.getAttribute('data-id');
+                const name = card.getAttribute('data-name');
+                const address = card.getAttribute('data-address');
+                const lat = parseFloat(card.getAttribute('data-lat'));
+                const lng = parseFloat(card.getAttribute('data-lng'));
+                
+                selectPickupSuggestion(id, name, address, lat, lng);
             });
         });
     }
 
-    async function selectPickupSuggestion(mapboxId, fallbackName, fallbackAddress, directLat, directLng) {
+    function selectPickupSuggestion(id, name, address, lat, lng) {
         const pickupInput = document.getElementById('pickup_search_input');
         const errorMsg = document.getElementById('pickup-error-msg');
         const clearBtn = document.getElementById('clear-pickup-icon');
 
-        if (directLat && directLng && directLat !== 'null' && directLng !== 'null') {
-            const lat = parseFloat(directLat);
-            const lng = parseFloat(directLng);
-            savePickupLocation(mapboxId, fallbackName, fallbackAddress || fallbackName, lat, lng);
+        savePickupLocation(id, name, address || name, lat, lng);
 
-            const displayVal = fallbackName + (fallbackAddress && fallbackAddress !== fallbackName ? `, ${fallbackAddress}` : '');
-            pickupInput.value = displayVal;
+        const displayVal = name + (address && address !== name ? `, ${address}` : '');
+        pickupInput.value = displayVal;
 
-            if (clearBtn) clearBtn.style.display = 'block';
-            if (errorMsg) errorMsg.style.display = 'none';
-            return;
-        }
-
-        try {
-            const url = `https://api.mapbox.com/search/searchbox/v1/retrieve/${mapboxId}?access_token=${MAPBOX_ACCESS_TOKEN}&session_token=${mapboxPickupSessionToken}`;
-            const res = await fetch(url);
-            const data = await res.json();
-
-            const feat = (data && data.features && data.features.length > 0) ? data.features[0] : null;
-            const props = feat ? feat.properties : {};
-            const coords = feat && feat.geometry ? feat.geometry.coordinates : [0, 0];
-
-            const placeId = props.mapbox_id || mapboxId;
-            const locName = props.name || fallbackName;
-            const address = props.full_address || props.place_formatted || props.address || fallbackAddress || locName;
-            const lng = coords[0];
-            const lat = coords[1];
-
-            savePickupLocation(placeId, locName, address, lat, lng);
-
-            const displayVal = locName + (props.place_formatted ? `, ${props.place_formatted}` : (address && address !== locName ? `, ${address}` : ''));
-            pickupInput.value = displayVal;
-
-            if (clearBtn) clearBtn.style.display = 'block';
-            if (errorMsg) errorMsg.style.display = 'none';
-
-            mapboxPickupSessionToken = generateUUID();
-
-        } catch (err) {
-            console.error('Mapbox Retrieve Error:', err);
-            savePickupLocation(mapboxId, fallbackName, fallbackAddress || fallbackName, 0, 0);
-
-            pickupInput.value = fallbackName + (fallbackAddress ? `, ${fallbackAddress}` : '');
-            if (errorMsg) errorMsg.style.display = 'none';
-        }
+        if (clearBtn) clearBtn.style.display = 'block';
+        if (errorMsg) errorMsg.style.display = 'none';
     }
 
     function savePickupLocation(id, name, address, lat, lng) {
-        rideDraft.origin = { id, name, address, lat, lng };
+        rideDraft.origin = { 
+            id: String(id), 
+            name: name, 
+            address: address, 
+            lat: Number(lat), 
+            lng: Number(lng) 
+        };
 
         document.getElementById('id_origin').value = name;
         document.getElementById('id_pickup_address').value = address;
-        document.getElementById('id_pickup_latitude').value = lat;
-        document.getElementById('id_pickup_longitude').value = lng;
-        document.getElementById('id_pickup_place_id').value = id;
+        document.getElementById('id_pickup_latitude').value = Number(lat);
+        document.getElementById('id_pickup_longitude').value = Number(lng);
+        document.getElementById('id_pickup_place_id').value = String(id);
 
         isPickupConfirmed = true;
 
@@ -1626,9 +1609,9 @@
     }
 
     // ==========================================
-    // DROP-OFF LOCATION SEARCH
+    // DROP-OFF LOCATION SEARCH (NOMINATIM + OSM)
     // ==========================================
-    function initDropoffMapboxSearch() {
+    function initDropoffSearch() {
         const dropInput = document.getElementById('drop_search_input');
         const clearBtn = document.getElementById('clear-drop-icon');
         const sugList = document.getElementById('drop-sug-list');
@@ -1638,7 +1621,6 @@
         dropInput.addEventListener('input', function() {
             const query = dropInput.value.trim();
 
-            // Requirement 3: Clear error as soon as user types again
             hideDropError();
 
             isDropConfirmed = false;
@@ -1659,7 +1641,7 @@
 
             dropDebounceTimer = setTimeout(() => {
                 fetchDropSuggestions(query);
-            }, 250);
+            }, 300);
         });
 
         if (clearBtn) {
@@ -1677,7 +1659,7 @@
         dropInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                const firstCard = sugList.querySelector('.mapbox-drop-card');
+                const firstCard = sugList.querySelector('.drop-sug-card');
                 if (firstCard) {
                     firstCard.click();
                 }
@@ -1755,26 +1737,27 @@
                 const lng = position.coords.longitude;
 
                 try {
-                    const res = await fetch(`https://api.mapbox.com/search/searchbox/v1/reverse?latitude=${lat}&longitude=${lng}&access_token=${MAPBOX_ACCESS_TOKEN}`);
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+                        headers: { 'Accept-Language': 'en' }
+                    });
                     const data = await res.json();
                     
                     let name = 'Current Location';
                     let address = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
                     let placeId = 'gps_' + Date.now();
 
-                    if (data && data.features && data.features.length > 0) {
-                        const feat = data.features[0];
-                        name = feat.properties.name || feat.properties.full_address || name;
-                        address = feat.properties.full_address || feat.properties.place_formatted || address;
-                        placeId = feat.properties.mapbox_id || placeId;
+                    if (data && (data.display_name || data.name)) {
+                        address = data.display_name || address;
+                        name = data.name || (data.display_name ? data.display_name.split(',')[0] : 'Current Location');
+                        placeId = data.place_id ? String(data.place_id) : placeId;
                     }
 
-                    const candidate = { id: placeId, name, address, lat, lng };
+                    const candidate = { id: placeId, name, address, lat: Number(lat), lng: Number(lng) };
 
-                    // Requirement 3: Same place validation
+                    // Validation: Pickup and drop-off cannot be the same location
                     if (isSamePlace(rideDraft.origin, candidate)) {
                         dropInput.value = '';
-                        showDropError("Drop-off can't be the same as pick-up");
+                        showDropError("Pickup and drop-off cannot be the same location.");
                         isDropConfirmed = false;
                         clearDropHiddenFields();
                         return;
@@ -1787,10 +1770,10 @@
                     hideDropError();
                 } catch (err) {
                     console.error('Error in drop reverse geocoding:', err);
-                    const candidate = { id: 'gps_' + Date.now(), name: 'Current Location', address: `GPS (${lat}, ${lng})`, lat, lng };
+                    const candidate = { id: 'gps_' + Date.now(), name: 'Current Location', address: `GPS (${lat}, ${lng})`, lat: Number(lat), lng: Number(lng) };
                     if (isSamePlace(rideDraft.origin, candidate)) {
                         dropInput.value = '';
-                        showDropError("Drop-off can't be the same as pick-up");
+                        showDropError("Pickup and drop-off cannot be the same location.");
                         return;
                     }
                     saveDropLocation(candidate.id, candidate.name, candidate.address, lat, lng);
@@ -1809,35 +1792,51 @@
         const sugList = document.getElementById('drop-sug-list');
         if (!sugList) return;
 
+        // Show loading state
+        sugList.innerHTML = `
+            <div class="blabla-suggestion-card" style="cursor: default;">
+                <div class="blabla-sug-left">
+                    <div class="blabla-sug-icon"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+                    <div>
+                        <div class="blabla-sug-title">Searching...</div>
+                        <div class="blabla-sug-address">Looking up "${escapeHtml(query)}"</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
         let suggestions = [];
 
-        // 1. Try Mapbox Search Box Suggest API if token is present
-        if (MAPBOX_ACCESS_TOKEN) {
-            try {
-                const url = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${encodeURIComponent(query)}&access_token=${MAPBOX_ACCESS_TOKEN}&session_token=${mapboxDropSessionToken}&language=en`;
-                const res = await fetch(url);
-                if (res.ok) {
-                    const data = await res.json();
-                    suggestions = data.suggestions || [];
-                }
-            } catch (err) {
-                console.warn('Mapbox Drop Search Box Suggest API Error:', err);
+        // 1. Try Nominatim Geocoding API directly
+        try {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5`;
+            const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+            if (res.ok) {
+                const data = await res.json();
+                suggestions = (data || []).map((item, idx) => ({
+                    id: item.place_id ? String(item.place_id) : `nom_drop_${idx}_${Date.now()}`,
+                    name: item.name || (item.display_name ? item.display_name.split(',')[0] : query),
+                    address: item.display_name || item.name || query,
+                    lat: parseFloat(item.lat),
+                    lng: parseFloat(item.lon)
+                }));
             }
+        } catch (err) {
+            console.warn('Nominatim Direct Search Error:', err);
         }
 
-        // 2. Fallback to internal geocoding API if Mapbox returned no results or no token
+        // 2. Fallback to internal geocoding API if Nominatim returned no results
         if (suggestions.length === 0) {
             try {
                 const fallbackRes = await fetch(`/rides/api/geocode/?q=${encodeURIComponent(query)}`);
                 if (fallbackRes.ok) {
                     const fallbackData = await fallbackRes.json();
                     suggestions = (fallbackData || []).map((item, idx) => ({
-                        mapbox_id: `fallback_drop_${idx}_${Date.now()}`,
+                        id: item.place_id ? String(item.place_id) : `fallback_drop_${idx}_${Date.now()}`,
                         name: item.name || (item.display_name ? item.display_name.split(',')[0] : query),
-                        full_address: item.display_name || item.name || query,
-                        lat: item.lat,
-                        lng: item.lng,
-                        is_fallback: true
+                        address: item.display_name || item.name || query,
+                        lat: parseFloat(item.lat),
+                        lng: parseFloat(item.lon || item.lng)
                     }));
                 }
             } catch (fallbackErr) {
@@ -1874,18 +1873,18 @@
             `;
         } else {
             suggestions.forEach(item => {
-                const mapboxId = item.mapbox_id;
+                const id = item.id;
                 const name = item.name || '';
-                const address = item.full_address || item.place_formatted || item.address || '';
-                const latAttr = (item.lat !== undefined && item.lat !== null) ? `data-lat="${item.lat}"` : '';
-                const lngAttr = (item.lng !== undefined && item.lng !== null) ? `data-lng="${item.lng}"` : '';
+                const address = item.address || '';
+                const lat = item.lat;
+                const lng = item.lng;
                 
                 html += `
-                    <div class="blabla-suggestion-card mapbox-drop-card" 
-                         data-mapbox-id="${escapeHtml(mapboxId)}" 
+                    <div class="blabla-suggestion-card drop-sug-card" 
+                         data-id="${escapeHtml(id)}" 
                          data-name="${escapeHtml(name)}" 
                          data-address="${escapeHtml(address)}"
-                         ${latAttr} ${lngAttr}>
+                         data-lat="${lat}" data-lng="${lng}">
                         <div class="blabla-sug-left">
                             <div class="blabla-sug-icon">
                                 <i class="fa-solid fa-location-dot"></i>
@@ -1906,102 +1905,57 @@
         const gpsCard = document.getElementById('drop-use-current-location');
         if (gpsCard) gpsCard.addEventListener('click', handleUseCurrentLocationDrop);
 
-        document.querySelectorAll('.mapbox-drop-card').forEach(card => {
+        document.querySelectorAll('.drop-sug-card').forEach(card => {
             card.addEventListener('click', function() {
                 hideDropError();
-                const mapboxId = card.getAttribute('data-mapbox-id');
-                const fallbackName = card.getAttribute('data-name');
-                const fallbackAddress = card.getAttribute('data-address');
-                const lat = card.getAttribute('data-lat');
-                const lng = card.getAttribute('data-lng');
-                selectDropSuggestion(mapboxId, fallbackName, fallbackAddress, lat, lng);
+                const id = card.getAttribute('data-id');
+                const name = card.getAttribute('data-name');
+                const address = card.getAttribute('data-address');
+                const lat = parseFloat(card.getAttribute('data-lat'));
+                const lng = parseFloat(card.getAttribute('data-lng'));
+                
+                selectDropSuggestion(id, name, address, lat, lng);
             });
         });
     }
 
-    async function selectDropSuggestion(mapboxId, fallbackName, fallbackAddress, directLat, directLng) {
+    function selectDropSuggestion(id, name, address, lat, lng) {
         const dropInput = document.getElementById('drop_search_input');
         const clearBtn = document.getElementById('clear-drop-icon');
 
-        if (directLat && directLng && directLat !== 'null' && directLng !== 'null') {
-            const lat = parseFloat(directLat);
-            const lng = parseFloat(directLng);
-            const candidate = { id: mapboxId, name: fallbackName, address: fallbackAddress || fallbackName, lat: lat, lng: lng };
-            if (isSamePlace(rideDraft.origin, candidate)) {
-                showDropError("Drop-off can't be the same as pick-up");
-                isDropConfirmed = false;
-                clearDropHiddenFields();
-                return;
-            }
-            saveDropLocation(mapboxId, fallbackName, fallbackAddress || fallbackName, lat, lng);
-            const displayVal = fallbackName + (fallbackAddress && fallbackAddress !== fallbackName ? `, ${fallbackAddress}` : '');
-            dropInput.value = displayVal;
-            if (clearBtn) clearBtn.style.display = 'block';
-            hideDropError();
+        const candidate = { id: String(id), name: name, address: address || name, lat: Number(lat), lng: Number(lng) };
+
+        // Validation: Pickup and drop-off cannot be the same location
+        if (isSamePlace(rideDraft.origin, candidate)) {
+            showDropError("Pickup and drop-off cannot be the same location.");
+            isDropConfirmed = false;
+            clearDropHiddenFields();
             return;
         }
 
-        try {
-            const url = `https://api.mapbox.com/search/searchbox/v1/retrieve/${mapboxId}?access_token=${MAPBOX_ACCESS_TOKEN}&session_token=${mapboxDropSessionToken}`;
-            const res = await fetch(url);
-            const data = await res.json();
+        saveDropLocation(id, name, address || name, lat, lng);
 
-            const feat = (data && data.features && data.features.length > 0) ? data.features[0] : null;
-            const props = feat ? feat.properties : {};
-            const coords = feat && feat.geometry ? feat.geometry.coordinates : [0, 0];
+        const displayVal = name + (address && address !== name ? `, ${address}` : '');
+        dropInput.value = displayVal;
 
-            const placeId = props.mapbox_id || mapboxId;
-            const locName = props.name || fallbackName;
-            const address = props.full_address || props.place_formatted || props.address || fallbackAddress || locName;
-            const lng = coords[0];
-            const lat = coords[1];
-
-            const candidate = { id: placeId, name: locName, address: address, lat: lat, lng: lng };
-
-            // Requirement 3: Same place validation
-            if (isSamePlace(rideDraft.origin, candidate)) {
-                showDropError("Drop-off can't be the same as pick-up");
-                isDropConfirmed = false;
-                clearDropHiddenFields();
-                return;
-            }
-
-            saveDropLocation(placeId, locName, address, lat, lng);
-
-            const displayVal = locName + (props.place_formatted ? `, ${props.place_formatted}` : (address && address !== locName ? `, ${address}` : ''));
-            dropInput.value = displayVal;
-
-            if (clearBtn) clearBtn.style.display = 'block';
-            hideDropError();
-
-            mapboxDropSessionToken = generateUUID();
-
-        } catch (err) {
-            console.error('Mapbox Drop Retrieve Error:', err);
-            const candidate = { id: mapboxId, name: fallbackName, address: fallbackAddress || fallbackName, lat: 0, lng: 0 };
-            
-            if (isSamePlace(rideDraft.origin, candidate)) {
-                showDropError("Drop-off can't be the same as pick-up");
-                isDropConfirmed = false;
-                clearDropHiddenFields();
-                return;
-            }
-
-            saveDropLocation(mapboxId, fallbackName, fallbackAddress || fallbackName, 0, 0);
-
-            dropInput.value = fallbackName + (fallbackAddress ? `, ${fallbackAddress}` : '');
-            hideDropError();
-        }
+        if (clearBtn) clearBtn.style.display = 'block';
+        hideDropError();
     }
 
     function saveDropLocation(id, name, address, lat, lng) {
-        rideDraft.destination = { id, name, address, lat, lng };
+        rideDraft.destination = { 
+            id: String(id), 
+            name: name, 
+            address: address, 
+            lat: Number(lat), 
+            lng: Number(lng) 
+        };
 
         document.getElementById('id_destination').value = name;
         document.getElementById('id_drop_address').value = address;
-        document.getElementById('id_drop_latitude').value = lat;
-        document.getElementById('id_drop_longitude').value = lng;
-        document.getElementById('id_drop_place_id').value = id;
+        document.getElementById('id_drop_latitude').value = Number(lat);
+        document.getElementById('id_drop_longitude').value = Number(lng);
+        document.getElementById('id_drop_place_id').value = String(id);
 
         isDropConfirmed = true;
 
@@ -2015,7 +1969,7 @@
     }
 
     // ==========================================
-    // SCREEN 3: ROUTE SELECTION & MAPBOX GL MAP
+    // SCREEN 3: ROUTE SELECTION & LEAFLET MAP (OSRM)
     // ==========================================
     async function loadRouteOptionsAndMap() {
         const routeContainer = document.getElementById('route-variant-container');
@@ -2024,7 +1978,7 @@
         routeContainer.innerHTML = `
             <div style="padding: 1.5rem; text-align: center; color: #64748b; font-weight: 600;">
                 <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 1.5rem; color: #f89516; margin-bottom: 0.5rem; display: block;"></i>
-                Calculating driving routes...
+                Finding best route...
             </div>
         `;
 
@@ -2039,13 +1993,15 @@
             const data = await res.json();
 
             if (!res.ok || !Array.isArray(data) || data.length === 0 || data.error) {
-                const errorText = (data && data.error) ? data.error : 'No route found. Please try changing your locations.';
+                const errorText = (data && data.error) ? data.error : 'Route unavailable. Showing pickup & drop-off locations.';
                 routeContainer.innerHTML = `
                     <div class="location-validation-error" style="display: flex; margin-bottom: 1rem;">
                         <i class="fa-solid fa-triangle-exclamation"></i>
                         <span>${escapeHtml(errorText)}</span>
                     </div>
                 `;
+                currentRoutes = [];
+                initOrUpdateLeafletMap();
                 return;
             }
 
@@ -2053,16 +2009,18 @@
             selectedRouteIndex = 0;
 
             renderRouteOptionCards();
-            initOrUpdateMapboxGlMap();
+            initOrUpdateLeafletMap();
 
         } catch (err) {
-            console.error('Error fetching routes:', err);
+            console.error('Error fetching routes from OSRM backend:', err);
             routeContainer.innerHTML = `
                 <div class="location-validation-error" style="display: flex; margin-bottom: 1rem;">
                     <i class="fa-solid fa-triangle-exclamation"></i>
-                    <span>Failed to load routes. Please check your network connection.</span>
+                    <span>Route unavailable. Showing pickup & drop-off locations.</span>
                 </div>
             `;
+            currentRoutes = [];
+            initOrUpdateLeafletMap();
         }
     }
 
@@ -2075,6 +2033,7 @@
             const isSelected = (idx === selectedRouteIndex);
             const tollText = (r.hasTolls === false) ? 'No tolls' : 'Tolls';
             const durationFormatted = formatDuration(r.durationMin);
+            const distanceFormatted = formatDistance(r.distanceKm);
             const summaryText = r.summary ? ` - ${escapeHtml(r.summary)}` : '';
 
             html += `
@@ -2085,7 +2044,7 @@
                             <span class="route-duration-text">${durationFormatted}</span>
                             <span class="route-toll-badge">- ${tollText}</span>
                         </div>
-                        <div class="route-subtitle-text">${r.distanceKm} km${summaryText}</div>
+                        <div class="route-subtitle-text">${distanceFormatted}${summaryText}</div>
                     </div>
                 </div>
             `;
@@ -2097,118 +2056,101 @@
     function selectRouteOption(idx) {
         selectedRouteIndex = idx;
         renderRouteOptionCards();
-        if (mapboxGlMap && currentRoutes.length > 0) {
+        if (leafletMap && currentRoutes.length > 0) {
             renderRoutesAndMarkersOnMap();
         }
     }
 
-    function initOrUpdateMapboxGlMap() {
+    function initOrUpdateLeafletMap() {
         const mapContainer = document.getElementById('route-map-container');
         if (!mapContainer) return;
 
-        if (!mapboxGlMap) {
-            if (!MAPBOX_ACCESS_TOKEN) {
-                console.warn('Mapbox access token is not configured on this environment.');
-                return;
-            }
-            try {
-                mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
-                mapboxGlMap = new mapboxgl.Map({
-                    container: 'route-map-container',
-                    style: 'mapbox://styles/mapbox/streets-v12',
-                    center: [rideDraft.origin.lng, rideDraft.origin.lat],
-                    zoom: 9
-                });
+        const tileUrl = '{{ map_tile_url|default:"https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"|escapejs }}';
+        const tileAttribution = '{{ map_tile_attribution|default:"Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012"|safe }}';
 
-                mapboxGlMap.on('load', function() {
-                    renderRoutesAndMarkersOnMap();
-                });
+        if (!leafletMap) {
+            try {
+                leafletMap = L.map('route-map-container', {
+                    scrollWheelZoom: true
+                }).setView([rideDraft.origin.lat, rideDraft.origin.lng], 9);
+
+                L.tileLayer(tileUrl, {
+                    maxZoom: 19,
+                    attribution: tileAttribution
+                }).addTo(leafletMap);
+
+                renderRoutesAndMarkersOnMap();
             } catch (mapErr) {
-                console.warn('Mapbox GL Map Init Error:', mapErr);
+                console.warn('Leaflet Map Init Error:', mapErr);
             }
         } else {
-            mapboxGlMap.resize();
-            renderRoutesAndMarkersOnMap();
+            setTimeout(() => {
+                leafletMap.invalidateSize();
+                renderRoutesAndMarkersOnMap();
+            }, 100);
         }
     }
 
     function renderRoutesAndMarkersOnMap() {
-        if (!mapboxGlMap) return;
+        if (!leafletMap) return;
 
-        // 1. Origin & Destination Markers
-        if (originMarker) originMarker.remove();
-        if (destMarker) destMarker.remove();
+        // Clear existing markers and route polylines
+        if (originMarker) leafletMap.removeLayer(originMarker);
+        if (destMarker) leafletMap.removeLayer(destMarker);
+        if (routeLayersGroup) leafletMap.removeLayer(routeLayersGroup);
 
-        const origEl = document.createElement('div');
-        origEl.className = 'mapbox-marker-origin';
-        origEl.innerHTML = '<div style="background: #059669; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.25); border: 2px solid #fff;"><i class="fa-solid fa-circle-dot"></i></div>';
+        routeLayersGroup = L.featureGroup().addTo(leafletMap);
 
-        const destEl = document.createElement('div');
-        destEl.className = 'mapbox-marker-dest';
-        destEl.innerHTML = '<div style="background: #f89516; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.25); border: 2px solid #fff;"><i class="fa-solid fa-location-dot"></i></div>';
+        // Custom Leaflet Icons for Pickup (Green) and Drop-off (Orange)
+        const originIcon = L.divIcon({
+            className: 'custom-leaflet-marker-origin',
+            html: '<div style="background: #059669; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.25); border: 2px solid #fff;"><i class="fa-solid fa-circle-dot"></i></div>',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+        });
 
-        originMarker = new mapboxgl.Marker(origEl)
-            .setLngLat([rideDraft.origin.lng, rideDraft.origin.lat])
-            .addTo(mapboxGlMap);
+        const destIcon = L.divIcon({
+            className: 'custom-leaflet-marker-dest',
+            html: '<div style="background: #f89516; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.25); border: 2px solid #fff;"><i class="fa-solid fa-location-dot"></i></div>',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+        });
 
-        destMarker = new mapboxgl.Marker(destEl)
-            .setLngLat([rideDraft.destination.lng, rideDraft.destination.lat])
-            .addTo(mapboxGlMap);
+        originMarker = L.marker([rideDraft.origin.lat, rideDraft.origin.lng], { icon: originIcon }).addTo(leafletMap);
+        destMarker = L.marker([rideDraft.destination.lat, rideDraft.destination.lng], { icon: destIcon }).addTo(leafletMap);
 
-        // 2. Draw Route GeoJSON Layers
-        // Render unselected routes first, then selected route on top
+        // Draw Route Polylines (using Leaflet L.geoJSON)
+        let selectedPolylineLayer = null;
+
         currentRoutes.forEach((r, idx) => {
-            const sourceId = `source_${r.id}`;
-            const layerId = `layer_${r.id}`;
             const isSelected = (idx === selectedRouteIndex);
 
-            if (mapboxGlMap.getSource(sourceId)) {
-                mapboxGlMap.getSource(sourceId).setData(r.geometry);
-            } else {
-                mapboxGlMap.addSource(sourceId, {
-                    type: 'geojson',
-                    data: r.geometry
-                });
-            }
+            const routeLayer = L.geoJSON(r.geometry, {
+                style: {
+                    color: isSelected ? '#f89516' : '#94a3b8',
+                    weight: isSelected ? 6 : 4,
+                    opacity: isSelected ? 0.95 : 0.5
+                }
+            });
 
-            if (!mapboxGlMap.getLayer(layerId)) {
-                mapboxGlMap.addLayer({
-                    id: layerId,
-                    type: 'line',
-                    source: sourceId,
-                    layout: {
-                        'line-join': 'round',
-                        'line-cap': 'round'
-                    },
-                    paint: {
-                        'line-color': isSelected ? '#f89516' : '#94a3b8',
-                        'line-width': isSelected ? 6 : 4,
-                        'line-opacity': isSelected ? 1.0 : 0.6
-                    }
-                });
-            } else {
-                mapboxGlMap.setPaintProperty(layerId, 'line-color', isSelected ? '#f89516' : '#94a3b8');
-                mapboxGlMap.setPaintProperty(layerId, 'line-width', isSelected ? 6 : 4);
-                mapboxGlMap.setPaintProperty(layerId, 'line-opacity', isSelected ? 1.0 : 0.6);
+            routeLayersGroup.addLayer(routeLayer);
+
+            if (isSelected) {
+                selectedPolylineLayer = routeLayer;
             }
         });
 
-        // Move selected route layer to top
-        if (currentRoutes[selectedRouteIndex]) {
-            const selectedLayerId = `layer_${currentRoutes[selectedRouteIndex].id}`;
-            if (mapboxGlMap.getLayer(selectedLayerId)) {
-                mapboxGlMap.moveLayer(selectedLayerId);
+        // Fit map bounds to encompass pickup, drop-off, and route line
+        if (selectedPolylineLayer && selectedPolylineLayer.getBounds().isValid()) {
+            leafletMap.fitBounds(selectedPolylineLayer.getBounds(), { padding: [50, 50] });
+        } else {
+            const bounds = L.latLngBounds([
+                [rideDraft.origin.lat, rideDraft.origin.lng],
+                [rideDraft.destination.lat, rideDraft.destination.lng]
+            ]);
+            if (bounds.isValid()) {
+                leafletMap.fitBounds(bounds, { padding: [50, 50] });
             }
-        }
-
-        // 3. Fit Map Bounds to Selected Route
-        const selRoute = currentRoutes[selectedRouteIndex];
-        if (selRoute && selRoute.geometry && selRoute.geometry.coordinates) {
-            const bounds = new mapboxgl.LngLatBounds();
-            selRoute.geometry.coordinates.forEach(coord => {
-                bounds.extend(coord);
-            });
-            mapboxGlMap.fitBounds(bounds, { padding: 60 });
         }
     }
 

@@ -108,14 +108,21 @@
 
         <div class="top-rides-grid">
             {% for route in popular_routes %}
-            <a href="{% url 'rides:search' %}?origin={{ route.search_origin|default:route.origin }}&destination={{ route.search_dest|default:route.destination }}&date={% now 'Y-m-d' %}"
+            <a href="{% url 'rides:search' %}?origin={{ route.search_origin|default:route.origin }}&destination={{ route.search_dest|default:route.destination }}"
                 class="route-card">
                 <div class="route-info">
-                    <span class="route-cities">{{ route.origin }} <i class="fa-solid fa-arrow-right"></i> {{ route.destination }}</span>
-                    <span class="route-freq">{{ route.freq_text }}</span>
+                    <span class="route-cities">
+                        {{ route.origin }} 
+                        {% if route.is_bidirectional %}
+                            <i class="fa-solid fa-right-left" style="font-size: 0.85em; opacity: 0.7; margin: 0 0.3rem;"></i>
+                        {% else %}
+                            <i class="fa-solid fa-arrow-right" style="font-size: 0.85em; opacity: 0.7; margin: 0 0.3rem;"></i>
+                        {% endif %}
+                        {{ route.destination }}
+                    </span>
                 </div>
-                <div class="route-price">
-                    <span class="price-tag">From ₹{{ route.min_price }} &nbsp;<i class="fa-solid fa-chevron-right"></i></span>
+                <div class="route-arrow">
+                    <i class="fa-solid fa-chevron-right"></i>
                 </div>
             </a>
             {% endfor %}

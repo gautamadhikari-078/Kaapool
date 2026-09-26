@@ -5,9 +5,6 @@
 
 {% block extra_css %}
 <style>
-/* ==========================================================
-   BLABLACAR 1:1 REPLICA - INBOX DESIGN
-   ========================================================== */
 .inbox-page-wrapper {
     background-color: #ffffff;
     min-height: 88vh;
@@ -17,11 +14,10 @@
 }
 
 .inbox-container {
-    max-width: 680px;
+    max-width: 720px;
     margin: 0 auto;
 }
 
-/* CENTERED TITLE */
 .inbox-page-title {
     font-size: 2.25rem;
     font-weight: 800;
@@ -31,50 +27,71 @@
     letter-spacing: -0.5px;
 }
 
-/* MESSAGE ROWS LIST */
 .inbox-rows-list {
     display: flex;
     flex-direction: column;
+    gap: 0.5rem;
 }
 
 .inbox-row-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.25rem 0.5rem;
+    padding: 1.25rem 1rem;
     border-bottom: 1px solid #f1f5f9;
     text-decoration: none !important;
     color: inherit;
     transition: background 0.15s ease;
     cursor: pointer;
-    border-radius: 12px;
+    border-radius: 14px;
+    background: #ffffff;
 }
 
 .inbox-row-item:hover {
     background: #f8fafc;
 }
 
+.inbox-row-item.has-unread {
+    background: #fff7ed;
+    border-left: 4px solid #f89516;
+}
+
 .inbox-row-left {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 0.2rem;
     flex: 1;
     min-width: 0;
     padding-right: 1rem;
+}
+
+.inbox-item-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
 }
 
 .inbox-item-title {
     font-size: 1.05rem;
     font-weight: 800;
     color: #051528;
-    line-height: 1.25;
 }
+
+.status-badge-sm {
+    font-size: 0.725rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    text-transform: uppercase;
+}
+.status-badge-sm.confirmed { background: #dcfce7; color: #166534; }
+.status-badge-sm.cancelled { background: #fee2e2; color: #991b1b; }
+.status-badge-sm.completed { background: #e0f2fe; color: #075985; }
 
 .inbox-item-subtitle {
     font-size: 0.925rem;
     font-weight: 700;
     color: #334155;
-    line-height: 1.35;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -83,8 +100,10 @@
 .inbox-item-subtext {
     font-size: 0.85rem;
     font-weight: 500;
-    color: #94a3b8;
-    line-height: 1.35;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .inbox-row-right {
@@ -94,25 +113,20 @@
     flex-shrink: 0;
 }
 
-/* AVATAR CIRCLES */
+.unread-badge {
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.2rem 0.55rem;
+    border-radius: 9999px;
+}
+
 .inbox-avatar-wrap {
     position: relative;
     width: 48px;
     height: 48px;
     flex-shrink: 0;
-}
-
-.inbox-system-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: #f89516;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    box-shadow: 0 4px 12px rgba(248, 149, 22, 0.2);
 }
 
 .inbox-user-avatar {
@@ -127,6 +141,12 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+}
+
+.inbox-user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .verified-check-badge {
@@ -146,7 +166,7 @@
 }
 
 .chevron-arrow-icon {
-    color: #64748b;
+    color: #94a3b8;
     font-size: 0.95rem;
     transition: transform 0.15s ease, color 0.15s ease;
 }
@@ -160,121 +180,46 @@
 
 {% block content %}
 <div class="inbox-page-wrapper">
-    <a href="javascript:history.back()" class="btn-page-back" title="Go back">
-        <i class="fa-solid fa-chevron-left"></i>
-    </a>
-
     <div class="inbox-container">
-
-        
-        <!-- CENTERED TITLE -->
         <h1 class="inbox-page-title">Inbox</h1>
 
-        <!-- MESSAGES ROWS LIST -->
         <div class="inbox-rows-list">
-
-            <!-- 1. KAAPOOL SYSTEM MESSAGE 1 -> OPENS IMAGE 2 REPLICA -->
-            <a href="{% url 'messaging:add_photo_info' %}" class="inbox-row-item">
+            {% for item in inbox_items %}
+            <a href="{% url 'messaging:chat_detail_by_id' item.conversation.id %}" class="inbox-row-item {% if item.unread_count > 0 %}has-unread{% endif %}">
                 <div class="inbox-row-left">
-                    <span class="inbox-item-title">Kaapool</span>
-                    <span class="inbox-item-subtitle">Add a photo to your profile</span>
-                </div>
-                <div class="inbox-row-right">
-                    <div class="inbox-avatar-wrap">
-                        <div class="inbox-system-avatar">
-                            <i class="fa-solid fa-quote-left"></i>
-                        </div>
+                    <div class="inbox-item-header">
+                        <span class="inbox-item-title">{{ item.other_user.get_full_name|default:item.other_user.username }}</span>
+                        {% if item.booking %}
+                            <span class="status-badge-sm {{ item.booking.status }}">{{ item.booking.status }}</span>
+                        {% endif %}
                     </div>
-                    <i class="fa-solid fa-chevron-right chevron-arrow-icon"></i>
+                    <span class="inbox-item-subtitle">
+                        {% if item.ride %}
+                            {{ item.ride.origin }} &rarr; {{ item.ride.destination }}
+                        {% else %}
+                            Booking #{{ item.booking.id }}
+                        {% endif %}
+                    </span>
+                    <span class="inbox-item-subtext">
+                        {% if item.last_message %}
+                            "{{ item.last_message.message_text|truncatechars:45 }}" &bull; {{ item.last_message.created_at|date:"d M, H:i" }}
+                        {% else %}
+                            No messages yet &bull; {{ item.conversation.created_at|date:"d M, Y" }}
+                        {% endif %}
+                    </span>
                 </div>
-            </a>
 
-            <!-- 2. KAAPOOL SYSTEM MESSAGE 2 -> OPENS IMAGE 4 REPLICA -->
-            <a href="{% url 'messaging:stay_updated_info' %}" class="inbox-row-item">
-                <div class="inbox-row-left">
-                    <span class="inbox-item-title">Kaapool</span>
-                    <span class="inbox-item-subtitle">How to stay updated</span>
-                </div>
                 <div class="inbox-row-right">
+                    {% if item.unread_count > 0 %}
+                        <span class="unread-badge">{{ item.unread_count }} unread</span>
+                    {% endif %}
                     <div class="inbox-avatar-wrap">
-                        <div class="inbox-system-avatar">
-                            <i class="fa-solid fa-quote-left"></i>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right chevron-arrow-icon"></i>
-                </div>
-            </a>
-
-            <!-- DYNAMIC USER CONVERSATIONS FROM DATABASE -> OPENS IMAGE 3 REPLICA -->
-            {% for message in inbox_messages %}
-            {% with other_user=message.sender %}
-
-                {% if message.sender == user %}
-                    {% with other_user=message.recipient %}
-                        <a href="{% url 'messaging:chat_detail' message.recipient.id %}" class="inbox-row-item">
-                            <div class="inbox-row-left">
-                                <span class="inbox-item-title">{{ message.recipient.get_full_name|default:message.recipient.username }}</span>
-                                <span class="inbox-item-subtitle">
-                                    {% if message.ride %}
-                                        {{ message.ride.origin }} &rarr; {{ message.ride.destination }}
-                                    {% else %}
-                                        {{ message.content }}
-                                    {% endif %}
-                                </span>
-                                <span class="inbox-item-subtext">{{ message.timestamp|date:"d M, Y" }}</span>
-                            </div>
-                            <div class="inbox-row-right">
-                                <div class="inbox-avatar-wrap">
-                                    <div class="inbox-user-avatar">
-                                        {{ message.recipient.username|slice:":2"|upper }}
-                                    </div>
-                                    <div class="verified-check-badge">
-                                        <i class="fa-solid fa-check"></i>
-                                    </div>
-                                </div>
-                                <i class="fa-solid fa-chevron-right chevron-arrow-icon"></i>
-                            </div>
-                        </a>
-                    {% endwith %}
-                {% else %}
-                    <a href="{% url 'messaging:chat_detail' message.sender.id %}" class="inbox-row-item">
-                        <div class="inbox-row-left">
-                            <span class="inbox-item-title">{{ message.sender.get_full_name|default:message.sender.username }}</span>
-                            <span class="inbox-item-subtitle">
-                                {% if message.ride %}
-                                    {{ message.ride.origin }} &rarr; {{ message.ride.destination }}
-                                {% else %}
-                                    {{ message.content }}
-                                {% endif %}
-                            </span>
-                            <span class="inbox-item-subtext">{{ message.timestamp|date:"d M, Y" }}</span>
-                        </div>
-                        <div class="inbox-row-right">
-                            <div class="inbox-avatar-wrap">
-                                <div class="inbox-user-avatar">
-                                    {{ message.sender.username|slice:":2"|upper }}
-                                </div>
-                                <div class="verified-check-badge">
-                                    <i class="fa-solid fa-check"></i>
-                                </div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right chevron-arrow-icon"></i>
-                        </div>
-                    </a>
-                {% endif %}
-            {% endwith %}
-            {% empty %}
-            <!-- DEMO USER CONVERSATION (MATCHING SCREENSHOT) -> OPENS CHAT FOR DEMO / OTHER USER -->
-            <a href="{% url 'messaging:chat_detail' user.id %}" class="inbox-row-item">
-                <div class="inbox-row-left">
-                    <span class="inbox-item-title">Rahul</span>
-                    <span class="inbox-item-subtitle">Gurugram &rarr; Rohtak</span>
-                    <span class="inbox-item-subtext">4 days ago</span>
-                </div>
-                <div class="inbox-row-right">
-                    <div class="inbox-avatar-wrap">
-                        <div class="inbox-user-avatar" style="background: #1e293b;">
-                            RA
+                        <div class="inbox-user-avatar">
+                            {% if item.other_user.profile_picture %}
+                                <img src="{{ item.other_user.profile_picture.url }}" alt="{{ item.other_user.username }}">
+                            {% else %}
+                                {{ item.other_user.username|slice:":2"|upper }}
+                            {% endif %}
                         </div>
                         <div class="verified-check-badge">
                             <i class="fa-solid fa-check"></i>
@@ -283,11 +228,17 @@
                     <i class="fa-solid fa-chevron-right chevron-arrow-icon"></i>
                 </div>
             </a>
+            {% empty %}
+            <div style="text-align: center; padding: 4rem 1rem; color: #78716c; background: #ffffff; border-radius: 16px; border: 1px solid #e7e5e4;">
+                <i class="fa-solid fa-comments" style="font-size: 3rem; color: #d6d3d1; margin-bottom: 1rem; display: block;"></i>
+                <h3 style="font-size: 1.25rem; font-weight: 800; color: #1c1917; margin-bottom: 0.5rem;">No active conversations yet</h3>
+                <p style="font-size: 0.95rem; color: #78716c; max-width: 420px; margin: 0 auto 1.5rem auto;">
+                    When you book a ride or someone books your offered ride, your private chat conversation will appear here automatically.
+                </p>
+                <a href="{% url 'rides:search' %}" class="btn" style="background: #f89516; color: #ffffff; padding: 0.65rem 1.4rem; border-radius: 10px; font-weight: 700; text-decoration: none;">Find a ride</a>
+            </div>
             {% endfor %}
-
         </div>
     </div>
 </div>
 {% endblock content %}
-
-{% block footer %}{% endblock footer %}

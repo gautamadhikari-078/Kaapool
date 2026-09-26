@@ -250,11 +250,55 @@ class ContactInquiry(models.Model):
     
     admin_notes = models.TextField(blank=True, default='')
     admin_replied_at = models.DateTimeField(blank=True, null=True)
+    reply_history = models.JSONField(default=list, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    @property
+    def is_expired(self):
+        """Returns True if the inquiry is older than 30 days and was not responded to."""
+        if not self.created_at:
+            return False
+        from django.utils import timezone
+        return (timezone.now() - self.created_at).days >= 30 and self.status == 'NEW'
+
+    @property
+    def is_expired_or_closed(self):
+        return self.status == 'CLOSED' or self.is_expired
+
+    def __str__(self):
+        return f"Contact Inquiry from {self.name} ({self.email}) [{self.status}]"
+
+
+class PlatformUpdate(models.Model):
+    """
+    Stores website updates, maintenance alerts, feature releases, or error logs broadcasted by Super Admin.
+    """
+    UPDATE_TYPES = (
+        ('UPDATE', 'Website Update'),
+        ('MAINTENANCE', 'System Maintenance'),
+        ('ALERT', 'System Error / Alert'),
+        ('FEATURE', 'New Feature'),
+    )
+
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    update_type = models.CharField(max_length=30, choices=UPDATE_TYPES, default='UPDATE')
+    posted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Contact Inquiry from {self.name} ({self.email}) [{self.status}]"
+        return f"[{self.get_update_type_display()}] {self.title}"
+
 

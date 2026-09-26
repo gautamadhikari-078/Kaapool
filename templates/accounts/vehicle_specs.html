@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vehicle Details | {{ vehicle.make_model }} - Kaapool{% endblock title %}
+
+{% block extra_css %}
+<style>
+.vspecs-page-wrapper {
+    background-color: #fdfbf7;
+    min-height: 90vh;
+    padding: 3rem 1.5rem 6rem 1.5rem;
+    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+}
+
+.vspecs-main-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* TOP BACK HEADER */
+.vspecs-header-box {
+    margin-bottom: 2.25rem;
+}
+
+.vspecs-title-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-vspecs-back-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1.5px solid #e7e5e4;
+    color: #1c1917;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    text-decoration: none !important;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    cursor: pointer;
+}
+
+.btn-vspecs-back-circle:hover {
+    background: #f5f5f4;
+    border-color: #d6d3d1;
+    transform: translateX(-3px);
+}
+
+.vspecs-title-heading {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #1c1917;
+    margin: 0;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+
+/* VERTICAL SPECIFICATIONS CARD */
+.vspecs-card {
+    background: #ffffff;
+    border: 1.5px solid #e7e5e4;
+    border-radius: 20px;
+    padding: 2.25rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+}
+
+.vspecs-vertical-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.vspecs-item-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding-bottom: 1.4rem;
+    border-bottom: 1px solid #f5f5f4;
+}
+
+.vspecs-item-block:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+/* TITLE LABELS: BOLD, LARGER & PROMINENT */
+.vspecs-item-label {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #1c1917;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.vspecs-item-label i {
+    font-size: 1.2rem;
+    color: #b45309;
+}
+
+/* VALUES: SMALLER & CLEAN MUTED SIZE */
+.vspecs-item-value {
+    font-size: 0.975rem;
+    font-weight: 600;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+/* ORANGE LICENSE PLATE BADGE */
+.plate-badge-lg {
+    background: linear-gradient(135deg, #f89516 0%, #b45309 100%);
+    color: #ffffff;
+    padding: 0.45rem 1.1rem;
+    border-radius: 12px;
+    font-family: monospace;
+    font-weight: 800;
+    letter-spacing: 2px;
+    font-size: 1.1rem;
+    display: inline-block;
+    /* border: 1.5px solid #b45309; */
+    /* box-shadow: 0 4px 14px rgba(180, 83, 9, 0.25); */
+    margin-top: 0.25rem;
+}
+
+/* VERTICAL FEATURES LIST */
+.vertical-features-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.4rem;
+}
+
+.vertical-feature-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    background: #fffcf8;
+    border: 1.5px solid #fed7aa;
+    padding: 0.9rem 1.25rem;
+    border-radius: 14px;
+    color: #b45309;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 1px 4px rgba(248, 149, 22, 0.05);
+}
+
+.vertical-feature-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #fff7ed;
+    color: #b45309;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="vspecs-page-wrapper">
+    <div class="vspecs-main-container">
+
+        <!-- PAGE HEADER -->
+        <div class="vspecs-header-box">
+            <div class="vspecs-title-row">
+                <a href="{% url 'accounts:vehicle_detail' vehicle.id %}" class="btn-vspecs-back-circle" title="Back to Your Vehicle">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <h1 class="vspecs-title-heading">Vehicle Details</h1>
+            </div>
+        </div>
+
+        <!-- MAIN VERTICAL SPECIFICATIONS CARD -->
+        <div class="vspecs-card">
+            <div class="vspecs-vertical-list">
+                
+                <!-- 1. MAKE & MODEL -->
+                <div class="vspecs-item-block">
+                    <div class="vspecs-item-label">
+                        <i class="fa-solid fa-car"></i> Make & Model
+                    </div>
+                    <div class="vspecs-item-value">{{ vehicle.make_model }}</div>
+                </div>
+
+                <!-- 2. LICENSE PLATE NUMBER -->
+                <div class="vspecs-item-block">
+                    <div class="vspecs-item-label">
+                        <i class="fa-solid fa-id-card"></i> License Plate Number
+                    </div>
+                    <div>
+                        {% if vehicle.license_plate %}
+                            <span class="plate-badge-lg">{{ vehicle.license_plate|upper }}</span>
+                        {% else %}
+                            <span class="vspecs-item-value">Not specified</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 3. COLOR -->
+                <div class="vspecs-item-block">
+                    <div class="vspecs-item-label">
+                        <i class="fa-solid fa-palette"></i> Color
+                    </div>
+                    <div class="vspecs-item-value">{{ vehicle.color|default:"Not specified" }}</div>
+                </div>
+
+                <!-- 4. FEATURES & AMENITIES (VERTICAL FORMAT) -->
+                <div class="vspecs-item-block">
+                    <div class="vspecs-item-label">
+                        <i class="fa-solid fa-list-check"></i> Features & Amenities
+                    </div>
+
+                    {% if features_list %}
+                    <div class="vertical-features-container">
+                        {% for ft in features_list %}
+                        <div class="vertical-feature-row">
+                            <div class="vertical-feature-icon">
+                                {% if "electric" in ft|lower %}
+                                    <i class="fa-solid fa-bolt"></i>
+                                {% elif "air" in ft|lower or "ac" in ft|lower or "conditioning" in ft|lower %}
+                                    <i class="fa-solid fa-snowflake"></i>
+                                {% elif "usb" in ft|lower or "plug" in ft|lower or "port" in ft|lower %}
+                                    <i class="fa-solid fa-plug"></i>
+                                {% elif "music" in ft|lower or "audio" in ft|lower %}
+                                    <i class="fa-solid fa-music"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-circle-check"></i>
+                                {% endif %}
+                            </div>
+                            <span>{{ ft }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <span class="vspecs-item-value">No features listed</span>
+                    {% endif %}
+                </div>
+
+                <!-- 5. ADDED ON -->
+                {% if vehicle.created_at %}
+                <div class="vspecs-item-block">
+                    <div class="vspecs-item-label">
+                        <i class="fa-solid fa-calendar-days"></i> Added On
+                    </div>
+                    <div class="vspecs-item-value">
+                        {{ vehicle.created_at|date:"F d, Y" }}
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock content %}

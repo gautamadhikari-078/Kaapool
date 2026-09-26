@@ -1,0 +1,325 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}{{ inquiry.subject }} - Contact Inquiry Details{% endblock %}
+{% block page_heading %}Contact Inquiry Details{% endblock %}
+
+{% block extra_css %}
+<style>
+.inquiry-detail-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.back-link-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    color: #0f172a;
+    text-decoration: none;
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.back-link-btn:hover {
+    background: #f89516;
+    color: #ffffff;
+    border-color: #f89516;
+    transform: translateX(-2px);
+}
+
+.detail-card-clean {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-card-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-grid-clean {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+@media (max-width: 640px) {
+    .info-grid-clean {
+        grid-template-columns: 1fr;
+    }
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.info-label {
+    font-size: 0.775rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #64748b;
+}
+
+.info-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.dynamic-message-box {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: #1e293b;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 120px;
+}
+
+.reply-textarea-clean {
+    width: 100%;
+    min-height: 140px;
+    padding: 1rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    outline: none;
+    transition: border-color 0.15s ease;
+    resize: vertical;
+    background: #ffffff;
+}
+
+.reply-textarea-clean:focus {
+    border-color: #f89516;
+}
+
+.btn-primary-theme {
+    background: #f89516;
+    color: #ffffff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.925rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.btn-primary-theme:hover {
+    background: #ea580c;
+}
+
+/* History Link Button */
+.btn-history-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: #ffffff;
+    color: #f89516;
+    border: 1.5px solid #f89516;
+    font-size: 0.875rem;
+    font-weight: 700;
+    padding: 0.4rem 0.95rem;
+    border-radius: 9999px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.btn-history-trigger:hover {
+    background: #f89516;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(248, 149, 22, 0.25);
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="inquiry-detail-container">
+    
+    <a href="{% url 'admin_panel:contact_inquiry_list' %}" class="back-link-btn" title="Back to Contact Inquiries List">
+        <i class="fa-solid fa-arrow-left"></i>
+    </a>
+
+    <!-- Top Status Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
+                <h2 style="font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0;">
+                    Contact Inquiry from {{ inquiry.name }}
+                </h2>
+                <span style="background: #f1f5f9; color: #475569; font-weight: 700; font-size: 0.8rem; padding: 0.2rem 0.65rem; border-radius: 8px;">
+                    #{{ inquiry.id }}
+                </span>
+            </div>
+            <p style="color: #64748b; margin: 0; font-size: 0.925rem;">
+                Submitted on {{ inquiry.created_at|date:"d M Y" }} at {{ inquiry.created_at|date:"h:i A" }}
+            </p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+            {% if inquiry.status == 'RESPONDED' %}
+                <span style="display: inline-flex; align-items: center; gap: 0.4rem; background: #dcfce7; color: #166534; font-size: 0.875rem; font-weight: 700; padding: 0.4rem 0.9rem; border-radius: 9999px;">
+                    <i class="fa-solid fa-circle-check"></i> Responded
+                </span>
+            {% elif inquiry.status == 'INVALID_EMAIL' %}
+                <span style="display: inline-flex; align-items: center; gap: 0.4rem; background: #fee2e2; color: #991b1b; font-size: 0.875rem; font-weight: 700; padding: 0.4rem 0.9rem; border-radius: 9999px;">
+                    <i class="fa-solid fa-circle-xmark"></i> Invalid Email
+                </span>
+            {% elif inquiry.status == 'CLOSED' %}
+                <span style="display: inline-flex; align-items: center; gap: 0.4rem; background: #f1f5f9; color: #475569; font-size: 0.875rem; font-weight: 700; padding: 0.4rem 0.9rem; border-radius: 9999px;">
+                    Closed
+                </span>
+            {% else %}
+                <span style="display: inline-flex; align-items: center; gap: 0.4rem; background: #fef3c7; color: #92400e; font-size: 0.875rem; font-weight: 700; padding: 0.4rem 0.9rem; border-radius: 9999px;">
+                    <i class="fa-solid fa-circle" style="font-size: 0.5rem; color: #f59e0b;"></i> New Inquiry
+                </span>
+            {% endif %}
+
+            <a href="{% url 'admin_panel:contact_inquiry_history' pk=inquiry.pk %}" class="btn-history-trigger">
+                <i class="fa-solid fa-clock-rotate-left"></i> History {% if replied_history %}({{ replied_history|length }}){% endif %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Sender Details Card -->
+    <div class="detail-card-clean">
+        <div class="detail-card-title">
+            <i class="fa-solid fa-user" style="color: #f89516;"></i> Contact Information
+        </div>
+
+        <div class="info-grid-clean">
+            <div class="info-item">
+                <span class="info-label">Full Name</span>
+                <span class="info-value">{{ inquiry.name }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Email Address</span>
+                <div>
+                    <a href="mailto:{{ inquiry.email }}" class="info-value" style="color: #0f172a; text-decoration: none;">
+                        {{ inquiry.email }}
+                    </a>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">Mobile Number</span>
+                <span class="info-value">
+                    {% if inquiry.phone %}
+                        <i class="fa-solid fa-phone" style="color: #f89516; font-size: 0.8rem;"></i> {{ inquiry.phone }}
+                    {% else %}
+                        <span style="color: #94a3b8;">Not Provided</span>
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">Category / Topic</span>
+                <span class="info-value">{{ inquiry.category|title|default:"General Inquiry" }}</span>
+            </div>
+        </div>
+
+        <!-- Subject & Customer Message Content -->
+        <div>
+            <div style="margin-bottom: 1.25rem; background: #fafafa; border-left: 4px solid #f89516; padding: 1rem 1.25rem; border-radius: 8px;">
+                <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px; margin-bottom: 0.25rem;">
+                    Inquiry Subject
+                </div>
+                <div style="font-size: 1.35rem; font-weight: 800; color: #0f172a; line-height: 1.4;">
+                    {{ inquiry.subject }}
+                </div>
+            </div>
+
+            <div style="font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                Customer Message Content
+            </div>
+            <div class="dynamic-message-box">
+                {{ inquiry.message }}
+            </div>
+        </div>
+
+        <!-- Support Team Reply for THIS Current Inquiry -->
+        {% if inquiry.admin_notes %}
+            <div style="margin-top: 1.5rem; background: #fffcf8; border: 1px solid #ffedd5; border-left: 4px solid #f89516; border-radius: 12px; padding: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #c2410c; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.4rem;">
+                        <i class="fa-solid fa-paper-plane" style="color: #f89516;"></i> Support Team Reply
+                    </div>
+                    {% if inquiry.admin_replied_at %}
+                        <div style="font-size: 0.8rem; font-weight: 700; color: #64748b;">
+                            <i class="fa-solid fa-clock" style="color: #94a3b8;"></i> {{ inquiry.admin_replied_at|date:"d M Y, h:i A" }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div style="font-size: 0.95rem; color: #0f172a; font-weight: 600; line-height: 1.65; white-space: pre-wrap;">
+                    {{ inquiry.admin_notes }}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Direct Email Reply Form Section (Only shown when pending response) -->
+    {% if not inquiry.is_expired_or_closed and inquiry.status != 'RESPONDED' %}
+    <div class="detail-card-clean">
+        <div class="detail-card-title">
+            <i class="fa-solid fa-paper-plane" style="color: #f89516;"></i> Reply Message
+        </div>
+
+        {% if not inquiry.is_email_valid %}
+            <div style="background: #fee2e2; border: 1px solid #fca5a5; border-radius: 12px; padding: 1rem 1.25rem; color: #991b1b; font-size: 0.9rem; font-weight: 600; margin-bottom: 1.25rem;">
+                <i class="fa-solid fa-triangle-exclamation" style="margin-right: 0.35rem;"></i>
+                This recipient's email address ({{ inquiry.email }}) has invalid syntax. System automated email sending is disabled for safety.
+            </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'admin_panel:contact_inquiry_reply' pk=inquiry.pk %}" id="replyInquiryForm">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="reply">
+
+            <div style="margin-bottom: 1.25rem;">
+                <textarea name="reply_message" class="reply-textarea-clean" placeholder="Type your response to the user here. It will be delivered directly to their email address..." {% if not inquiry.is_email_valid %}disabled{% endif %} required></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; align-items: center;">
+                <button type="submit" class="btn-primary-theme" {% if not inquiry.is_email_valid %}disabled style="opacity: 0.5; cursor: not-allowed;"{% endif %}>
+                    <i class="fa-solid fa-paper-plane"></i> Send Reply Email
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock content %}

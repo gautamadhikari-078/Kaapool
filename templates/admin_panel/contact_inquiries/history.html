@@ -1,0 +1,185 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}{{ inquiry.name }} - Contact Inquiry History{% endblock %}
+{% block page_heading %}Contact Inquiry History{% endblock %}
+
+{% block extra_css %}
+<style>
+.inquiry-history-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.back-link-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    color: #0f172a;
+    text-decoration: none;
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.back-link-btn:hover {
+    background: #f89516;
+    color: #ffffff;
+    border-color: #f89516;
+    transform: translateX(-2px);
+}
+
+.detail-card-clean {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.history-card-item {
+    background: #ffffff;
+    border: 1px solid #fed7aa;
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    margin-bottom: 1.25rem;
+}
+
+.history-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #ffedd5;
+}
+
+.history-subject {
+    font-weight: 800;
+    color: #9a3412;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.history-time {
+    font-size: 0.825rem;
+    font-weight: 700;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.history-label {
+    font-size: 0.775rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.35rem;
+}
+
+.history-message-box {
+    font-size: 0.925rem;
+    color: #334155;
+    background: #f8fafc;
+    padding: 0.85rem 1.1rem;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+
+.history-reply-box {
+    font-size: 0.925rem;
+    color: #0f172a;
+    font-weight: 600;
+    background: #fffcf8;
+    padding: 0.85rem 1.1rem;
+    border-radius: 10px;
+    border: 1px solid #ffedd5;
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+
+.history-empty-card {
+    text-align: center;
+    padding: 3.5rem 1.5rem;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px dashed #cbd5e1;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="inquiry-history-container">
+    
+    <a href="{% url 'admin_panel:contact_inquiry_detail' pk=inquiry.pk %}" class="back-link-btn" title="Back to Inquiry Details">
+        <i class="fa-solid fa-arrow-left"></i>
+    </a>
+
+    <!-- Top Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h2 style="font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0 0 0.35rem 0;">
+                Inquiry & Reply History
+            </h2>
+            <p style="color: #64748b; margin: 0; font-size: 0.95rem;">
+                Complete record of previous messages and support responses for <strong>{{ inquiry.name }}</strong> ({{ inquiry.email }})
+            </p>
+        </div>
+        <div>
+            <span style="background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; font-weight: 800; font-size: 0.875rem; padding: 0.4rem 0.95rem; border-radius: 9999px;">
+                <i class="fa-solid fa-clock-rotate-left"></i> {{ replied_history|length }} Past Response{{ replied_history|length|pluralize }}
+            </span>
+        </div>
+    </div>
+
+    <!-- History List -->
+    {% if replied_history %}
+        {% for item in replied_history %}
+            <div class="history-card-item">
+                <div class="history-card-header">
+                    <div class="history-subject">
+                        <i class="fa-solid fa-envelope-open-text" style="color: #f89516;"></i>
+                        Subject: {{ item.subject }}
+                    </div>
+                    <div class="history-time">
+                        <i class="fa-solid fa-clock" style="color: #94a3b8;"></i>
+                        Replied at: {{ item.replied_at }}
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <div class="history-label">Customer Message:</div>
+                    <div class="history-message-box">{{ item.message }}</div>
+                </div>
+
+                <div>
+                    <div class="history-label" style="color: #c2410c;">Support Team Reply:</div>
+                    <div class="history-reply-box">{{ item.reply }}</div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="history-empty-card">
+            <i class="fa-solid fa-inbox" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem; display: block;"></i>
+            <h3 style="margin: 0 0 0.5rem 0; font-weight: 800; color: #334155;">No Previous History Found</h3>
+            <p style="margin: 0; font-size: 0.925rem; color: #64748b;">There are no past replied inquiries recorded for <strong>{{ inquiry.email }}</strong> yet.</p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock content %}

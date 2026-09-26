@@ -12,13 +12,15 @@ class BookingWebFlowTests(TestCase):
     def setUp(self):
         self.driver = User.objects.create_user(username='driver2', password='password123')
         self.passenger = User.objects.create_user(username='passenger1', password='password123')
+        from datetime import timedelta
         self.ride = Ride.objects.create(
             driver=self.driver,
             origin='Gurugram',
             destination='Rohtak',
-            departure_time=timezone.now(),
+            departure_datetime=timezone.now() + timedelta(days=1),
             available_seats=4,
-            price_per_seat=150.00
+            price_per_seat=150.00,
+            status='active'
         )
 
     def test_checkout_view_authenticated(self):

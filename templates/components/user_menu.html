@@ -8,7 +8,6 @@
         <li><a href="{% url 'rides:my_rides' %}">My Rides</a></li>
         <li><a href="{% url 'messaging:inbox' %}">Inbox</a></li>
         <li><a href="{% url 'payments:history' %}">Payments & Refunds</a></li>
-        <li><a href="{% url 'notifications:list' %}">Notifications</a></li>
         <li>
             <form action="{% url 'accounts:logout' %}" method="post" class="logout-form">
                 {% csrf_token %}

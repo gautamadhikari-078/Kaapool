@@ -978,18 +978,6 @@
 
         <!-- ABOUT MEMBER SECTION -->
         <div class="about-member-section">
-            <h2 class="about-section-title">About {{ user.first_name|default:user.username }}</h2>
-
-            <div class="pref-row-item">
-                <i class="fa-solid fa-comment-dots"></i>
-                <span>{% if user.bio %}{{ user.bio }}{% else %}I'm chatty when I feel comfortable{% endif %}</span>
-            </div>
-
-            <div class="pref-row-item">
-                <i class="fa-solid fa-ban-smoking"></i>
-                <span>Smoking allowed</span>
-            </div>
-
             <div class="member-meta-note">
                 {{ user.first_name|default:user.username }} is a non-professional member
             </div>
